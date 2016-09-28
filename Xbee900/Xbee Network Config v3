@@ -1,3 +1,5 @@
+// Alex and Tom
+
 ///////////////////////////////////////////////
 /////////// Config DIGIMESH ///////////////////
 //////////////////////////////////////////////
@@ -5,15 +7,17 @@
 #include <WaspXBeeDM.h>
 #include <WaspFrame.h>
 
- 
+// 1.0
 // PAN (Personal Area Network) Identifier
 uint8_t  panID[2] = {0x7F,0xFF}; 
 
 
-////////////////////////////////////////////
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 1.1
 // Define Freq Channel to be set: 
 // Digimesh 2.4Ghz. Range from 0x0B to 0x1A
 // Digimesh 900Mhz. Range from 0x00 to 0x0B
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 uint8_t  channel = 0x01;
 
 /* 
