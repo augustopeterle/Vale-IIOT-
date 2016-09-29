@@ -301,6 +301,7 @@ void loop()
   RTC.getTime();
 /////////////////////////////////////////
 
+  USB.println(F(" Turn on Sensor Board"));
 //Power on board
   SensorCities.ON();
 
@@ -335,6 +336,8 @@ void loop()
   // 2. Read sensors
   ///////////////////////////////////////////  
 
+USB.println(F(" Read Sensors "));
+
   // Read the temperature sensor
   temperature = SensorCities.readValue(SENS_CITIES_TEMPERATURE);
   // Read the humidity sensor
@@ -363,6 +366,8 @@ void loop()
   // 3. Turn off the sensors
   /////////////////////////////////////////// 
 
+USB.println(F(" Turn off Sensor Board"));
+
   // Power off the temperature sensor
   SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_TEMPERATURE);
   // Power off the humidity sensor
@@ -383,11 +388,6 @@ void loop()
   SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_AUDIO);
   // Power off the DS18B20 sensor
   SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_TEMP_DS18B20);
-
-
-
-
-
 
 
 
