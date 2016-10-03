@@ -46,7 +46,7 @@ char password[] = "libeliumlibelium";
 // 1.5 
 //Select the node address value: from 2 to 255 Each node must have a unique node number
 // CHANGING NODE ADDRESS FOR A NEW DEVICE
-  uint8_t node_address = 26;
+  uint8_t node_address = 31;
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   
@@ -57,7 +57,7 @@ char password[] = "libeliumlibelium";
 
 float temperature; 
 float humidity; 
-float analogLDRvoltage;
+//float analogLDRvoltage;
 //float dust; 
 //float crackLin; 
 //float crackPro; 
@@ -67,7 +67,7 @@ float audio;
 //float tempDS18B20; 
 char node_ID[] = "Node_01";
 int e;
-  
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
   void setup()
@@ -217,7 +217,7 @@ void loop()
   // Power on the humidity sensor
   SensorCities.setSensorMode(SENS_ON, SENS_CITIES_HUMIDITY);
   // Power on the LDR sensor
-  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_LDR);
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_LDR);
   // Power on the dust sensor
   //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_DUST);
   // Power on the crack linear sensor
@@ -248,9 +248,9 @@ void loop()
   // Read the humidity sensor
   humidity = SensorCities.readValue(SENS_CITIES_HUMIDITY);
   //First dummy reading for analog-to-digital converter channel selection
-  SensorCities.readValue(SENS_CITIES_LDR);
+  //SensorCities.readValue(SENS_CITIES_LDR);
   //Sensor LDR reading
-  analogLDRvoltage = SensorCities.readValue(SENS_CITIES_LDR);
+  //analogLDRvoltage = SensorCities.readValue(SENS_CITIES_LDR);
   // Read the dust sensor
   //dust = SensorCities.readValue(SENS_CITIES_DUST);
   // Read the crack linear sensor
@@ -277,7 +277,7 @@ void loop()
   // Power off the humidity sensor
   SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_HUMIDITY);
   // Power off the LDR sensor
-  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_LDR);
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_LDR);
   // Power off the dust sensor
   //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_DUST);
   // Power off the crack linear sensor
@@ -295,6 +295,11 @@ void loop()
     delay(10000);
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
+// Part 2: USB printing
+  // Print the sound level value through the USB
+  USB.print(F("Sound pressure: "));
+  USB.print(audio);
+  USB.println(F("dBA"));
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // 3.4 Show Battery levels
@@ -357,7 +362,7 @@ USB.println(frame.getFrameSize(),DEC);
   // Add humidity
   frame.addSensor(SENSOR_HUMA, humidity);
   // Add LDR value
-  frame.addSensor(SENSOR_LUM, analogLDRvoltage);
+  //frame.addSensor(SENSOR_LUM, analogLDRvoltage);
   // Add dust value
   //frame.addSensor(SENSOR_DUST, dust);
   // Add crack linear
@@ -369,7 +374,7 @@ USB.println(frame.getFrameSize(),DEC);
   // Add ultrasound
   //frame.addSensor(SENSOR_US, ultrasound);
   // Add audio
-  frame.addSensor(SENSOR_MCP, audio);
+  //frame.addSensor(SENSOR_MCP, audio);
   // Add DS18B20 temperature
  // frame.addSensor(SENSOR_TCC, tempDS18B20);
   
@@ -388,7 +393,7 @@ USB.println(frame.getFrameSize(),DEC);
    - AES_192
    - AES_256
    */
-  frame.encryptFrame( AES_128, password ); 
+  //frame.encryptFrame( AES_128, password ); 
 
   // Show the Encrypted frame via USB port
   frame.showFrame();
