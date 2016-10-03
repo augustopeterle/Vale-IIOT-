@@ -1,4 +1,4 @@
- // Tom
+// Tom
  //Version:           0.1
  // Change list
  // 1.0 Change the LORA Gateway number uint8_t rx_address = 1;. 1 is defult
@@ -28,7 +28,7 @@
 //1.0
 // Lora Gateway Address
 // Define the destination address to send packets
-uint8_t rx_address = 2;
+uint8_t rx_address = 1;
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //2.0
 // define the Waspmtoe ID
@@ -124,8 +124,8 @@ void loop()
   // 1. Create Max frame
   ///////////////////////////////////////////  
   
-  frame.createFrame(MAX_FRAME);  
-  USB.println(frame.getFrameSize(),DEC); 
+ // frame.createFrame(MAX_FRAME);  
+ // USB.println(frame.getFrameSize(),DEC); 
 
 // or
 
@@ -136,7 +136,7 @@ void loop()
 
   // Creating frame to send
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  //frame.createFrame(ASCII);
+  frame.createFrame(ASCII);
   USB.println(F("Frame created"));
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
