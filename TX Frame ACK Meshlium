@@ -116,12 +116,12 @@ void loop()
 ///////////////////////////////////////////
 USB.println(F("Create a new Frame:"));
 
-    frame.createFrame(MAX_FRAME);  
+frame.createFrame(MAX_FRAME);  
 USB.println(frame.getFrameSize(),DEC); 
   
   
   // create new frame
-  frame.createFrame(ASCII);  
+  //frame.createFrame(ASCII);  
 
   // add frame fields
   frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
