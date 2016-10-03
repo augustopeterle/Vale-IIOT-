@@ -66,6 +66,7 @@ float humidity;
 float audio;
 //float tempDS18B20; 
 char node_ID[] = "Node_01";
+int e;
   
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
