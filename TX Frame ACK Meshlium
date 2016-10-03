@@ -1,7 +1,23 @@
  // Tom
  //Version:           0.1
  // Change list
- // 
+ // 1.0 Change the LORA Gateway number uint8_t rx_address = 1;. 1 is defult
+ // 2.0 Change the node ID char nodeID[] = "node_001"; . Put a name for your location
+ // 4.0 Change the screen print name USB.println(F("Test Tom")); . You dont have to change this but it should match you Node ID
+ // 5.0 Select the channel  e = sx1272.setChannel(CH_12_900);
+ //                        USB.print(F("Setting Channel CH_12_900.\t state ")); 
+ //5.5 Set Node address   e = sx1272.setNodeAddress(13);
+ //                       USB.print(F("Setting Node Address to '13'.\t state "));
+ // You can not have two nodes with the same address
+ //5.6 Set network transmission retries   e = sx1272.setRetries(3);
+ //                                       USB.print(F("Setting Max retries to '3'.\t state "));
+ //6.0 If you need to change the frame type you can
+ // frame.createFrame(MAX_FRAME);  
+ // USB.println(frame.getFrameSize(),DEC); 
+ // or 
+ //  frame.createFrame(ASCII);
+ //  USB.println(F("Frame created"));
+ //end
 
 
 // Include these libraries to transmit frames with sx1272
@@ -119,6 +135,7 @@ void loop()
   ///////////////////////////////////////////  
 
   // Creating frame to send
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //frame.createFrame(ASCII);
   USB.println(F("Frame created"));
  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
