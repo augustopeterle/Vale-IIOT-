@@ -138,7 +138,7 @@ void loop()
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //frame.createFrame(ASCII);
   USB.println(F("Frame created"));
- //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   // Adding sensor battery
   frame.addSensor(SENSOR_BAT, (uint8_t) PWR.getBatteryLevel());
