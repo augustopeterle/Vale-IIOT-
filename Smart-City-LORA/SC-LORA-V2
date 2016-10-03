@@ -57,7 +57,7 @@ char password[] = "libeliumlibelium";
 
 float temperature; 
 float humidity; 
-//float analogLDRvoltage;
+float analogLDRvoltage;
 //float dust; 
 //float crackLin; 
 //float crackPro; 
