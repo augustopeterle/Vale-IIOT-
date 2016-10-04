@@ -1,25 +1,4 @@
-
-/*  
- *  ------ Waspmote Pro Code Example -------- 
- *  
- *  Explanation: This is the basic Code for Waspmote Pro
- *  
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L. 
- *  http://www.libelium.com 
- *  
- *  This program is free software: you can redistribute it and/or modify  
- *  it under the terms of the GNU General Public License as published by  
- *  the Free Software Foundation, either version 3 of the License, or  
- *  (at your option) any later version.  
- *   
- *  This program is distributed in the hope that it will be useful,  
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of  
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  
- *  GNU General Public License for more details.  
- *   
- *  You should have received a copy of the GNU General Public License  
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.  
- */
+//Tom and Carey
      
      
      
@@ -34,16 +13,16 @@
 #include <WaspXBeeDM.h>
 #include <WaspFrame.h>
 
- float temperature; 
-float humidity; 
+float temperature; 
+//float humidity; 
 float analogLDRvoltage;
-float dust; 
-float crackLin; 
-float crackPro; 
-float crackDet;
+//float dust; 
+//float crackLin; 
+//float crackPro; 
+//float crackDet;
 float ultrasound; 
-float audio;
-float tempDS18B20; 
+//float audio;
+//float tempDS18B20; 
 
 
 // PAN (Personal Area Network) Identifier
@@ -75,19 +54,19 @@ uint8_t  channel = 0x01;
 //////////////////////////////////////////
 // Destination MAC address
 //////////////////////////////////////////
-//char RX_ADDRESS[] = "0013A200408DE1AF";
+char RX_ADDRESS[] = "0013A20040794B68";
 //////////////////////////////////////////
 
 //OR
 
 // Define BROADCAST MAC address
 //////////////////////////////////////////
-char RX_ADDRESS[] = "000000000000FFFF";
+//char RX_ADDRESS[] = "000000000000FFFF";
 //////////////////////////////////////////
 
 
 // Define the Waspmote ID
-char WASPMOTE_ID[] = "SECOND";
+char WASPMOTE_ID[] = "SC Carey Test";
 
 
 // define variable
@@ -312,23 +291,23 @@ void loop()
   // Power on the temperature sensor
   SensorCities.setSensorMode(SENS_ON, SENS_CITIES_TEMPERATURE);
   // Power on the humidity sensor
-  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_HUMIDITY);
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_HUMIDITY);
   // Power on the LDR sensor
   SensorCities.setSensorMode(SENS_ON, SENS_CITIES_LDR);
   // Power on the dust sensor
-  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_DUST);
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_DUST);
   // Power on the crack linear sensor
-  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_LD);
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_LD);
   // Power on the crack propagation sensor
-  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_CP);
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_CP);
   // Power on the crack detection sensor
-  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_CD);
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_CD);
   // Power on the ultrasound sensor
   SensorCities.setSensorMode(SENS_ON, SENS_CITIES_ULTRASOUND_3V3);
   // Power on the audio sensor
-  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_AUDIO);
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_AUDIO);
   // Power on the DS18B20 sensor
-  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_TEMP_DS18B20);
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_TEMP_DS18B20);
   delay(2000);
 
 
@@ -341,25 +320,25 @@ USB.println(F(" Read Sensors "));
   // Read the temperature sensor
   temperature = SensorCities.readValue(SENS_CITIES_TEMPERATURE);
   // Read the humidity sensor
-  humidity = SensorCities.readValue(SENS_CITIES_HUMIDITY);
+  //humidity = SensorCities.readValue(SENS_CITIES_HUMIDITY);
   //First dummy reading for analog-to-digital converter channel selection
   SensorCities.readValue(SENS_CITIES_LDR);
   //Sensor LDR reading
   analogLDRvoltage = SensorCities.readValue(SENS_CITIES_LDR);
   // Read the dust sensor
-  dust = SensorCities.readValue(SENS_CITIES_DUST);
+  //dust = SensorCities.readValue(SENS_CITIES_DUST);
   // Read the crack linear sensor
-  crackLin = SensorCities.readValue(SENS_CITIES_LD);
+  //crackLin = SensorCities.readValue(SENS_CITIES_LD);
   // Read the crack propagation sensor
-  crackPro = SensorCities.readValue(SENS_CITIES_CP);
+  //crackPro = SensorCities.readValue(SENS_CITIES_CP);
   // Read the crack detection sensor
-  crackDet = SensorCities.readValue(SENS_CITIES_CD);
+  //crackDet = SensorCities.readValue(SENS_CITIES_CD);
   // Read the ultrasound sensor 
   ultrasound = SensorCities.readValue(SENS_CITIES_ULTRASOUND_3V3, SENS_US_WRA1);
   // Read the audio sensor
-  audio = SensorCities.readValue(SENS_CITIES_AUDIO);
+  //audio = SensorCities.readValue(SENS_CITIES_AUDIO);
   // Read the DS18B20 sensor 
-  tempDS18B20 = SensorCities.readValue(SENS_CITIES_TEMP_DS18B20);
+  //tempDS18B20 = SensorCities.readValue(SENS_CITIES_TEMP_DS18B20);
 
 
   ///////////////////////////////////////////
@@ -371,23 +350,23 @@ USB.println(F(" Turn off Sensor Board"));
   // Power off the temperature sensor
   SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_TEMPERATURE);
   // Power off the humidity sensor
-  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_HUMIDITY);
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_HUMIDITY);
   // Power off the LDR sensor
   SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_LDR);
   // Power off the dust sensor
-  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_DUST);
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_DUST);
   // Power off the crack linear sensor
-  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_LD);
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_LD);
   // Power off the crack propagation sensor
-  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_CP);
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_CP);
   // Power off the crack detection sensor
-  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_CD);
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_CD);
   // Power off the ultrasound sensor
   SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_ULTRASOUND_3V3);
   // Power off the audio sensor
-  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_AUDIO);
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_AUDIO);
   // Power off the DS18B20 sensor
-  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_TEMP_DS18B20);
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_TEMP_DS18B20);
 
 
 
@@ -408,23 +387,23 @@ USB.println(F(" Turn off Sensor Board"));
   // Add temperature
   frame.addSensor(SENSOR_TCA, temperature);
   // Add humidity
-  frame.addSensor(SENSOR_HUMA, humidity);
+  //frame.addSensor(SENSOR_HUMA, humidity);
   // Add LDR value
   frame.addSensor(SENSOR_LUM, analogLDRvoltage);
   // Add dust value
-  frame.addSensor(SENSOR_DUST, dust);
+  //frame.addSensor(SENSOR_DUST, dust);
   // Add crack linear
-  frame.addSensor(SENSOR_LD, crackLin);
+  //frame.addSensor(SENSOR_LD, crackLin);
   // Add crack propagation
-  frame.addSensor(SENSOR_CPG, crackPro);
+  //frame.addSensor(SENSOR_CPG, crackPro);
   // Add crack detection
-  frame.addSensor(SENSOR_CDG, crackDet);
+  //frame.addSensor(SENSOR_CDG, crackDet);
   // Add ultrasound
   frame.addSensor(SENSOR_US, ultrasound);
   // Add audio
-  frame.addSensor(SENSOR_MCP, audio);
+  //frame.addSensor(SENSOR_MCP, audio);
   // Add DS18B20 temperature
-  frame.addSensor(SENSOR_TCC, tempDS18B20);
+  //frame.addSensor(SENSOR_TCC, tempDS18B20);
   
   ///////////////////////////////////////////
   // 2. Send packet
