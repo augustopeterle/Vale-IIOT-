@@ -319,12 +319,20 @@ USB.println(F(" Turn off Sensor Board"));
 
 
 //7.0  
+
+//%%%%%%%%%%%%%%%%%%% Binary %%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 4.2 create new frame (MAX Frame) Binary
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+frame.createFrame(MAX_FRAME);  
+USB.println(frame.getFrameSize(),DEC); 
+
+//OR
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // 1. Create ASCII frame
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
   // create new frame
-  frame.createFrame(ASCII);  
+  //frame.createFrame(ASCII);  
   
   // add frame fields
   frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
