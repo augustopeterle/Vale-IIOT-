@@ -1,0 +1,446 @@
+// Code 9.6 Change  the nodeAddress and nodeID.
+//Alex & Tom
+// Change Log // Things you need to Change
+// 1.2 char nodeID[] = "SEPro-Vit-Node26"; // Change to match you node name standard SE = Plug and sense type SEPro (Smart Environment Pro), Location and Node Number
+// 1.3 uint8_t meshlium_address = 2; Change the Meshlium address to match your gateway number
+// 1.4 char password[] = "libeliumlibelium";  Edit your 16-Byte enctyption key to match your gateway key
+// 1.5 uint8_t node_address = 26; set your sensor node number. Must be unique number for each sensor on the network for the AP
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #1 Set Global Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     
+  
+     
+//1.0
+//Enter Librarys needed 
+#include <WaspSensorCities.h>
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+
+// 1.1 
+//Enter Sensor objects if needed
+
+//Add any Float commands
+float temperature; 
+
+
+//1.2
+//Change PAN ID
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// PAN (Personal Area Network) Identifier
+uint8_t  panID[2] = {0x7F,0xFF}; 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//1.3
+// Set radio channel
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Define Freq Channel to be set: 
+// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+// Digimesh 900Mhz. Range from 0x00 to 0x0B
+uint8_t  channel = 0x01;
+
+/* 
+0x00 – Channel 0 -- 902 – 904,16 GHz
+0x01 – Channel 1 --  904,16 – 906,32 GHz
+0x02 – Channel 2 -- 906,32 – 908,48 GHz
+0x03 – Channel 3 -- 908,48 – 910,64 GHz
+0x04 – Channel 4 -- 910,64 – 912,80 GHz
+0x05 – Channel 5 -- 912,80 – 914,96 GHz
+0x06 – Channel 6 -- 914,96 – 917,12 GHz
+0x07 – Channel 7 -- 917,12 – 919,28 GHz
+0x08 – Channel 8 -- 919,28 – 921,44 GHz
+0x09 – Channel 9 -- 921,44 – 923,6 GHz
+0x0A – Channel 10 -- 923,6 – 925,76 GHz
+0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+
+//1.4 Set Gateway MAC address
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Destination MAC address
+char RX_ADDRESS[] = "0013A20040794B68";
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//OR
+
+// Define BROADCAST MAC address
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//char RX_ADDRESS[] = "000000000000FFFF";
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+// Define the Waspmote ID
+char WASPMOTE_ID[] = "SC Carey Test";
+
+
+// define variable
+uint8_t error;
+
+
+// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+uint8_t encryptionMode = 0;
+
+// Define the AES 16-byte Encryption Key
+char  encryptionKey[] = "WaspmoteValeKey!"; 
+ 
+
+
+
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Config Xbee %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+void setup()
+{
+  // open USB port
+  USB.ON();
+
+  USB.println(F("-------------------------------"));
+  USB.println(F("Configure XBee Digimesh"));
+  USB.println(F("-------------------------------"));
+  
+
+  // store Waspmote identifier in EEPROM memory
+  frame.setID( WASPMOTE_ID );
+  
+  // init XBee 
+ xbeeDM.ON();    
+
+
+  /////////////////////////////////////
+  // 1. set channel 
+  /////////////////////////////////////
+  xbeeDM.setChannel( channel );
+
+  // check at commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("1. Channel set OK to: 0x"));
+    USB.printHex( xbeeDM.channel );
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("1. Error calling 'setChannel()'"));
+  }
+
+/////////Mesh Network Retries (4.7 manual digimesh)/////////////////////
+  xbeeDM.setMeshNetworkRetries(0x07);  
+  xbeeDM.getMeshNetworkRetries();  
+
+///////////////////// Set Power Lever ///////////////////
+/*
+Parameter 	XBee-PRO
+0 	         10dBm
+1 	         12dBm
+2 	         14dBm
+3 	         16dBm 
+4 	         18dBm
+*/
+
+xbeeDM.setPowerLevel(4);
+xbeeDM.getPowerLevel();
+
+//////////////////////////////////////////////
+
+  /////////////////////////////////////
+  // 2. set PANID
+  /////////////////////////////////////
+  xbeeDM.setPAN( panID );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("2. PAN ID set OK to: 0x"));
+    USB.printHex( xbeeDM.PAN_ID[0] ); 
+    USB.printHex( xbeeDM.PAN_ID[1] ); 
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("2. Error calling 'setPAN()'"));  
+  }
+
+
+
+
+
+  /////////////////////////////////////
+  // 3. set encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.setEncryptionMode( encryptionMode );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbeeDM.encryptMode, DEC );
+  }
+  else 
+  {
+    USB.println(F("3. Error calling 'setEncryptionMode()'"));
+  }
+
+
+
+
+  /////////////////////////////////////
+  // 4. set encryption key
+  /////////////////////////////////////
+  xbeeDM.setLinkKey( encryptionKey );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("4. AES encryption key set OK"));
+  }
+  else 
+  {
+    USB.println(F("4. Error calling 'setLinkKey()'")); 
+  }
+
+
+  
+   ////////////Set RTC Time /////////////////////////
+ // Powers RTC up, init I2C bus and read initial values
+  USB.println(F("Init RTC"));
+  RTC.ON();
+  
+  // Setting time [yy:mm:dd:dow:hh:mm:ss]
+  RTC.setTime("16:07:27:00:09:55:00");
+  USB.print(F("Setting time: "));
+ // USB.println(F("13:01:16:06:12:33:00"));
+/////////////////////////////////////////////
+
+  /////////////////////////////////////
+  // 5. write values to XBee module memory
+  /////////////////////////////////////
+  xbeeDM.writeValues();
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("5. Changes stored OK"));
+  }
+  else 
+  {
+    USB.println(F("5. Error calling 'writeValues()'"));   
+  }
+
+  USB.println(F("-------------------------------")); 
+}
+
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Prod Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+void loop()
+{
+    
+  
+  
+  /////////////////////////////////////
+  // 1. get channel 
+  /////////////////////////////////////
+  xbeeDM.getChannel();
+  USB.print(F("channel: "));
+  USB.printHex(xbeeDM.channel);
+  USB.println();
+
+  USB.print(F("Set Retries: "));
+  USB.printHex(xbeeDM.meshNetRetries);
+  USB.println();
+ /////////////////////////////////////
+  // 2. get PAN ID
+  /////////////////////////////////////
+  xbeeDM.getPAN();
+  USB.print(F("panid: "));
+  USB.printHex(xbeeDM.PAN_ID[0]); 
+  USB.printHex(xbeeDM.PAN_ID[1]); 
+  USB.println(); 
+  
+  /////////////////////////////////////
+  // 3. get Encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.getEncryptionMode();
+  USB.print(F("encryption mode: "));
+  USB.printHex(xbeeDM.encryptMode);
+  USB.println(); 
+  
+  USB.println(F("-------------------------------")); 
+     
+  delay(3000);
+
+
+/////////////////////////////////////////////
+//////////// END Digi Mesh Config ////////////
+////////////////////////////////////////////
+
+////////////RTC Time /////////////////////
+ // get Time from RTC
+  RTC.getTime();
+/////////////////////////////////////////
+
+  USB.println(F(" Turn on Sensor Board"));
+//Power on board
+  SensorCities.ON();
+
+///////////////////////////////////////////
+  // 1. Turn on the sensors
+  /////////////////////////////////////////// 
+
+  // Power on the temperature sensor
+  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_TEMPERATURE);
+  // Power on the humidity sensor
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_HUMIDITY);
+  // Power on the LDR sensor
+  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_LDR);
+  // Power on the dust sensor
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_DUST);
+  // Power on the crack linear sensor
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_LD);
+  // Power on the crack propagation sensor
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_CP);
+  // Power on the crack detection sensor
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_CD);
+  // Power on the ultrasound sensor
+  SensorCities.setSensorMode(SENS_ON, SENS_CITIES_ULTRASOUND_3V3);
+  // Power on the audio sensor
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_AUDIO);
+  // Power on the DS18B20 sensor
+  //SensorCities.setSensorMode(SENS_ON, SENS_CITIES_TEMP_DS18B20);
+  delay(2000);
+
+
+  ///////////////////////////////////////////
+  // 2. Read sensors
+  ///////////////////////////////////////////  
+
+USB.println(F(" Read Sensors "));
+
+  // Read the temperature sensor
+  temperature = SensorCities.readValue(SENS_CITIES_TEMPERATURE);
+  // Read the humidity sensor
+  //humidity = SensorCities.readValue(SENS_CITIES_HUMIDITY);
+  //First dummy reading for analog-to-digital converter channel selection
+  SensorCities.readValue(SENS_CITIES_LDR);
+  //Sensor LDR reading
+  analogLDRvoltage = SensorCities.readValue(SENS_CITIES_LDR);
+  // Read the dust sensor
+  //dust = SensorCities.readValue(SENS_CITIES_DUST);
+  // Read the crack linear sensor
+  //crackLin = SensorCities.readValue(SENS_CITIES_LD);
+  // Read the crack propagation sensor
+  //crackPro = SensorCities.readValue(SENS_CITIES_CP);
+  // Read the crack detection sensor
+  //crackDet = SensorCities.readValue(SENS_CITIES_CD);
+  // Read the ultrasound sensor 
+  ultrasound = SensorCities.readValue(SENS_CITIES_ULTRASOUND_3V3, SENS_US_WRA1);
+  // Read the audio sensor
+  //audio = SensorCities.readValue(SENS_CITIES_AUDIO);
+  // Read the DS18B20 sensor 
+  //tempDS18B20 = SensorCities.readValue(SENS_CITIES_TEMP_DS18B20);
+
+
+  ///////////////////////////////////////////
+  // 3. Turn off the sensors
+  /////////////////////////////////////////// 
+
+USB.println(F(" Turn off Sensor Board"));
+
+  // Power off the temperature sensor
+  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_TEMPERATURE);
+  // Power off the humidity sensor
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_HUMIDITY);
+  // Power off the LDR sensor
+  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_LDR);
+  // Power off the dust sensor
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_DUST);
+  // Power off the crack linear sensor
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_LD);
+  // Power off the crack propagation sensor
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_CP);
+  // Power off the crack detection sensor
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_CD);
+  // Power off the ultrasound sensor
+  SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_ULTRASOUND_3V3);
+  // Power off the audio sensor
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_AUDIO);
+  // Power off the DS18B20 sensor
+  //SensorCities.setSensorMode(SENS_OFF, SENS_CITIES_TEMP_DS18B20);
+
+
+
+  
+///////////////////////////////////////////
+// 1. Create ASCII frame
+///////////////////////////////////////////  
+
+  // create new frame
+  frame.createFrame(ASCII);  
+  
+  // add frame fields
+  //frame.addSensor(SENSOR_STR, "new_sensor_frame");
+  
+  frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
+  frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
+  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+  // Add temperature
+  frame.addSensor(SENSOR_TCA, temperature);
+  // Add humidity
+  //frame.addSensor(SENSOR_HUMA, humidity);
+  // Add LDR value
+  frame.addSensor(SENSOR_LUM, analogLDRvoltage);
+  // Add dust value
+  //frame.addSensor(SENSOR_DUST, dust);
+  // Add crack linear
+  //frame.addSensor(SENSOR_LD, crackLin);
+  // Add crack propagation
+  //frame.addSensor(SENSOR_CPG, crackPro);
+  // Add crack detection
+  //frame.addSensor(SENSOR_CDG, crackDet);
+  // Add ultrasound
+  frame.addSensor(SENSOR_US, ultrasound);
+  // Add audio
+  //frame.addSensor(SENSOR_MCP, audio);
+  // Add DS18B20 temperature
+  //frame.addSensor(SENSOR_TCC, tempDS18B20);
+  
+  ///////////////////////////////////////////
+  // 2. Send packet
+///////////////////////////////////////////  
+  
+  USB.println(F("-------------------------------"));
+  USB.println(F("Send Packet"));
+  USB.println(F("-------------------------------"));
+  
+
+
+  // send XBee packet
+  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+  
+  // check TX flag
+  if( error == 0 )
+  {
+    USB.println(F("send ok"));
+    
+    // blink green LED    
+    Utils.blinkGreenLED();
+    
+  }
+  else 
+  {
+    USB.println(F("send error"));
+    
+    // blink red LED
+    Utils.blinkRedLED();
+  }
+
+  // wait for five seconds
+  delay(5000);
+
+}
+
