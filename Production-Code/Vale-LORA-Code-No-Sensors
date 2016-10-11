@@ -53,7 +53,7 @@ char password[] = "libeliumlibelium";
 // 1.6
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 //General Float and int commands
-
+int e;
   
   
   
