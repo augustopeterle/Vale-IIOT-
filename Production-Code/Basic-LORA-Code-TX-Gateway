@@ -200,20 +200,20 @@ void loop()
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // 4.4 Create Frame with Encrypted contents
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-*/  USB.println(F("2. Encrypting Frame"));   
+/*  USB.println(F("2. Encrypting Frame"));   
 
   /* Calculate encrypted message with ECB cipher mode and ZEROS padding
    The Encryption options are:
    - AES_128
    - AES_192
    - AES_256
-   */
+   
   frame.encryptFrame( AES_128, password ); 
 
   // Show the Encrypted frame via USB port
   frame.showFrame();
 USB.println();
-/*
+*/
 
  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // 4.5 Send packet
