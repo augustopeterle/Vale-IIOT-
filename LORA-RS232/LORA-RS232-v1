@@ -26,6 +26,7 @@
 // Include these libraries to transmit frames with sx1272
 #include <WaspSX1272.h>
 #include <WaspFrame.h>
+#include <Wasp232.h>
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //1.0
@@ -122,6 +123,27 @@ void setup()
   USB.println(F("----------------------------------------"));
   USB.println(F("Sending:")); 
   USB.println(F("----------------------------------------"));
+  
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.0
+//Turn on RS232
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+USB.println(F("RS232 On")); 
+// Powers on the module and assigns the UART in socket0
+  W232.ON(SOCKET1);
+  delay(100);
+
+// Configure the baud rate of the module
+  W232.baudRateConfig(115200);
+  // Configure the parity bit as disabled 
+  W232.parityBit(DISABLED);
+  // Use one stop bit configuration
+  W232.stopBitConfig(1);  
+  // Print hello message
+  USB.println("Hello this is RS-232 communication receive data example.");
+  
+  
+  
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -131,24 +153,33 @@ void setup()
 void loop()
 {  
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Enter Sensor Options %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// 3.0
-//Turn on Sensor
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // 3.1
 //Read the Sensor
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+ // If data in response buffer 
+  if (W232.available()) 
+  {
+    while (W232.available()) {
+      // Read one byte from the buffer
+      // Print data received in the serial monitor    
+      USB.print(W232.read(), HEX);
+    }
+   
+   USB.print("\n");
+    
+  }
+
+  delay(100);
+  
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //3.2
 // Turn off the Sensor
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
 
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #4 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -256,6 +287,7 @@ USB.println();
 
   // 5.0 Go to deepsleep 
 // After X Time, Waspmote wakes up thanks to the RTC Alarm
+USB.println(F("Going to Sleep"));
 PWR.deepSleep("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF);
 
 // Wake UP
