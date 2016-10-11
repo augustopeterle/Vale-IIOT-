@@ -1,1 +1,267 @@
-xxx
+// Tom
+ //Version:           0.1
+ // Change list
+ // 1.0 Change the LORA Gateway number uint8_t rx_address = 1;. 1 is defult
+ // 1.1 Change the node ID char nodeID[] = "node_001"; . Put a name for your location
+ // 4.0 Change the screen print name USB.println(F("Test Tom")); . You dont have to change this but it should match you Node ID
+ // 5.0 Select the channel  e = sx1272.setChannel(CH_12_900);
+ //                        USB.print(F("Setting Channel CH_12_900.\t state ")); 
+ //5.5 Set Node address   e = sx1272.setNodeAddress(13);
+ //                       USB.print(F("Setting Node Address to '13'.\t state "));
+ // You can not have two nodes with the same address
+ //5.6 Set network transmission retries   e = sx1272.setRetries(3);
+ //                                       USB.print(F("Setting Max retries to '3'.\t state "));
+ //6.0 If you need to change the frame type you can
+ // frame.createFrame(MAX_FRAME);  
+ // USB.println(frame.getFrameSize(),DEC); 
+ // or 
+ //  frame.createFrame(ASCII);
+ //  USB.println(F("Frame created"));
+ //end
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #1 Set Global Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// Include these libraries to transmit frames with sx1272
+#include <WaspSX1272.h>
+#include <WaspFrame.h>
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//1.0
+// Lora Gateway Address
+// Define the destination address to send packets
+uint8_t rx_address = 1;
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//1.1
+// define the Waspmtoe ID
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+char nodeID[] = "node_RS232";
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//1.3
+// define status variable
+int e;
+
+
+void setup()
+{
+
+//1.4 
+ // Init USB port
+  USB.ON();
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  USB.println(F("Test Tom"));
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  USB.println(F("Semtech SX1272 module. TX LoRa with Waspmote Frame, ACKs and Retries"));
+
+  // set node ID
+  frame.setID(nodeID);
+
+  // Init Accelerometer
+  ACC.ON();
+
+
+  USB.println(F("----------------------------------------"));
+  USB.println(F("Setting configuration:")); 
+  USB.println(F("----------------------------------------"));
+
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Set Lora Config %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  // Init sx1272 module
+  sx1272.ON();
+//5.0
+  // Select frequency channel
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  e = sx1272.setChannel(CH_12_900);
+  USB.print(F("Setting Channel CH_12_900.\t state ")); 
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  USB.println(e);
+//5.1
+  // Select implicit (off) or explicit (on) header mode
+  e = sx1272.setHeaderON();
+  USB.print(F("Setting Header ON.\t\t state "));
+  USB.println(e); 
+//5.2
+  // Select mode: from 1 to 10
+  e = sx1272.setMode(1);  
+  USB.print(F("Setting Mode '1'.\t\t state ")); 
+  USB.println(e);  
+//5.3
+  // Select CRC on or off
+  e = sx1272.setCRC_ON();
+  USB.print(F("Setting CRC ON.\t\t\t state "));
+  USB.println(e);  
+//5.4
+  // Select output power (Max, High or Low)
+  e = sx1272.setPower('H');
+  USB.print(F("Setting Power to 'H'.\t\t state ")); 
+  USB.println(e); 
+//5.5
+  // Select the node address value: from 2 to 255
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  e = sx1272.setNodeAddress(13);
+  USB.print(F("Setting Node Address to '13'.\t state "));
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  USB.println(e);
+//5.6
+  // Select the maximum number of retries: from '0' to '5'
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  e = sx1272.setRetries(3);
+  USB.print(F("Setting Max retries to '3'.\t state "));
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  USB.println(e);
+  USB.println();
+
+  delay(1000);  
+
+  USB.println(F("----------------------------------------"));
+  USB.println(F("Sending:")); 
+  USB.println(F("----------------------------------------"));
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void loop()
+{  
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Enter Sensor Options %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.0
+//Turn on Sensor
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.1
+//Read the Sensor
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//3.2
+// Turn off the Sensor
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #4 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Create Frame %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+  //4.0
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // 1. Create Max frame
+ // frame.createFrame(MAX_FRAME);  
+ // USB.println(frame.getFrameSize(),DEC); 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+//OR
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 4.1 set user frame size via manual parameters (Binary)
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//frame.setFrameSize(220);
+//USB.print(F("\n frame size given by the user (220):"));
+//USB.println(frame.getFrameSize(),DEC);  
+//delay(500);
+
+//OR
+
+ //4.2
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // 1. Create ASCII frame
+  frame.createFrame(ASCII);
+  USB.println(F("Frame created"));
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+// 4.3 Sensor Frames
+
+  // Adding sensor battery
+  frame.addSensor(SENSOR_BAT, (uint8_t) PWR.getBatteryLevel());
+  USB.println(F("Battery level added"));
+
+  // Adding accelerometer
+  frame.addSensor(SENSOR_ACC, ACC.getX(), ACC.getY(), ACC.getZ() );
+  USB.println(F("Accelerometer added"));
+
+  // Printing frame
+  frame.showFrame(); 
+  
+  
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // 4.4 Create Frame with Encrypted contents
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/*  USB.println(F("2. Encrypting Frame"));   
+
+  /* Calculate encrypted message with ECB cipher mode and ZEROS padding
+   The Encryption options are:
+   - AES_128
+   - AES_192
+   - AES_256
+   
+  frame.encryptFrame( AES_128, password ); 
+
+  // Show the Encrypted frame via USB port
+  frame.showFrame();
+USB.println();
+*/
+
+ //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // 4.5 Send packet
+ //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+ 
+  // Sending packet, with retries if failure, and waiting an ACK response
+  e = sx1272.sendPacketTimeoutACKRetries( rx_address, frame.buffer, frame.length);
+  
+ // if ACK was received check signal strength
+  if( e == 0 )
+  {   
+    USB.println(F("Packet sent OK"));     
+    
+    e = sx1272.getSNR();
+    USB.print(F("-> SNR: "));
+    USB.println(sx1272._SNR); 
+    
+    e = sx1272.getRSSI();
+    USB.print(F("-> RSSI: "));
+    USB.println(sx1272._RSSI);   
+    
+    e = sx1272.getRSSIpacket();
+    USB.print(F("-> Last packet RSSI value is: "));    
+    USB.println(sx1272._RSSIpacket); 
+  }
+  else 
+  {
+    USB.println(F("Error sending the packet"));  
+    USB.print(F("state: "));
+    USB.println(e, DEC);
+  } 
+
+  USB.println();
+  delay(2500);
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #5 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Sleep Area %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  // 5.0 Go to deepsleep 
+// After X Time, Waspmote wakes up thanks to the RTC Alarm
+PWR.deepSleep("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF);
+
+// Wake UP
+  USB.ON();
+  USB.println(F("\n Wake UP! \n"));
+ 
+delay(2500);
+  
+}
