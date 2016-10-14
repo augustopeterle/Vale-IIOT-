@@ -1,0 +1,470 @@
+/*  SMART ENVIRO NOT CALIBRATE - Sleep not activet in this code!
+
+ *Code Default 
+ *  Parameter Cordinator: SM =7, SO = 1
+ *  Parameter Cordinator: SM =8, SO = 0
+ *  Basic TX and RX code 
+ *  You need to add sensor data into the code
+ * Tom and Alex
+ */
+
+#include <WaspSensorGas_v20.h>
+#include <WaspFrame.h>
+#include <WaspXBeeDM.h>
+
+////////////SENSORS NOT CALIBRATE/////////////////////
+#define GAINCO2  7  //GAIN of the sensor stage
+#define GAINO2  100 //GAIN of the sensor stage
+#define GAINSOCKET2A  1      //GAIN of the sensor stage
+#define RESISTOR2A 20  //LOAD RESISTOR of the sensor stage
+#define GAINSOCKET2B  1      //GAIN of the sensor stage
+#define RESISTOR2B 20  //LOAD RESISTOR of the sensor stage
+#define GAINSOCKET3A  1      //GAIN of the sensor stage
+#define RESISTOR3A 20  //LOAD RESISTOR of the sensor stage
+#define GAINSOCKET3B  1      //GAIN of the sensor stage
+#define RESISTOR3B 20  //LOAD RESISTOR of the sensor stage
+#define GAINSOCKET4A  1      //GAIN of the sensor stage
+#define RESISTOR4A 20  //LOAD RESISTOR of the sensor stage
+#define GAINCO  1      // GAIN of the sensor stage
+#define RESISTORCO 100  // LOAD RESISTOR of the sensor stage
+#define GAINNH3  1      // GAIN of the sensor stage
+#define RESISTORNH3 10  // LOAD RESISTOR of the sensor stage
+
+float temperature; 
+float humidity; 
+float pressure;
+float co2Val;
+float o2Val;
+float socket2AVal;
+float socket2BVal;
+float socket3AVal;
+float socket3BVal;
+float socket4AVal;
+float socketCOVal;
+float socketNH3Val;
+float coVal;
+
+char node_ID[] = "Envi_digi";
+
+// PAN (Personal Area Network) Identifier
+uint8_t panID[2] = {0x7F,0xFF}; 
+
+// Define Freq Channel to be set: 
+// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+// Digimesh 900Mhz. Range from 0x00 to 0x0B
+uint8_t channel = 0x0B;
+/* 
+0x00 – Channel 0 -- 902 – 904,16 GHz
+0x01 – Channel 1 --  904,16 – 906,32 GHz
+0x02 – Channel 2 -- 906,32 – 908,48 GHz
+0x03 – Channel 3 -- 908,48 – 910,64 GHz
+0x04 – Channel 4 -- 910,64 – 912,80 GHz
+0x05 – Channel 5 -- 912,80 – 914,96 GHz
+0x06 – Channel 6 -- 914,96 – 917,12 GHz
+0x07 – Channel 7 -- 917,12 – 919,28 GHz
+0x08 – Channel 8 -- 919,28 – 921,44 GHz
+0x09 – Channel 9 -- 921,44 – 923,6 GHz
+0x0A – Channel 10 -- 923,6 – 925,76 GHz
+0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+
+// Define BROADCAST MAC address
+//////////////////////////////////////////
+char RX_ADDRESS[] = "000000000000FFFF";
+//char RX_ADDRESS[] = "0013A20040A5A041";
+//char RX_ADDRESS[] = "0013A200408DE1AF";
+
+// define variable
+uint8_t error;
+
+// deifne variable to get running time
+unsigned long startTime;
+
+// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+uint8_t encryptionMode = 0;
+
+// Define the AES 16-byte Encryption Key
+char  encryptionKey[] = "WaspmoteLinkKey!"; 
+
+void setup() 
+{
+  
+  USB.ON();
+  USB.println(F("Gases Sensor Board - NOT CALIBRATE"));
+  
+   // init XBee 
+  xbeeDM.ON(); 
+
+  // Set the Waspmote ID
+  frame.setID(node_ID); 
+  
+  //Power gases board and wait for stabilization and sensor response time
+  SensorGasv20.ON();
+    /////////////////////////////////////
+  // 1. set channel 
+  /////////////////////////////////////
+  xbeeDM.setChannel(channel);
+
+  // check at commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("1. Channel set OK to: 0x"));
+    USB.printHex( xbeeDM.channel );
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("1. Error calling 'setChannel()'"));
+  }
+
+
+  /////////////////////////////////////
+  // 2. set PANID
+  /////////////////////////////////////
+  xbeeDM.setPAN( panID );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("2. PAN ID set OK to: 0x"));
+    USB.printHex( xbeeDM.PAN_ID[0] ); 
+    USB.printHex( xbeeDM.PAN_ID[1] ); 
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("2. Error calling 'setPAN()'"));  
+  }
+
+  /////////////////////////////////////
+  // 3. set encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.setEncryptionMode( encryptionMode );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbeeDM.encryptMode, DEC );
+  }
+  else 
+  {
+    USB.println(F("3. Error calling 'setEncryptionMode()'"));
+  }
+
+  /////////////////////////////////////
+  // 4. set encryption key
+  /////////////////////////////////////
+  xbeeDM.setLinkKey( encryptionKey );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("4. AES encryption key set OK"));
+  }
+  else 
+  {
+    USB.println(F("4. Error calling 'setLinkKey()'")); 
+  }
+
+  // 1.2 init RTC 
+  RTC.ON();
+  
+  // 1.4 set sleep mode for cyclic sleep mode
+  //xbeeDM.setSleepMode(0);  
+  //xbeeDM.setSleepOptions(2);
+    
+  // 1.5 Mesh Network Retries (4.7 manual digimesh)
+  xbeeDM.setMeshNetworkRetries(0x07);  
+  xbeeDM.getMeshNetworkRetries();  
+  
+  // 1.6 Set Power Lever 
+    /*
+    Parameter 	XBee-PRO
+    0 	         10dBm
+    1 	         12dBm
+    2 	         14dBm
+    3 	         16dBm 
+    4 	         18dBm
+    
+  xbeeDM.setPowerLevel(4);
+  xbeeDM.getPowerLevel();
+
+
+  // 1.7 store Waspmote identifier in EEPROM memory
+  frame.setID( WASPMOTE_ID );
+  delay(1000);  
+  */
+  
+    /////////////////////////////////////
+  // 5. write values to XBee module memory
+  /////////////////////////////////////
+  xbeeDM.writeValues();
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("5. Changes stored OK"));
+  }
+  else 
+  {
+    USB.println(F("5. Error calling 'writeValues()'"));   
+  }
+
+  USB.println(F("-------------------------------")); 
+  
+
+  
+}
+
+void loop()
+{
+  
+   
+  /////Turn on Xbee Radio ///////////
+  ///////////////////////////////////
+  
+  // 1.8 init XBee
+  xbeeDM.ON(); 
+
+// --------------------- Config Xbee -------------------------------------
+   
+  /////////////////////////////////////
+  // 1. get channel 
+  /////////////////////////////////////
+  xbeeDM.getChannel();
+  USB.print(F("channel: "));
+  USB.printHex(xbeeDM.channel);
+  USB.println();
+
+  /////////////////////////////////////
+  // 2. get PAN ID
+  /////////////////////////////////////
+  xbeeDM.getPAN();
+  USB.print(F("panid: "));
+  USB.printHex(xbeeDM.PAN_ID[0]); 
+  USB.printHex(xbeeDM.PAN_ID[1]); 
+  USB.println(); 
+  
+  /////////////////////////////////////
+  // 3. get Encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.getEncryptionMode();
+  USB.print(F("encryption mode: "));
+  USB.printHex(xbeeDM.encryptMode);
+  USB.println(); 
+  
+  USB.println(F("-------------------------------")); 
+     
+delay(500);
+
+ 
+ //----------------------------- Enter Sleep Settings ------------------------------------------------
+/* 
+///////////////////////////////////////////////
+// 2. Waspmote sleeps while XBee listens
+///////////////////////////////////////////////
+
+// Waspmote enters to sleep until XBee module wakes it up
+// It is important not to switch off the XBee module when
+// entering sleep mode calling PWR.sleep function
+// It is necessary to enable the XBee interrupt
+
+// Get starting time
+    startTime = RTC.getEpochTime();
+
+    USB.println(F("Enter deep sleep..."));
+  
+// 2.1. enables XBEE Interrupt
+    enableInterrupts(XBEE_INT);
+
+     USB.println(F("..."));
+
+/////////////// 2.2. Waspmote enters sleep mode Radio is alive ////////////////////
+//  #define ALL_OFF_ALEX SENS_OFF | UART0_OFF | UART1_OFF | BAT_OFF | RTC_OFF
+
+    PWR.sleep( SENS_OFF | BAT_OFF | RTC_OFF );
+
+    USB.println(F("After PwrSleep...Now in Power Sleep"));
+  
+///////////////////////////////////////////////
+// 3. Waspmote wakes up and check intFlag
+///////////////////////////////////////////////
+
+    USB.ON();
+    USB.println(F("...wake up!"));
+
+// init RTC 
+    RTC.ON();
+    USB.print(F("Sleeping time (seconds):"));
+    USB.println( RTC.getEpochTime() - startTime );
+   
+// After waking up check the XBee interrupt
+    if( intFlag & XBEE_INT )
+  {
+
+// Blink the red LED
+    Utils.blinkRedLED();
+    USB.println(F("--------------------"));
+    USB.println(F("XBee interruption captured!!"));
+    USB.println(F("--------------------"));
+    intFlag &= ~(XBEE_INT); // Clear flag
+  }
+*/
+
+/* Application transmissions should be done here when XBee
+   module is awake for the defined awake time. All operations
+   must be done during this period before teh XBee modules enters
+   a sleep period again*/
+
+// do nothing while XBee module remains awake before 
+// return to sleep agains after 'awake' seconds
+
+
+  //////////////////////////////////////////////////////////////////////
+  // 1. Turn on and configure sensors and wait for stabilization 
+  //	and sensor response time
+  ////////////////////////////////////////////////////////////////////// 
+
+  // Power on the atmospheric pressure sensor
+//  SensorGasv20.setSensorMode(SENS_ON, SENS_PRESSURE);
+  // Configure the CO2 sensor socket
+  SensorGasv20.configureSensor(SENS_CO2, GAINCO2);
+  // Power on the CO2 sensor
+  SensorGasv20.setSensorMode(SENS_ON, SENS_CO2);
+  // Configure the O2 sensor socket
+  SensorGasv20.configureSensor(SENS_O2, GAINO2);
+  // Power on the O2 sensor
+  SensorGasv20.setSensorMode(SENS_ON, SENS_O2);
+  // Configure the 2A sensor socket
+  SensorGasv20.configureSensor(SENS_SOCKET2A, GAINSOCKET2A, RESISTOR2A);
+  // Power on the 2A sensor socket
+  SensorGasv20.setSensorMode(SENS_ON, SENS_SOCKET2A);
+  // Configure the 2B sensor socket
+  SensorGasv20.configureSensor(SENS_SOCKET2B, GAINSOCKET2B, RESISTOR2B);
+  // Power on the 2B sensor socket
+  SensorGasv20.setSensorMode(SENS_ON, SENS_SOCKET2B);
+  // Configure the 3B sensor socket NO2
+  SensorGasv20.configureSensor(SENS_SOCKET3B, GAINSOCKET3B, RESISTOR3B);
+  // Power on the 3B sensor socket
+  SensorGasv20.setSensorMode(SENS_ON, SENS_SOCKET3B);
+  // Configure the CO sensor socket
+  SensorGasv20.configureSensor(SENS_SOCKET4CO, GAINCO, RESISTORCO);
+  // Power on the 3A sensor socket
+  SensorGasv20.setSensorMode(SENS_ON, SENS_SOCKET3A);
+   
+  delay(4000); 
+
+  ///////////////////////////////////////////
+  // 2. Read sensors
+  ///////////////////////////////////////////  
+
+  // Read the temperature sensor
+  temperature = SensorGasv20.readValue(SENS_TEMPERATURE);
+  // Read the humidity sensor
+  humidity = SensorGasv20.readValue(SENS_HUMIDITY);
+  // Read the CO2 sensor 
+  co2Val = SensorGasv20.readValue(SENS_CO2);
+  // Read the sensor 
+  o2Val = SensorGasv20.readValue(SENS_O2);
+  // Read the 2A sensor socket
+//  socket2AVal = SensorGasv20.readValue(SENS_SOCKET2A);
+//  // Conversion from voltage into kiloohms
+//  socket2AVal = SensorGasv20.calculateResistance(SENS_SOCKET2A, socket2AVal, GAINSOCKET2A, RESISTOR2A);
+//  // Read the 2B sensor socket
+//  socket2BVal = SensorGasv20.readValue(SENS_SOCKET2B);
+//  // Conversion from voltage into kiloohms
+//  socket2BVal = SensorGasv20.calculateResistance(SENS_SOCKET2B, socket2BVal, GAINSOCKET2B,RESISTOR2B);
+//  // Read the 3B sensor socket NO2
+  socket3BVal = SensorGasv20.readValue(SENS_SOCKET3B);
+  // Conversion from voltage into kiloohms
+  float socket3BValRes = SensorGasv20.calculateResistance(SENS_SOCKET3B, socket3BVal,GAINSOCKET3B, RESISTOR3B);
+  // Read the CO sensor socket
+  
+  socketCOVal = SensorGasv20.readValue(SENS_SOCKET4CO);
+  // Conversion from voltage into kiloohms
+  socketCOVal = SensorGasv20.calculateResistance( SENS_SOCKET4CO, socketCOVal, 1, 100);
+  
+  coVal = SensorGasv20.readValue(SENS_SOCKET4CO);
+  //ppmVal = SensorGasv20.calculateConcentration(coCalibrationConcentration,coCalibrationOutput,coVal);
+  //USB.print(ppmVal);
+  //USB.println(F("ppm"))												
+  float coResVal = SensorGasv20.calculateResistance(SENS_SOCKET4CO, coVal, 1, 100);
+  USB.print(coResVal);
+  USB.print(F("kohms - "));
+  ///////////////////////////////////////////
+  // 3. Turn off the sensors
+  /////////////////////////////////////////// 
+
+  // Power off the atmospheric pressure sensor
+ // SensorGasv20.setSensorMode(SENS_OFF, SENS_PRESSURE);
+  // Power off the CO2 sensor
+  SensorGasv20.setSensorMode(SENS_OFF, SENS_CO2);
+  // Power off the O2 sensor
+  SensorGasv20.setSensorMode(SENS_OFF, SENS_O2);
+  // Power off the 2A sensor socket
+  SensorGasv20.setSensorMode(SENS_OFF, SENS_SOCKET2A);
+  // Power off the 2B sensor socket
+  SensorGasv20.setSensorMode(SENS_OFF, SENS_SOCKET2B);
+  // Power off the 3B sensor socket
+  SensorGasv20.setSensorMode(SENS_OFF, SENS_SOCKET3B);
+
+  SensorGasv20.setSensorMode(SENS_OFF, SENS_SOCKET4CO);
+  ///////////////////////////////////////////
+  // 4. Create ASCII frame
+  /////////////////////////////////////////// 
+
+  // Create new frame (ASCII)
+  //frame.createFrame(MAX_FRAME);
+  frame.createFrame(ASCII);
+
+  frame.addSensor(SENSOR_STR, "SensorsNotCalibrated");
+  // Add temperature
+  frame.addSensor(SENSOR_GP_TC, temperature);
+  // Add humidity
+  frame.addSensor(SENSOR_GP_HUM, humidity);
+  // Add CO2 value
+  frame.addSensor(SENSOR_GP_CO2, co2Val);
+  // Add O2 value
+  frame.addSensor(SENSOR_GP_O2, o2Val);
+  // Add CO value
+  frame.addSensor(SENSOR_GP_CO, socketCOVal);
+  // Add NO2 value
+  frame.addSensor(SENSOR_GP_NO2, socket3BVal);
+  // Add CO2 value
+ // frame.addSensor(SENSOR_GP_O3, socket2BVal);
+  // Add NH4 value
+  frame.addSensor(SENS_SOCKET4CO, coVal);
+
+  // Show the frame
+  frame.showFrame();
+
+//int ppmVal = SensorGasv20.calculateConcentration(coCalibrationConcentration,coCalibrationOutput,coVal);
+// send XBee packet
+
+///////////////////////////////////////////
+// 4. Send packet
+///////////////////////////////////////////     
+    
+// send XBee packet
+  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+  
+  // check TX flag
+  if( error == 0 )
+  {
+    USB.println(F("send ok"));
+    
+    // blink green LED
+    Utils.blinkGreenLED();
+    
+  }
+  else 
+  {
+    USB.println(F("send error"));
+    
+    // blink red LED
+    Utils.blinkRedLED();
+  }
+
+  delay(2000);
+}
