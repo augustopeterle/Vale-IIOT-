@@ -1,0 +1,371 @@
+/*  
+
+Alex and Tom code
+11/11/2016
+ 
+ */
+
+#include <WaspSensorAgr_v20.h>
+#include <WaspFrame.h>
+#include <WaspSX1272.h>
+
+
+// Variable to store the anemometer value
+float anemometer;
+
+// Variable to store the pluviometer value
+float pluviometer1; //mm in current hour 
+float pluviometer2; //mm in previous hour
+float pluviometer3; //mm in last 24 hours
+float  pressure; // pressure sensor
+float temperature; // digital temperature sensor 
+float humidity; // digital humidity sensor 
+  
+// Variable to store the vane value
+int vane;
+
+// variable to store the number of pending pulses
+int pendingPulses;
+
+// check variable
+int e;
+
+// define node identifier
+char nodeID[] = "SA_Vit_Node_8";
+
+// Define the Meshlium address to send packets
+// The default Meshlium address is '1'
+uint8_t meshlium_address = 1;
+
+//%%%%%%%%% IMPORTANT %%%%%%%%%%%%%%%%%%%%%
+// 1.5 
+//Select the node address value: from 2 to 255 Each node must have a unique node number
+// CHANGING NODE ADDRESS FOR A NEW DEVICE
+uint8_t node_address = 8;
+
+char CH[]= "CH_12_900";
+
+void setup()
+{
+  // Turn on the USB and print a start message
+  USB.ON();
+  USB.println(F("Example AG_12. Weather Station example"));
+
+  // set node ID
+  frame.setID( nodeID ); 
+  
+    // Init sx1272 module
+  sx1272.ON();
+
+  // Turn on the sensor board
+  SensorAgrv20.ON();  
+
+  // Turn on the RTC
+  RTC.ON();
+  USB.print(F("Time:"));
+  USB.println(RTC.getTime());
+  
+  configurationLora(node_address, *CH);
+  
+  delay(500);
+}
+
+
+
+void loop()
+{
+  /////////////////////////////////////////////
+  // 1. Enter sleep mode
+  /////////////////////////////////////////////
+  SensorAgrv20.sleepAgr("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE5, SOCKET0_OFF, SENS_AGR_PLUVIOMETER);
+
+
+  /////////////////////////////////////////////
+  // 2.1. check pluviometer interruption
+  /////////////////////////////////////////////
+  if( intFlag & PLV_INT)
+  {
+    USB.println(F("+++ PLV interruption +++"));
+
+    pendingPulses = intArray[PLV_POS];
+
+    USB.print(F("Number of pending pulses:"));
+    USB.println( pendingPulses );
+
+    for(int i=0 ; i<pendingPulses; i++)
+    {
+      // Enter pulse information inside class structure
+      SensorAgrv20.storePulse();
+
+      // decrease number of pulses
+      intArray[PLV_POS]--;
+    }
+
+    // Clear flag
+    intFlag &= ~(PLV_INT); 
+  }
+
+  /////////////////////////////////////////////
+  // 2.2. check RTC interruption
+  /////////////////////////////////////////////
+  if(intFlag & RTC_INT)
+  {
+    USB.println(F("+++ RTC interruption +++"));
+    
+    // switch on sensor board
+    SensorAgrv20.ON();
+    
+    RTC.ON();
+    USB.print(F("Time:"));
+    USB.println(RTC.getTime());        
+
+    // measure sensors
+    measureSensors();
+
+    // Clear flag
+    intFlag &= ~(RTC_INT); 
+  }  
+
+}
+
+
+/*******************************************************************
+ *
+ *  measureSensors
+ *
+ *  This function reads from the sensors of the Weather Station and 
+ *  then creates a new Waspmote Frame with the sensor fields in order 
+ *  to prepare this information to be sent
+ *
+ *******************************************************************/
+void measureSensors()
+{  
+
+  USB.println(F("------------- Measurement process ------------------"));
+  
+  /////////////////////////////////////////////////////
+  // 1. Reading sensors
+  ///////////////////////////////////////////////////// 
+    // Power on the temperature sensor
+  
+  // Turn on the sensor and wait for stabilization and response time
+  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_SENSIRION);
+  delay(10000);
+
+  // Power on the pressure sensor
+  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_PRESSURE);
+    
+  // Turn on the sensor and wait for stabilization and response time
+  SensorAgrv20.setSensorMode(SENS_ON, SENS_AGR_ANEMOMETER);
+  delay(10);
+  
+
+  // Read the pressure sensor
+  pressure = SensorAgrv20.readValue(SENS_AGR_PRESSURE);
+  // Read the anemometer sensor 
+  anemometer = SensorAgrv20.readValue(SENS_AGR_ANEMOMETER);
+  
+   // Read the temperature from the sensor 
+  temperature = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_TEMP);
+
+  // Read the humidity from the sensor 
+  humidity = SensorAgrv20.readValue(SENS_AGR_SENSIRION, SENSIRION_HUM);
+  
+    // Read the pluviometer sensor 
+  pluviometer1 = SensorAgrv20.readPluviometerCurrent();
+  pluviometer2 = SensorAgrv20.readPluviometerHour();
+  pluviometer3 = SensorAgrv20.readPluviometerDay();
+  
+  // Read the vane sensor 
+  vane = SensorAgrv20.readValue(SENS_AGR_VANE);
+
+  // Turn off the sensor
+  
+  // Power off the pressure sensor
+  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_PRESSURE);
+  
+  // Power off Sensirion
+  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_SENSIRION);
+ 
+  SensorAgrv20.setSensorMode(SENS_OFF, SENS_AGR_ANEMOMETER);
+
+
+  /////////////////////////////////////////////////////
+  // 2. USB: Print the weather values through the USB
+  /////////////////////////////////////////////////////
+
+  // Print the temp value
+  USB.print(F("Temperatura: "));
+  USB.print(temperature);
+  USB.println(F(" Graus C"));
+ 
+  USB.print(F("Humidity: "));
+  USB.print(humidity);
+  USB.println(F(" %"));
+  
+  USB.print(F("Pressure: "));
+  USB.print(pressure);
+  USB.println(F(" Pascal"));
+  
+  
+  // Print the accumulated rainfall
+  USB.print(F("Current hour accumulated rainfall (mm/h): "));
+  USB.println( pluviometer1 );
+
+  // Print the accumulated rainfall
+  USB.print(F("Previous hour accumulated rainfall (mm/h): "));
+  USB.println( pluviometer2 );
+
+  // Print the accumulated rainfall
+  USB.print(F("Last 24h accumulated rainfall (mm/day): "));
+  USB.println( pluviometer3 );
+  
+  // Print the anemometer value
+  USB.print(F("Anemometer: "));
+  USB.print(anemometer);
+  USB.println(F("km/h"));
+    
+  // Print the vane value
+  char vane_str[10] = {0};
+  USB.print(F("Vane: "));
+  switch(SensorAgrv20.vaneDirection)
+  {
+  case  SENS_AGR_VANE_N   :  snprintf( vane_str, sizeof(vane_str), "N" );
+                             break;
+  case  SENS_AGR_VANE_NNE :  snprintf( vane_str, sizeof(vane_str), "NNE" );
+                             break;  
+  case  SENS_AGR_VANE_NE  :  snprintf( vane_str, sizeof(vane_str), "NE" );
+                             break;    
+  case  SENS_AGR_VANE_ENE :  snprintf( vane_str, sizeof(vane_str), "ENE" );
+                             break;      
+  case  SENS_AGR_VANE_E   :  snprintf( vane_str, sizeof(vane_str), "E" );
+                             break;    
+  case  SENS_AGR_VANE_ESE :  snprintf( vane_str, sizeof(vane_str), "ESE" );
+                             break;  
+  case  SENS_AGR_VANE_SE  :  snprintf( vane_str, sizeof(vane_str), "SE" );
+                             break;    
+  case  SENS_AGR_VANE_SSE :  snprintf( vane_str, sizeof(vane_str), "SSE" );
+                             break;   
+  case  SENS_AGR_VANE_S   :  snprintf( vane_str, sizeof(vane_str), "S" );
+                             break; 
+  case  SENS_AGR_VANE_SSW :  snprintf( vane_str, sizeof(vane_str), "SSW" );
+                             break; 
+  case  SENS_AGR_VANE_SW  :  snprintf( vane_str, sizeof(vane_str), "SW" );
+                             break;  
+  case  SENS_AGR_VANE_WSW :  snprintf( vane_str, sizeof(vane_str), "WSW" );
+                             break; 
+  case  SENS_AGR_VANE_W   :  snprintf( vane_str, sizeof(vane_str), "W" );
+                             break;   
+  case  SENS_AGR_VANE_WNW :  snprintf( vane_str, sizeof(vane_str), "WNW" );
+                             break; 
+  case  SENS_AGR_VANE_NW  :  snprintf( vane_str, sizeof(vane_str), "WN" );
+                             break;
+  case  SENS_AGR_VANE_NNW :  snprintf( vane_str, sizeof(vane_str), "NNW" );
+                             break;  
+  default                 :  snprintf( vane_str, sizeof(vane_str), "error" );
+                             break;    
+  }
+
+  USB.println( vane_str );
+  USB.println(F("----------------------------------------------------\n"));
+  
+  
+
+  /////////////////////////////////////////////////////
+  // 3. Create Waspmote Frame
+  /////////////////////////////////////////////////////
+  
+  // Create new frame
+  frame.createFrame(MAX_FRAME); 
+  
+  // add pluviometer value
+  frame.addSensor( SENSOR_PLV1, pluviometer1 );
+  // add pluviometer value
+  frame.addSensor( SENSOR_PLV2, pluviometer2 );
+  // add pluviometer value
+  frame.addSensor( SENSOR_PLV3, pluviometer3 );
+  // add anemometer value
+  frame.addSensor( SENSOR_ANE, anemometer );
+  // add pluviometer value
+  frame.addSensor( SENSOR_WV, SensorAgrv20.vaneDirection );
+   // Add pressure
+  frame.addSensor(SENSOR_PA, pressure); 
+
+  // Add temperature
+  frame.addSensor(SENSOR_TCB, temperature);
+  // Add humidity
+  frame.addSensor(SENSOR_HUMB, humidity);
+
+  // BatteryLevel
+  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());   
+  // Print frame
+  frame.showFrame();
+  
+ 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 4.6 Send packet
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  USB.println(F("----------------------------------------"));
+  USB.println(F("Sending:")); 
+  USB.println(F("----------------------------------------"));
+  
+// Sending packet before ending a timeout
+//   e = sx1272.sendPacketTimeout ( meshlium_address, frame.buffer, frame.length );
+e = sx1272.sendPacketTimeoutACKRetries ( meshlium_address, frame.buffer, frame.length );
+// if ACK was received check signal strength
+  if( e == 0 )
+  {   
+    USB.println(F("Packet sent OK"));     
+  }
+  else 
+  {
+    USB.println(F("Error sending the packet"));  
+    USB.print(F("state: "));
+    USB.println(e, DEC);
+  } 
+
+  USB.println();
+  delay(2500);
+   
+}
+
+void configurationLora(int node_address, char CH)
+{
+  
+  // Select frequency channel
+  e = sx1272.setChannel(CH_12_900);
+  USB.print(F("Setting Channel CH_12_900.\t state ")); 
+  USB.println(e);
+
+  // Select implicit (off) or explicit (on) header mode
+  e = sx1272.setHeaderON();
+  USB.print(F("Setting Header ON.\t\t state "));  
+  USB.println(e); 
+
+  // Select mode (mode 1)
+  e = sx1272.setMode(1);  
+  USB.print(F("Setting Mode '1'.\t\t state "));
+  USB.println(e);  
+
+  // Select CRC on or off
+  e = sx1272.setCRC_ON();
+  USB.print(F("Setting CRC ON.\t\t\t state "));
+  USB.println(e); 
+
+  // Select output power (Max, High or Low)
+  e = sx1272.setPower('H');
+  USB.print(F("Setting Power to 'H'.\t\t state ")); 
+  USB.println(e); 
+
+  // Select the node address value: from 2 to 255
+  e = sx1272.setNodeAddress(node_address);
+  USB.print(F("Setting Node Address to 8 .\t state "));
+  USB.println(e);
+  
+  // 2.91
+ //Select the maximum number of retries: from '0' to '5'
+  e = sx1272.setRetries(5);
+  USB.print(F("Setting Retries to '5'.\t\t state "));
+  USB.println(e);
+  USB.println();
+}
