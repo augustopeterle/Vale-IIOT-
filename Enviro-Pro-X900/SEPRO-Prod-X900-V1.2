@@ -1,0 +1,553 @@
+// Code 9.6 Change  the nodeAddress and nodeID.
+//Alex & Tom
+// Change Log // Things you need to Change
+// 1.2 char nodeID[] = "SEPro-Vit-Node26"; // Change to match you node name standard SE = Plug and sense type SEPro (Smart Environment Pro), Location and Node Number
+// 1.3 uint8_t meshlium_address = 2; Change the Meshlium address to match your gateway number
+// 1.4 char password[] = "libeliumlibelium";  Edit your 16-Byte enctyption key to match your gateway key
+// 1.5 uint8_t node_address = 26; set your sensor node number. Must be unique number for each sensor on the network for the AP
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #1 Set Global Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     
+  
+     
+//1.0
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Enter Librarys needed 
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+#include <WaspSensorGas_Pro.h>
+#include <WaspOPC_N2.h>
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// 1.1 
+//Enter Sensor objects if needed
+
+//Add any Float commands
+ 
+//Gas CO(SOCKET_1);
+Gas CO(SOCKET_2);
+//Gas CH4(SOCKET_3);
+//Gas O2(SOCKET_4);
+//Gas NO(SOCKET_5);
+Gas NO2(SOCKET_6);
+
+float temperature; 
+float humidity; 
+float pressure;
+//float concCO;
+float concCO;
+//float concCH4;
+//float concO2;
+//float concNO;
+float concNO2;
+
+char node_ID[] = "SEProtest1";
+
+int status;
+  int measure;
+//END
+  int e;
+  
+//1.2
+//Change PAN ID
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// PAN (Personal Area Network) Identifier
+uint8_t  panID[2] = {0x7F,0xFF}; 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//1.3
+// Set radio channel
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Define Freq Channel to be set: 
+// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+// Digimesh 900Mhz. Range from 0x00 to 0x0B
+uint8_t  channel = 0x01;
+
+/* 
+0x00 – Channel 0 -- 902 – 904,16 GHz
+0x01 – Channel 1 --  904,16 – 906,32 GHz
+0x02 – Channel 2 -- 906,32 – 908,48 GHz
+0x03 – Channel 3 -- 908,48 – 910,64 GHz
+0x04 – Channel 4 -- 910,64 – 912,80 GHz
+0x05 – Channel 5 -- 912,80 – 914,96 GHz
+0x06 – Channel 6 -- 914,96 – 917,12 GHz
+0x07 – Channel 7 -- 917,12 – 919,28 GHz
+0x08 – Channel 8 -- 919,28 – 921,44 GHz
+0x09 – Channel 9 -- 921,44 – 923,6 GHz
+0x0A – Channel 10 -- 923,6 – 925,76 GHz
+0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+
+//1.4 Set Gateway MAC address
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Destination MAC address
+char RX_ADDRESS[] = "0013a20040794b68";
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//OR
+
+// Define BROADCAST MAC address
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//char RX_ADDRESS[] = "000000000000FFFF";
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//1.5
+// Set Waspmote ID use site standard
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Define the Waspmote ID
+char WASPMOTE_ID[] = "SCDust1";
+
+//1.6
+// define variable
+uint8_t error;
+
+//1.7
+//If needed set encription key
+// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+uint8_t encryptionMode = 0;
+
+// Define the AES 16-byte Encryption Key
+char  encryptionKey[] = "WaspmoteValeKey!"; 
+ 
+
+
+
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #2 Config Xbee   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+void setup()
+{
+  // open USB port
+  USB.ON();
+
+  USB.println(F("-------------------------------"));
+  USB.println(F("Configure XBee Digimesh"));
+  USB.println(F("-------------------------------"));
+   USB.println(F("Frame Utility Example for Gases Pro Sensor Board"));
+
+  // store Waspmote identifier in EEPROM memory
+  frame.setID( WASPMOTE_ID );
+  
+  // init XBee 
+ xbeeDM.ON();    
+
+
+  /////////////////////////////////////
+  // 1. set channel 
+  /////////////////////////////////////
+  xbeeDM.setChannel( channel );
+
+  // check at commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("1. Channel set OK to: 0x"));
+    USB.printHex( xbeeDM.channel );
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("1. Error calling 'setChannel()'"));
+  }
+
+/////////Mesh Network Retries (4.7 manual digimesh)/////////////////////
+  xbeeDM.setMeshNetworkRetries(0x07);  
+  xbeeDM.getMeshNetworkRetries();  
+
+///////////////////// Set Power Lever ///////////////////
+/*
+Parameter 	XBee-PRO
+0 	         10dBm
+1 	         12dBm
+2 	         14dBm
+3 	         16dBm 
+4 	         18dBm
+*/
+
+
+xbeeDM.setPowerLevel(4);
+xbeeDM.getPowerLevel();
+
+//////////////////////////////////////////////
+
+  /////////////////////////////////////
+  // 2. set PANID
+  /////////////////////////////////////
+  xbeeDM.setPAN( panID );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("2. PAN ID set OK to: 0x"));
+    USB.printHex( xbeeDM.PAN_ID[0] ); 
+    USB.printHex( xbeeDM.PAN_ID[1] ); 
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("2. Error calling 'setPAN()'"));  
+  }
+
+
+  /////////////////////////////////////
+  // 3. set encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.setEncryptionMode( encryptionMode );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbeeDM.encryptMode, DEC );
+  }
+  else 
+  {
+    USB.println(F("3. Error calling 'setEncryptionMode()'"));
+  }
+
+
+
+
+  /////////////////////////////////////
+  // 4. set encryption key
+  /////////////////////////////////////
+  xbeeDM.setLinkKey( encryptionKey );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("4. AES encryption key set OK"));
+  }
+  else 
+  {
+    USB.println(F("4. Error calling 'setLinkKey()'")); 
+  }
+
+
+  
+   ////////////Set RTC Time /////////////////////////
+ // Powers RTC up, init I2C bus and read initial values
+  USB.println(F("Init RTC"));
+  RTC.ON();
+  
+  // Setting time [yy:mm:dd:dow:hh:mm:ss]
+  RTC.setTime("16:07:27:00:09:55:00");
+  USB.print(F("Setting time: "));
+ // USB.println(F("13:01:16:06:12:33:00"));
+/////////////////////////////////////////////
+
+  /////////////////////////////////////
+  // 5. write values to XBee module memory
+  /////////////////////////////////////
+  xbeeDM.writeValues();
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("5. Changes stored OK"));
+  }
+  else 
+  {
+    USB.println(F("5. Error calling 'writeValues()'"));   
+  }
+
+  USB.println(F("-------------------------------")); 
+}
+
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Prod Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+void loop()
+{
+    
+  
+  
+  /////////////////////////////////////
+  // 1. get channel 
+  /////////////////////////////////////
+  xbeeDM.getChannel();
+  USB.print(F("channel: "));
+  USB.printHex(xbeeDM.channel);
+  USB.println();
+
+  USB.print(F("Set Retries: "));
+  USB.printHex(xbeeDM.meshNetRetries);
+  USB.println();
+ /////////////////////////////////////
+  // 2. get PAN ID
+  /////////////////////////////////////
+  xbeeDM.getPAN();
+  USB.print(F("panid: "));
+  USB.printHex(xbeeDM.PAN_ID[0]); 
+  USB.printHex(xbeeDM.PAN_ID[1]); 
+  USB.println(); 
+  
+  /////////////////////////////////////
+  // 3. get Encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.getEncryptionMode();
+  USB.print(F("encryption mode: "));
+  USB.printHex(xbeeDM.encryptMode);
+  USB.println(); 
+  
+  USB.println(F("-------------------------------")); 
+     
+  delay(3000);
+
+
+/////////////////////////////////////////////
+//////////// END Digi Mesh Config ////////////
+////////////////////////////////////////////
+
+////////////RTC Time /////////////////////
+ // get Time from RTC
+  RTC.getTime();
+/////////////////////////////////////////
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #3 Sensor Config   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// 1a. Turn on particle sensor
+    ///////////////////////////////////////////  
+
+    // Power on the OPC_N2 sensor. 
+    // If the gases PRO board is off, turn it on automatically.
+    status = OPC_N2.ON();
+    if (status == 1)
+    {
+        USB.println(F("Particle sensor started"));
+
+    }
+    else
+    {
+        USB.println(F("Error starting the particle sensor"));
+    }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    // 1b. Read the particle sensor
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    if (status == 1)
+    {
+        // Power the fan and the laser and perform a measure of 8 seconds
+        measure = OPC_N2.getPM(8000);
+        if (measure == 1)
+        {
+            USB.println(F("Measure performed"));
+            USB.print(F("PM 1: "));
+            USB.print(OPC_N2._PM1);
+            USB.println(F(" ug/m3"));
+            USB.print(F("PM 2.5: "));
+            USB.print(OPC_N2._PM2_5);
+            USB.println(F(" ug/m3"));
+            USB.print(F("PM 10: "));
+            USB.print(OPC_N2._PM10);
+            USB.println(F(" ug/m3"));
+        }
+        else
+        {
+            USB.print(F("Error performing the measure. Error code:"));
+            USB.println(measure, DEC);
+        }
+    }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 1c. Turn off the particle sensor
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    // Power off the OPC_N2 sensor. If there aren't other sensors powered, 
+    // turn off the board automatically
+    OPC_N2.OFF();
+  USB.println(F(" Partical Sensor Board Off"));
+    delay(15000);
+
+
+//Power on sensors
+ // CO.ON();
+  CO.ON();
+ // CH4.ON();
+  //O2.ON();
+ // NO.ON();
+  NO2.ON();
+  
+  // Sensors need time to warm up and get a response from gas
+  // To reduce the battery consumption, use deepSleep instead delay
+  // After 2 minutes, Waspmote wakes up thanks to the RTC Alarm  
+  PWR.deepSleep("00:00:02:00", RTC_OFFSET, RTC_ALM1_MODE1, ALL_ON);
+
+//4.0
+//Turn on the sensor board
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  USB.println(F(" Turn on Sensor Board"));
+//Power on board
+  //SensorCities.ON();
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // 1. Turn on the sensors
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+USB.println(F(" Turn on Sensors "));
+  
+  
+//5.0
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 2. Read sensors
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+USB.println(F(" Read Sensors "));
+
+  
+  // Read the CO2 sensor and compensate with the temperature internally
+  //concCO = CO.getConc();
+  // Read the CO sensor and compensate with the temperature internally
+  concCO = CO.getConc();
+  // Read the O3 sensor and compensate with the temperature internally
+  //concCH4 = CH4.getConc();
+  // Read the O2 sensor and compensate with the temperature internally
+ // concO2 = O2.getConc();
+  // Read the NO sensor and compensate with the temperature internally
+  //concNO = NO.getConc();
+  // Read the NO2 sensor and compensate with the temperature internally
+  concNO2 = NO2.getConc();
+  
+  // Read enviromental variables
+  temperature = CO.getTemp();
+  humidity = CO.getHumidity();
+  pressure = CO.getPressure();
+  
+//6.0
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // 3. Turn off the sensors
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+USB.println(F(" Turn off Sensor Board"));
+//Power off sensors
+ // CO.OFF();
+  CO.OFF();
+  //CH4.OFF();
+  //O2.OFF();
+  //NO.OFF();
+  NO2.OFF();
+USB.println(F("Sensor Board off"));
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #4 Data Config  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//7.0  
+
+//%%%%%%%%%%%%%%%%%%% Binary %%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 4.2 create new frame (MAX Frame) Binary
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+USB.println(F("Create MAX Frame"));
+frame.createFrame(MAX_FRAME);  
+USB.println(frame.getFrameSize(),DEC); 
+
+//OR
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 1. Create ASCII frame
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ // create new frame
+ // frame.createFrame(ASCII);  
+  
+  // Add temperature
+  frame.addSensor(SENSOR_GP_TC, temperature);
+  // Add humidity
+  frame.addSensor(SENSOR_GP_HUM, humidity);
+  // Add pressure value
+  frame.addSensor(SENSOR_GP_PRES, pressure);
+  // Add CO2 value
+ // frame.addSensor(SENSOR_GP_CO, concCO);
+  // Add CO value
+  frame.addSensor(SENSOR_GP_CO, concCO);
+  // Add O3 value
+  //frame.addSensor(SENSOR_GP_CH4, concCH4);
+  // Add O2 value
+  //frame.addSensor(SENSOR_GP_O2, concO2);
+  // Add NO value
+  //frame.addSensor(SENSOR_GP_NO, concNO);
+  // Add NO2 value
+  frame.addSensor(SENSOR_GP_NO2, concNO2);
+  // Add PM 1
+    frame.addSensor(SENSOR_OPC_PM1, OPC_N2._PM1); 
+    // Add PM 2.5
+    frame.addSensor(SENSOR_OPC_PM2_5, OPC_N2._PM2_5); 
+    // Add PM 10
+    frame.addSensor(SENSOR_OPC_PM10, OPC_N2._PM10); 
+    // Add PM 10
+    frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+    
+
+  // add frame fields
+ // frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
+ // frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
+ // frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+   frame.showFrame();
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #5 Encript  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  
+  
+  
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #6 Send  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+//8.0 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  // 2. Send packet
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  USB.println(F("-------------------------------"));
+  USB.println(F("Send Packet"));
+  USB.println(F("-------------------------------"));
+  
+
+
+  // send XBee packet
+  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+  
+  // check TX flag
+  if( error == 0 )
+  {
+    USB.println(F("send ok"));
+    
+    // blink green LED    
+    Utils.blinkGreenLED();
+    
+  }
+  else 
+  {
+    USB.println(F("send error"));
+    
+    // blink red LED
+    Utils.blinkRedLED();
+  }
+
+  // wait for five seconds
+  delay(5000);
+  
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #7 Sleep %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// 4.7 Go to deepsleep 
+// After X Time, Waspmote wakes up thanks to the RTC Alarm
+PWR.deepSleep("00:00:00:10", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF);
+
+// Wake UP
+  USB.ON();
+  USB.println(F("\n Wake UP! \n"));
+ 
+delay(2500);
+}
+
+
