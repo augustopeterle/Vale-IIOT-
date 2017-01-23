@@ -102,7 +102,7 @@ void setup()
 
 
   // 1.4. set sleep mode for cyclic sleep mode
-  xbeeDM.setSleepMode(8);  
+  //xbeeDM.setSleepMode(8);  
   
    // 1.5 Mesh Network Retries (4.7 manual digimesh)
   xbeeDM.setMeshNetworkRetries(0x03); 
