@@ -217,6 +217,50 @@ void loop()
    module is awake for the defined awake time. All operations
    must be done during this period before teh XBee modules enters
    a sleep period again*/
+   
+///////////////////////////////////////////
+// 3. Create ASCII frame or Create Binnary frame
+/////////////////////////////////////////// 
+
+
+// Or %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ 
+ 
+///////////////////////////////////////////
+// Create ASCII frame
+/////////////////////////////////////////// 
+
+// Create new frame
+    USB.println(F("Create a new Frame:"));
+    frame.createFrame(ASCII);  
+    
+// Create frame fields
+    frame.addSensor(SENSOR_STR, "Park 4");
+    frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+  
+///////////////////////////////////////////
+// 4. Send packet
+///////////////////////////////////////////  
+
+// send XBee packet
+    error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+  
+// check TX flag
+  if( error == 0 )
+  {
+    USB.println(F("send ok"));
+    
+// blink green LED
+    Utils.blinkGreenLED();
+    
+  }
+     else 
+  {
+     USB.println(F("send error"));
+    
+// blink red LED
+     Utils.blinkRedLED();
+}
 
   // do nothing while XBee module remains awake before 
   // return to sleep agains after 'awake' seconds
