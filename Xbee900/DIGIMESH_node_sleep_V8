@@ -130,7 +130,7 @@ void loop()
 {  
 //%%%%%%%%%%%%%%%%%%%%%%%% Setting RTC time from Meshlium settings%%%%%%%%%%%%%%%%%%%%%
     // set RTC time
-  error = xbeeDM.setRTCfromMeshlium(MESHLIUM_ADDRESS);
+  error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
       
   // check flag
   if( error == 0 )
