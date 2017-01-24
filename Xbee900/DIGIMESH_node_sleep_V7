@@ -1,4 +1,32 @@
-
+/*  
+ *  ------ [DM_09] - set low power state in XBee module  -------- 
+ *  
+ *  Explanation: This program shows how to set the cyclic sleep mode
+ *  in XBee-Digimesh modules. In order to coordinate a whole sleeping 
+ *  network it is mandatory to switch on a network coordinator which
+ *  SM must be set to '7' and its SO parameter must be set to '1' so 
+ *  as to be a coordinator.     
+ *
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L. 
+ *  http://www.libelium.com 
+ *  
+ *  This program is free software: you can redistribute it and/or modify 
+ *  it under the terms of the GNU General Public License as published by 
+ *  the Free Software Foundation, either version 3 of the License, or 
+ *  (at your option) any later version. 
+ *  
+ *  This program is distributed in the hope that it will be useful, 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ *  GNU General Public License for more details. 
+ *  
+ *  You should have received a copy of the GNU General Public License 
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *  
+ *  Version:           0.2
+ *  Design:            David Gascón 
+ *  Implementation:    Yuri Carmona
+ */
 
 #include <WaspXBeeDM.h>
 #include <WaspFrame.h>
@@ -22,7 +50,6 @@ uint8_t awake[3]={ 0x00,0x13,0x88};
 // deifne variable to get running time
 unsigned long startTime;
 
-
 // PAN (Personal Area Network) Identifier
 uint8_t  panID[2] = {0x11,0x11}; 
 
@@ -30,12 +57,11 @@ uint8_t  panID[2] = {0x11,0x11};
 //////////////////////////////////////////
 char RX_ADDRESS[] = "0013A20040A5A041";
 
-// define variable
-uint8_t error;
-
 // Define the Waspmote ID
 char WASPMOTE_ID[] = "Nod4-Valepark";
 
+// define variable
+uint8_t error;
 
 void setup()
 {
@@ -53,10 +79,7 @@ void setup()
   // 1.1. init XBee
   xbeeDM.ON();
   
-  // set Waspmote identifier
-  frame.setID(WASPMOTE_ID);
-  xbeeDM.setNodeIdentifier(WASPMOTE_ID);
-  
+
   // 1.2. set time the module remains awake (ST parameter)
   xbeeDM.setAwakeTime(awake);
   
@@ -82,47 +105,9 @@ void setup()
   {
     USB.println(F("error setting SP parameter")); 
   }
-  
-    /////////////////////////////////////
-  // 2. set PANID
-  /////////////////////////////////////
-  xbeeDM.setPAN( panID );
-  // check the AT commmand execution flag
-  if( xbeeDM.error_AT == 0 ) 
-  {
-    USB.print(F("2. PAN ID set OK to: 0x"));
-    USB.printHex( xbeeDM.PAN_ID[0] ); 
-    USB.printHex( xbeeDM.PAN_ID[1] ); 
-    USB.println();
-  }
-  else 
-  {
-    USB.println(F("2. Error calling 'setPAN()'"));  
-  }
-
 
   // 1.4. set sleep mode for cyclic sleep mode
-  //xbeeDM.setSleepMode(8);  
-  
-   // 1.5 Mesh Network Retries (4.7 manual digimesh)
-  xbeeDM.setMeshNetworkRetries(0x03); 
-    
-   /////////////////////////////////////
-  // 5. write values to XBee module memory
-  /////////////////////////////////////
-  xbeeDM.writeValues();
-
-  // check the AT commmand execution flag
-  if( xbeeDM.error_AT == 0 ) 
-  {
-    USB.println(F("5. Changes stored OK"));
-  }
-  else 
-  {
-    USB.println(F("5. Error calling 'writeValues()'"));   
-  }
-
-  USB.println(F("-------------------------------")); 
+  xbeeDM.setSleepMode(8);  
 
 }
 
@@ -183,47 +168,6 @@ void loop()
 
   // do nothing while XBee module remains awake before 
   // return to sleep agains after 'awake' seconds
-  
-  ///////////////////////////////////////////
-// 3. Create ASCII frame or Create Binnary frame
-///////////////////////////////////////////  
-
-
-///////////////////////////////////////////
-// Create ASCII frame
-/////////////////////////////////////////// 
-// Create new frame
-    USB.println(F("Create a new Frame:"));
-    frame.createFrame(ASCII);  
-    
-// Create frame fields
-    frame.addSensor(SENSOR_STR, "Park 4");
-    frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
-  
-///////////////////////////////////////////
-// 4. Send packet
-///////////////////////////////////////////  
-
-// send XBee packet
-    error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
-  
-// check TX flag
-  if( error == 0 )
-  {
-    USB.println(F("send ok"));
-    
-// blink green LED
-    Utils.blinkGreenLED();
-    
-  }
-     else 
-  {
-     USB.println(F("send error"));
-    
-// blink red LED
-     Utils.blinkRedLED();
-  }
-  
-  
   delay(1000);
 }
+
