@@ -259,7 +259,7 @@ void loop()
    must be done during this period before teh XBee modules enters
    a sleep period again*/
    
-   /%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // 3.4
 // Turn on gas sensors
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
