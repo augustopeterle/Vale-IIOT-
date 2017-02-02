@@ -1,0 +1,502 @@
+/*  
+ *  ------ [DM_09] - set low power state in XBee module  -------- 
+ *  
+ *  Explanation: This program shows how to set the cyclic sleep mode
+ *  in XBee-Digimesh modules. In order to coordinate a whole sleeping 
+ *  network it is mandatory to switch on a network coordinator which
+ *  SM must be set to '7' and its SO parameter must be set to '1' so 
+ *  as to be a coordinator.     
+ *
+ *  
+ *  Version:           1.0
+ *  Design:            Tom and Carey  
+ *  Implementation:    
+ */
+
+// Change Log // Things you need to Change
+// 1.2 char nodeID[] = "SEPro-Vit-Node26"; // Change to match you node name standard SE = Plug and sense type SEPro (Smart Environment Pro), Location and Node Number
+// 1.3 uint8_t meshlium_address = 2; Change the Meshlium address to match your gateway number
+// 1.4 char password[] = "libeliumlibelium";  Edit your 16-Byte enctyption key to match your gateway key
+// 1.5 uint8_t node_address = 26; set your sensor node number. Must be unique number for each sensor on the network for the AP
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #1 Set Global Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// 1.0 library
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+#include <WaspOPC_N2.h>
+#include <WaspSensorGas_Pro.h>
+#include <WaspAES.h>
+
+// 1.1 
+//Each object will be used by each gas sensor
+  Gas CO(SOCKET_A);
+  Gas O2(SOCKET_B);
+  Gas CO2(SOCKET_C);
+  Gas NO2(SOCKET_F);
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 1.2
+//General Float and int commands
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  float conc_CO;		// Stores the concentration level of CO in ppm
+  float conc_O2;		// Stores the concentration level of O2 in ppm
+  float conc_CO2;		// Stores the concentration level of CO2 in ppm
+  float conc_NO2;		// Stores the concentration level of NO2 in ppm
+  float temperature;	        // Stores the temperature in ºC
+  float humidity;		// Stores the realitve humidity in %RH
+  float pressure;		// Stores the pressure in Pa
+  int status;
+  int measure;
+  int e;
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 1.3
+//Default Sleep Options
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+// SP parameter: Time to be asleep -> 5 seconds: 0x0001F4 (hex format, time in units of 10ms)
+// Other possible values: 
+//   0x0003E8 (10 seconds)
+//   0x0000C8 (2 seconds)
+//   0x0005DC (15 seconds)
+//   0x001770 (60 seconds)
+uint8_t asleep[3]={ 0x00,0x01,0xF4};
+
+// ST parameter: Time to be awake -> 5 seconds: 0x001388 (hex format, time in units of 1ms)
+// Other possible values: 
+//   0x002710 (10 seconds)
+//   0x0007D0 (2 seconds)
+//   0x003A98 (15 seconds)
+//   0x00EA60 (60 seconds)
+uint8_t awake[3]={ 0x00,0x13,0x88};
+
+// deifne variable to get running time
+unsigned long startTime;
+
+// 1.4
+// PAN (Personal Area Network) Identifier
+uint8_t  panID[2] = {0x11,0x11}; 
+
+//1.5
+// Define Unicast
+//////////////////////////////////////////
+char RX_ADDRESS[] = "0013A20040A5A041";
+
+//or
+// Define Multi Cast
+//////////////////////////////////////////
+//char RX_ADDRESS[] = "0013A20040A5A041";
+
+// Define the Waspmote ID
+char WASPMOTE_ID[] = "Nod4-Valepark";
+
+// define variable
+uint8_t error;
+
+
+
+void setup()
+{
+  // Init USB port
+  USB.ON();
+  USB.println(F("Cyclic sleep example"));
+
+  // init RTC 
+  RTC.ON();
+
+  //////////////////////////
+  // 1. XBee setup
+  //////////////////////////
+
+  // 1.1. init XBee
+  xbeeDM.ON();
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+//%%%%%%%%%%%%%%%%%%%%%%%%Sleep setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+  // 1.2. set time the module remains awake (ST parameter)
+  xbeeDM.setAwakeTime(awake);
+  
+  // check AT command flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("ST parameter set ok"));
+  }
+  else 
+  {
+    USB.println(F("error setting ST parameter")); 
+  }
+
+  // 1.3. set Sleep period (SP parameter)
+  xbeeDM.setSleepTime(asleep);
+  
+  // check AT command flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("SP parameter set ok"));
+  }
+  else 
+  {
+    USB.println(F("error setting SP parameter")); 
+  }
+
+  // 1.4. set sleep mode for cyclic sleep mode
+  xbeeDM.setSleepMode(8);  
+  
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Sleep %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Setup Radio X900 %%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// set Waspmote identifier
+  frame.setID(WASPMOTE_ID);
+xbeeDM.setNodeIdentifier(WASPMOTE_ID);
+
+   /////////////////////////////////////
+  // 2. set PANID
+  /////////////////////////////////////
+  xbeeDM.setPAN( panID );
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("2. PAN ID set OK to: 0x"));
+    USB.printHex( xbeeDM.PAN_ID[0] ); 
+    USB.printHex( xbeeDM.PAN_ID[1] ); 
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("2. Error calling 'setPAN()'"));  
+  }  
+  
+   // 1.5 Mesh Network Retries (4.7 manual digimesh)
+  xbeeDM.setMeshNetworkRetries(0x03); 
+    
+  /////////////////////////////////////
+  // 5. write values to XBee module memory
+  /////////////////////////////////////
+  xbeeDM.writeValues();
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("5. Changes stored OK"));
+  }
+  else 
+  {
+    USB.println(F("5. Error calling 'writeValues()'"));   
+  }
+
+  USB.println(F("-------------------------------")); 
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+//%%%%%%%%%%%%%%%%%%%%%%%%End Radio Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+}
+
+
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+void loop()
+{  
+  ///////////////////////////////////////////////
+  // 2. Waspmote sleeps while XBee sleeps
+  ///////////////////////////////////////////////
+
+  // Waspmote enters to sleep until XBee module wakes it up
+  // It is important not to switch off the XBee module when
+  // entering sleep mode calling PWR.sleep function
+  // It is necessary to enable the XBee interrupt
+
+  // get starting time
+  startTime = RTC.getEpochTime();
+
+  USB.println(F("Enter deep sleep..."));
+  
+  // 2.1. enables XBEE Interrupt
+  enableInterrupts(XBEE_INT);
+
+  // 2.2. Waspmote enters sleep mode
+  PWR.sleep( SENS_OFF );
+
+
+  ///////////////////////////////////////////////
+  // 3. Waspmote wakes up and check intFlag
+  ///////////////////////////////////////////////
+
+  USB.println(F("...wake up!"));
+
+  // init RTC 
+  RTC.ON();
+  
+  USB.print(F("Sleeping time (seconds):"));
+  USB.println( RTC.getEpochTime() - startTime );
+ 
+  
+  // After waking up check the XBee interrupt
+  if( intFlag & XBEE_INT )
+  {
+    // blink the red LED
+    Utils.blinkRedLED();
+
+    USB.println(F("--------------------"));
+    USB.println(F("XBee interruption captured!!"));
+    USB.println(F("--------------------"));
+    
+    intFlag &= ~(XBEE_INT); // Clear flag
+  }
+
+
+
+  /* Application transmissions should be done here when XBee
+   module is awake for the defined awake time. All operations
+   must be done during this period before teh XBee modules enters
+   a sleep period again*/
+   
+  
+ 
+   
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #3 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Enter Sensor Options %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.0
+//Turn on particle sensor
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// 3.1
+//Power on the OPC_N2 sensor. 
+// If the gases PRO board is off, turn it on automatically.
+  status = OPC_N2.ON();
+  if (status == 1)
+  {
+      USB.println(F("Particle sensor started"));
+  }
+  else
+  {
+      USB.println(F("Error starting the particle sensor"));
+  }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.2
+//Read the particle sensor
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  if (status == 1)
+  {
+// Power the fan and the laser and perform a measure of 8 seconds
+  measure = OPC_N2.getPM(8000);
+    if (measure == 1)
+    {
+      USB.println(F("Measure performed"));
+      USB.print(F("PM 1: "));
+      USB.print(OPC_N2._PM1);
+      USB.println(F(" ug/m3"));
+      USB.print(F("PM 2.5: "));
+      USB.print(OPC_N2._PM2_5);
+      USB.println(F(" ug/m3"));
+      USB.print(F("PM 10: "));
+      USB.print(OPC_N2._PM10);
+      USB.println(F(" ug/m3"));
+    }
+    else
+    {
+      USB.print(F("Error performing the measure. Error code:"));
+      USB.println(measure, DEC);
+    }
+  }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//3.3
+// Turn off the particle sensor
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+// Power off the OPC_N2 sensor. If there aren't other sensors powered, 
+// turn off the board automatically
+    OPC_N2.OFF();
+
+    delay(10000);
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.4
+// Turn on gas sensors
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    CO.ON();
+    O2.ON();
+    CO2.ON();
+    NO2.ON();
+
+// 3.5 
+// The sensor needs time to warm up and get a response from gas
+// To reduce the battery consumption, use deepSleep instead delay
+// After 2 minutes, Waspmote wakes up thanks to the RTC Alarm
+
+    PWR.deepSleep("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE1, ALL_ON);
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.6
+// Read gas sensors
+// Read the sensors and compensate with the temperature internally
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+
+    conc_CO = CO.getConc();
+    conc_O2 = O2.getConc();
+    conc_CO2 = CO2.getConc();
+    conc_NO2 = NO2.getConc();
+
+// 3.7
+// Read enviromental variables
+// In this case, CO objet has been used.
+// O2, CO2 or NO2 objects could be used with the same result
+    temperature = CO.getTemp();
+    humidity = CO.getHumidity();
+    pressure = CO.getPressure();
+
+// 3.8
+// And print the values via USB
+    USB.println(F("***************************************"));
+    USB.print(F("CO concentration: "));
+    USB.print(conc_CO);
+    USB.println(F(" ppm"));
+    USB.print(F("O2 concentration: "));
+    USB.print(conc_O2);
+    USB.println(F(" ppm"));
+    USB.print(F("CO2 concentration: "));
+    USB.print(conc_CO2);
+    USB.println(F(" ppm"));
+    USB.print(F("NO2 concentration: "));
+    USB.print(conc_NO2);
+    USB.println(F(" ppm"));
+    USB.print(F("Temperature: "));
+    USB.print(temperature);
+    USB.println(F(" Celsius degrees"));
+    USB.print(F("RH: "));
+    USB.print(humidity);
+    USB.println(F(" %"));
+    USB.print(F("Pressure: "));
+    USB.print(pressure);
+    USB.println(F(" Pa"));
+    
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.9 Show Battery levels
+// Show the remaining battery level
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    USB.print(F("Battery Level: "));
+    USB.print(PWR.getBatteryLevel(),DEC);
+    USB.print(F(" %"));
+  
+// Show the battery Volts
+    USB.print(F(" | Battery (Volts): "));
+    USB.print(PWR.getBatteryVolts());
+    USB.println(F(" V"));
+  
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 3.91
+// Turn off the gas sensors
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+// 3.92
+// Power off the sensors sensor. If there aren't more gas sensors powered, 
+
+    CO.OFF();
+    O2.OFF();
+    CO2.OFF();
+NO2.OFF(); 
+   
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #4 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Create Frame %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+   
+///////////////////////////////////////////
+// 3. Create ASCII frame or Create Binnary frame
+/////////////////////////////////////////// 
+
+//%%%%%%%%%%%%%%%%%%% Binary %%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 4.2 create new frame (MAX Frame) Binary
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//frame.createFrame(MAX_FRAME);  
+//USB.println(frame.getFrameSize(),DEC); 
+
+// Or %%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ 
+///////////////////////////////////////////
+// Create ASCII frame
+/////////////////////////////////////////// 
+
+// Create new frame
+    USB.println(F("Create a new Frame:"));
+    frame.createFrame(ASCII);  
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 4.4 Sensor Frames
+
+// Add CO concentration
+    frame.addSensor(SENSOR_GP_CO, conc_CO);
+// Add O2 concentration
+    frame.addSensor(SENSOR_GP_O2, conc_O2);
+// Add CO2 concentration
+    frame.addSensor(SENSOR_GP_CO2, conc_CO2);
+// Add NO2 concentration
+    frame.addSensor(SENSOR_GP_NO2, conc_NO2);
+// Add temperature
+    frame.addSensor(SENSOR_GP_TC, temperature);
+// Add humidity
+    frame.addSensor(SENSOR_GP_HUM, humidity);
+// Add pressure
+    frame.addSensor(SENSOR_GP_PRES, pressure);	
+// Add PM 1
+    frame.addSensor(SENSOR_OPC_PM1, OPC_N2._PM1); 
+// Add PM 2.5
+    frame.addSensor(SENSOR_OPC_PM2_5, OPC_N2._PM2_5); 
+// Add PM 10
+    frame.addSensor(SENSOR_OPC_PM10, OPC_N2._PM10); 
+ 
+// Add Battery Level
+    frame.addSensor(SENSOR_STR, "Park 4");
+    frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+  
+///////////////////////////////////////////
+// 4. Send packet
+///////////////////////////////////////////  
+
+// send XBee packet
+    error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+  
+// check TX flag
+  if( error == 0 )
+  {
+    USB.println(F("send ok"));
+    
+// blink green LED
+    Utils.blinkGreenLED();
+    
+  }
+     else 
+  {
+     USB.println(F("send error"));
+    
+// blink red LED
+     Utils.blinkRedLED();
+}
+
+  // do nothing while XBee module remains awake before 
+  // return to sleep agains after 'awake' seconds
+  delay(1000);
+}
