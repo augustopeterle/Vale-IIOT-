@@ -1,0 +1,520 @@
+/*
+* ------ [900_01] - configure basic XBee parameters --------
+*
+* Implementation: Alex & Tom
+*/
+
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+#include <WaspSensorSW.h>
+
+#include <TurbiditySensor.h>
+#include <ModbusMaster485.h>
+#include <Wasp485.h>
+
+///////////////////////////////////
+// define variable
+///////////////////////////////////
+
+turbiditySensorClass turbiditySensor;
+float value_turb; // Turbidity Sensor
+float value_pH; //PH sensor
+float value_temp; //Temp 
+float value_pH_calculated; //PH sensor
+float value_orp; //Oxidation-reduction
+float value_orp_calculated; //Oxidation-reduction
+float value_di; //Dissolved Ions
+float value_do; // Dissolved Oxygen
+float value_do_calculated; // Dissolved Oxygen
+float value_cond; //Conductivity Sensor
+float value_cond_calculated; ////Conductivity Sensor
+uint8_t error;
+
+
+
+
+//-------------------------------------------------   Calibration ------------------------------------------------------------
+
+/////////////////////////////////////////
+// Calibration values
+////////////////////////////////////////
+#define cal_point_10 1.980
+#define cal_point_7 2.095
+#define cal_point_4 2.245
+
+// Temperature at which calibration was carried out
+#define cal_temp 22.115
+
+// Offset obtained from sensor calibration
+#define calibration_offset 0.016
+
+// %%%%%%% Dissolved Oxygen Sensor Reading %%%%%%%%%
+// Calibration of the sensor in normal air
+#define air_calibration 2.848
+// Calibration of the sensor under 0% solution
+#define zero_calibration 0.0023585968
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
+    
+// Value 1 used to calibrate the sensor
+//#define point1_cond 10500
+// Value 2 used to calibrate the sensor
+//#define point2_cond 40000
+// Point 1 of the calibration 
+#define point1_cal 197.00
+// Point 2 of the calibration 
+#define point2_cal 150.00
+
+//////////////////////////////////////////
+// PAN (Personal Area Network) Identifier
+    uint8_t panID[2] = {0x11,0x11};
+
+
+// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+    uint8_t encryptionMode = 0;
+
+
+// Define the AES 16-byte Encryption Key
+    char encryptionKey[] = "WaspmoteLinkKey!";
+
+// Define Freq Channel to be set: 
+// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+// Digimesh 900Mhz. Range from 0x00 to 0x0B
+uint8_t  channel = 0x01;
+
+/* 
+0x00 – Channel 0 -- 902 – 904,16 GHz
+0x01 – Channel 1 --  904,16 – 906,32 GHz
+0x02 – Channel 2 -- 906,32 – 908,48 GHz
+0x03 – Channel 3 -- 908,48 – 910,64 GHz
+0x04 – Channel 4 -- 910,64 – 912,80 GHz
+0x05 – Channel 5 -- 912,80 – 914,96 GHz
+0x06 – Channel 6 -- 914,96 – 917,12 GHz
+0x07 – Channel 7 -- 917,12 – 919,28 GHz
+0x08 – Channel 8 -- 919,28 – 921,44 GHz
+0x09 – Channel 9 -- 921,44 – 923,6 GHz
+0x0A – Channel 10 -- 923,6 – 925,76 GHz
+0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+
+
+// Destination MAC address /////////////// 
+//////////////////////////////////////////
+    char RX_ADDRESS[] = "0013A20040A5A041";
+//char RX_ADDRESS[] = "000000000000FFFF";
+//////////////////////////////////////////
+
+// Define the Waspmote ID
+    char WASPMOTE_ID[] = "Node1_SW_Vitoria Park";
+
+// deifne variable to get running time
+    unsigned long startTime;
+
+
+    pHClass pHSensor;
+    ORPClass ORPSensor;
+    DIClass DISensor;
+    DOClass DOSensor;
+    conductivityClass ConductivitySensor;
+    pt1000Class TemperatureSensor;
+
+
+       
+                                          
+// ---------------------------------------------- Config Calibration Values ----------------------------------------------------------
+
+void setup()
+{
+  
+// Configure the calibration values
+  pHSensor.setCalibrationPoints(cal_point_10, 
+                                cal_point_7, 
+                                cal_point_4, 
+                                cal_temp);
+  DOSensor.setCalibrationPoints(air_calibration, zero_calibration);
+// ConductivitySensor.setCalibrationPoints(point1_cond,
+//                                         point1_cal, 
+//                                         point2_cond, 
+//                                         point2_cal);
+// open USB port
+
+
+// ---------------------------------------------- Config Xbee ----------------------------------------------------------
+    USB.ON();
+
+    USB.println(F("-------------------------------"));
+    USB.println(F("Configure XBee Digi Mesh 900"));
+    //USB.println(F("Sending Packets"));
+    USB.println(F("-------------------------------"));
+
+
+// init XBee
+    xbeeDM.ON(SOCKET1);
+
+// store Waspmote identifier in EEPROM memory
+    frame.setID( WASPMOTE_ID );
+    
+
+/////////////////////////////////////
+// 1. set PANID
+/////////////////////////////////////
+    xbeeDM.setPAN( panID );
+
+// check the AT commmand execution flag
+    if( xbeeDM.error_AT == 0 )
+{
+    USB.print(F("1. PAN ID set OK to: 0x"));
+    USB.printHex( xbeeDM.PAN_ID[0] );
+    USB.printHex( xbeeDM.PAN_ID[1] );
+    USB.println();
+}
+  else
+{
+    USB.println(F("1. Error calling 'setPAN()'"));
+}
+
+/////////////////////////////////////
+  // 1. set channel 
+  /////////////////////////////////////
+  xbeeDM.setChannel( channel );
+
+  // check at commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("1. Channel set OK to: 0x"));
+    USB.printHex( xbeeDM.channel );
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("1. Error calling 'setChannel()'"));
+}
+
+
+/////////////////////////////////////
+// 2. set encryption mode (1:enable; 0:disable)
+/////////////////////////////////////
+    xbeeDM.setEncryptionMode( encryptionMode );
+
+
+// check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 )
+{
+    USB.print(F("2. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbeeDM.encryptMode, DEC );
+}
+else
+{
+    USB.println(F("2. Error calling 'setEncryptionMode()'"));
+}
+
+
+/////////////////////////////////////
+// 3. set encryption key
+/////////////////////////////////////
+    xbeeDM.setLinkKey( encryptionKey );
+
+// check the AT commmand execution flag
+    if( xbeeDM.error_AT == 0 )
+{
+    USB.println(F("3. AES encryption key set OK"));
+}
+  else
+{
+    USB.println(F("3. Error calling 'setLinkKey()'"));
+}
+
+// 1.4 set sleep mode for cyclic sleep mode
+    xbeeDM.setSleepMode(0); 
+/////////////////////////////////////
+
+
+// 4. write values to XBee module memory
+/////////////////////////////////////
+    xbeeDM.writeValues();
+
+// check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 )
+{
+    USB.println(F("4. Changes stored OK"));
+}
+  else
+{
+    USB.println(F("4. Error calling 'writeValues()'"));
+}
+
+    USB.println(F("-------------------------------"));
+}
+
+  void loop()
+{
+ 
+// --------------------------------------------------------End Xbee Config-------------------------------------------------------------------- 
+
+
+//                         ----------------------------- Pint Xbee Config ------------------------------------------------------
+
+   
+  /////////////////////////////////////
+  // 1. get channel 
+  /////////////////////////////////////
+  xbeeDM.getChannel();
+  USB.print(F("channel: "));
+  USB.printHex(xbeeDM.channel);
+  USB.println();
+
+  /////////////////////////////////////
+  // 2. get PAN ID
+  /////////////////////////////////////
+  xbeeDM.getPAN();
+  USB.print(F("panid: "));
+  USB.printHex(xbeeDM.PAN_ID[0]); 
+  USB.printHex(xbeeDM.PAN_ID[1]); 
+  USB.println(); 
+  
+  /////////////////////////////////////
+  // 3. get Encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.getEncryptionMode();
+  USB.print(F("encryption mode: "));
+  USB.printHex(xbeeDM.encryptMode);
+  USB.println(); 
+  
+  USB.println(F("-------------------------------")); 
+     
+  delay(3000);
+
+//----------------------------------------------------------End Print config ----------------------------------------------------------------
+
+  
+// --------------------------------------------------------Read Sensors ----------------------------------------------------------------------  
+  ///////////////////////////////////////////
+  // 1. Turn on the board
+  /////////////////////////////////////////// 
+
+  SensorSW.ON();
+  delay(2000);
+// ------------------------------------------------------- Turbidity -------------------------------------------------------------------------
+ turbiditySensor.ON();
+ delay(2000);
+  // Result of the communication
+    int result = -1;
+    int retries = 0;
+    
+  ///////////////////////////////////////////////////////////
+  // Get Turbidity Measure
+  ///////////////////////////////////////////////////////////
+
+  // Initializes the retries counter
+  retries = 0;
+
+  // This variable will store the result of the communication
+  // result = 0 : no errors 
+  // result = 1 : error occurred
+  result = -1;
+
+  while ((result !=0) & (retries < 5)) 
+  {  
+    retries ++;
+    result = turbiditySensor.readTurbidity();
+    //USB.print(result);
+    delay(10);
+  }
+
+
+delay(500);   
+
+value_turb = turbiditySensor.getTurbidity();
+  
+     ///////////////////////////////////////////////////////////
+  // Print Turbidity Value
+  ///////////////////////////////////////////////////////////
+  if (result == 0) {
+  //  float turbidity = turbiditySensor.getTurbidity();
+    USB.print(F("Turbidity value: "));
+   // USB.print(turbidity);    
+    USB.print(value_turb);    
+    USB.println(F(" NTU"));
+  } else {
+USB.println(F("Error while reading turbidity sensor"));
+  }
+//----------------------------------------------------- Read Other Sensors ---------------------------------------------------
+
+  ///////////////////////////////////////////
+  // 2. Read sensors
+  ///////////////////////////////////////////  
+  
+USB.println(F("5. Read Sensors"));
+// Read the ph sensor
+    value_pH = pHSensor.readpH();
+// Convert the value read with the information obtained in calibration
+    value_pH_calculated = pHSensor.pHConversion(value_pH,value_temp);
+
+// Read the temperature sensor
+    value_temp = TemperatureSensor.readTemperature();
+
+// Reading of the ORP sensor
+    value_orp = ORPSensor.readORP();
+// Apply the calibration offset
+    value_orp_calculated = value_orp - calibration_offset;
+ 
+// Reading of the DI sensor
+//   value_di = DISensor.readDI();
+
+  
+  delay(500);  
+
+// Reading of the ORP sensor
+    value_do = DOSensor.readDO();
+// Conversion from volts into dissolved oxygen percentage
+    value_do_calculated = DOSensor.DOConversion(value_do);
+  
+// Reading of the Conductivity sensor
+  //  value_cond = ConductivitySensor.readConductivity();
+// Conversion from resistance into ms/cm
+  // value_cond_calculated = ConductivitySensor.conductivityConversion(value_cond);
+  delay(1000);
+  
+  ///////////////////////////////////////////
+  // 3. Turn off the sensors
+  /////////////////////////////////////////// 
+
+  SensorSW.OFF();
+ USB.println(F("6. Sensors Off"));
+ turbiditySensor.OFF();
+  //wait 2 seconds
+delay(2000);
+
+//                        ----------------------------- Read Sensors End -------------------------------------------------  
+ 
+//                        ----------------------------- Enter Sleep Settings ------------------------------------------------
+ 
+ 
+///////////////////////////////////////////////
+// 2. Waspmote sleeps while XBee listens
+///////////////////////////////////////////////
+
+// Waspmote enters to sleep until XBee module wakes it up
+// It is important not to switch off the XBee module when
+// entering sleep mode calling PWR.sleep function
+// It is necessary to enable the XBee interrupt
+
+// Get starting time
+    startTime = RTC.getEpochTime();
+
+    USB.println(F("Enter deep sleep..."));
+  
+// 2.1. enables XBEE Interrupt
+    enableInterrupts(XBEE_INT);
+
+     USB.println(F("..."));
+
+/////////////// 2.2. Waspmote enters sleep mode Radio is alive ////////////////////
+//  #define ALL_OFF_ALEX SENS_OFF | UART0_OFF | UART1_OFF | BAT_OFF | RTC_OFF
+
+    PWR.sleep( SENS_OFF | BAT_OFF | RTC_OFF );
+
+    USB.println(F("After PwrSleep...Now in Power Sleep"));
+  
+///////////////////////////////////////////////
+// 3. Waspmote wakes up and check intFlag
+///////////////////////////////////////////////
+
+    USB.ON();
+    USB.println(F("...wake up!"));
+
+// init RTC 
+    RTC.ON();
+    USB.print(F("Sleeping time (seconds):"));
+    USB.println( RTC.getEpochTime() - startTime );
+   
+// After waking up check the XBee interrupt
+    if( intFlag & XBEE_INT )
+  {
+
+// Blink the red LED
+    Utils.blinkRedLED();
+    USB.println(F("--------------------"));
+    USB.println(F("XBee interruption captured!!"));
+    USB.println(F("--------------------"));
+    intFlag &= ~(XBEE_INT); // Clear flag
+  }
+
+
+/* Application transmissions should be done here when XBee
+   module is awake for the defined awake time. All operations
+   must be done during this period before teh XBee modules enters
+   a sleep period again
+
+// do nothing while XBee module remains awake before 
+// return to sleep agains after 'awake' seconds
+*/  
+  
+// -------------------------------------------------------Create Frame and send ----------------------------------------------
+ 
+///////////////////////////////////////////
+// 1. Create Max Frame Binnary frame
+///////////////////////////////////////////
+
+// create new frame
+   // frame.createFrame(ASCII);  
+    frame.createFrame(MAX_FRAME);  
+//USB.println(frame.getFrameSize(),DEC); 
+
+// Add frame fields
+
+// Add Bettery
+frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
+
+// Add temperature
+  frame.addSensor(SENSOR_WT, value_temp);
+  
+// Add PH
+  frame.addSensor(SENSOR_PH, value_pH_calculated);
+  
+// Add ORP value
+  frame.addSensor(SENSOR_ORP, value_orp_calculated);
+  
+// Add DI value
+  //frame.addSensor(SENSOR_DINA, value_di);
+  
+// Add DO value
+  frame.addSensor(SENSOR_DO, value_do_calculated);
+  
+// Add conductivity value
+  //frame.addSensor(SENSOR_COND, value_cond_calculated);
+
+// Add TurbiditySensor
+frame.addSensor(SENSOR_TURB, value_turb);
+
+// Show the frame
+frame.showFrame();
+
+///////////////////////////////////////////
+// 2. Send packet
+///////////////////////////////////////////
+
+// send XBee packet
+error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+USB.println(F("1. Frame Sent"));
+
+// check TX flag
+if( error == 0 )
+{
+USB.println(F("send ok"));
+
+// blink green LED
+Utils.blinkGreenLED();
+
+}
+else
+{
+USB.println(F("send error"));
+
+// blink red LED
+Utils.blinkRedLED();
+}
+
+// wait for five seconds
+delay(5000);
+
+}
