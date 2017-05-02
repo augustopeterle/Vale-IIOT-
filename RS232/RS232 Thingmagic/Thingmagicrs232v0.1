@@ -1,0 +1,91 @@
+/* On Start:
+
+Areas
+1.         Open Serial port with default baudrate (9600).
+2.         Send Command to Boot Firmware of the reader; this is required only on initial start.
+3.         Send a command to get Firmware details; this step is to read the details about the reader and it’s not mandatory.
+4.         Send a command to check whether the reader is still in Booting cycle or ready for application use.
+5.         Send Command to reader to set the higher Baud rate.
+6.         Update Serial port baudrate to the same as reader, so that both can communicate with same baudrate. If baudrate is different, reader won’t respond to commands so it’s mandatory to set the baudrate same.
+7.         Send Command to set the Tag Protocol to Gen2.
+8.         Check and send command to set the current region to NA.
+9.         Send command to set read tag multiple
+10.       Send Command to get Tag buffer; at once reader returns 13 RFID tag details. If the Tag buffer is having more than 13, send get tag buffer command multiples times in the multiples of 13.
+11.       Send command to clear tag buffer.
+12.       Repeat commands from 9 – 11 to continuously read data from reader.
+
+On Close:
+1.         Send command to reader for setting the baudrate to default (9600), this is required to listen the response from reader on start.
+2.         Close the Serial port if it’s open.
+
+
+
+
+
+ *  Version:          .1
+ *  Design:           Tom/Alex
+ *  Implementation:   Chris Bertrand
+ */
+
+//Include always this library when you are using the Wasp232 functions  
+#include <Wasp232.h>
+
+
+void setup()
+{
+  // Power on the USB for viewing data in the serial monitor  
+  // Note : if you are using the socket 0 for communication, 
+  // for viewing data in the serial monitor, you should open
+  // the USB at the same speed
+  USB.ON();
+  delay(100);
+  
+  // Powers on the module and assigns the UART in socket0  
+  W232.ON(SOCKET0);  	 
+  delay(100);  
+  
+  // %%%%%%%%%%%%%%% Area #1 Set Communications   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // Configure the baud rate of the module
+  W232.baudRateConfig(115200);
+ 
+  // Configure the parity bit as disabled  
+  W232.parityBit(NONE);
+
+  // Use one stop bit configuration
+  W232.stopBitConfig(1);
+
+  delay(100);
+  
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  // Hello message 
+  USB.println(F("RS-232 serial communication properly initialized."));
+  USB.println(F("Hello, this is RS-232 communication send example!")); 
+
+  delay(100);
+}
+
+void loop() 
+{
+ 
+
+// %%%%%%%%%%%%%%%%%%%%%%%%Area 2 Boot Firmware %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Send data through RS-232 line
+
+//HEX 0xFF, 0x00, 0x04, 0x1D, 0x0B
+//DEC 255,0,4,29,11
+
+int data = 255,0,4,29,11;
+// Send 12345 in binary base. It prints 0110 000 0011 1001.
+W232.send(data, BIN);
+// Send 12345 in octal base. It prints 30071.
+W232.send(data, OCT);
+// Send 12345 in decimal base. It prints 12345.
+W232.send(data, DEC);
+// Send 12345 in hexadecimal base. It prints 3039.
+W232.send(data, HEX);
+}   
+
+  delay(2000);
+
+}
