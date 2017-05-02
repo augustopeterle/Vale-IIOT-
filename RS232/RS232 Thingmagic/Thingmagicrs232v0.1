@@ -46,7 +46,7 @@ void setup()
   
   // %%%%%%%%%%%%%%% Area #1 Set Communications   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // Configure the baud rate of the module
-  W232.baudRateConfig(115200);
+  W232.baudRateConfig(9600);
  
   // Configure the parity bit as disabled  
   W232.parityBit(NONE);
@@ -55,7 +55,7 @@ void setup()
   W232.stopBitConfig(1);
 
   delay(100);
-  
+
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   // Hello message 
@@ -63,7 +63,9 @@ void setup()
   USB.println(F("Hello, this is RS-232 communication send example!")); 
 
   delay(100);
+
 }
+
 
 void loop() 
 {
@@ -71,21 +73,41 @@ void loop()
 
 // %%%%%%%%%%%%%%%%%%%%%%%%Area 2 Boot Firmware %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Send data through RS-232 line
-
+  
 //HEX 0xFF, 0x00, 0x04, 0x1D, 0x0B
 //DEC 255,0,4,29,11
+  
+//int data1 = 255,0,4,29,11;
+    int data1 = 25500042911;
+// Send 12345 in hexadecimal base. It prints 0xFF, 0x00, 0x04, 0x1D, 0x0B.
+    W232.send(data1, HEX);
+    delay(2000);
+   
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-int data = 255,0,4,29,11;
-// Send 12345 in binary base. It prints 0110 000 0011 1001.
-W232.send(data, BIN);
-// Send 12345 in octal base. It prints 30071.
-W232.send(data, OCT);
-// Send 12345 in decimal base. It prints 12345.
-W232.send(data, DEC);
-// Send 12345 in hexadecimal base. It prints 3039.
-W232.send(data, HEX);
-}   
 
-  delay(2000);
+// %%%%%%%%%%%%%%%%%%%%%%%% Firmware Details%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Send data through RS-232 line
+
+//HEX 0xFF, 0x00, 0x03, 0x1D, 0x0c
+//DEC 255,00,03,29,12
+ 
+int data2 = 25500032912;
+// Send 12345 in hexadecimal base. It prints 0xFF, 0x00, 0x03, 0x1D, 0x0c .
+W232.send(data2, HEX);
+     
+     
+ // %%%%%%%%%%%%%%%%%%%%%%%% Listem for Data Recived %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Print Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+      
+  if(W232.receive() > 0)
+  { 
+    USB.println(W232._buffer, W232._length);
+  }
+
+  delay(100);   
+     
+ 
+ 
 
 }
