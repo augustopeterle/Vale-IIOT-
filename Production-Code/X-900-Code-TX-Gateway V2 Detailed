@@ -1,0 +1,322 @@
+/*  
+ *  ------ Waspmote Pro Code Example -------- 
+ *  
+ *  Explanation: This is the basic Code for Waspmote Pro with Digi Mesh
+ *
+ *
+ Change Log
+ //Generall config
+  1.0 Set Pan ID if needed 
+  1.1 Set chennel of the Radio
+  1.2 Set Gateway address or use BROADCAST mode. If you set the address the sensor will only send data to that spacific gateway
+  1.3 Set snesor ID must be unique 
+  1.4 Turn on Encryption or not
+
+
+
+  
+ */
+     
+// Put your libraries here (#include ...)
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%% Set Variables %%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+
+//1. 
+// PAN (Personal Area Network) Identifier
+uint8_t  panID[2] = {0x11,0x11}; 
+
+//1.1
+// Define Freq Channel to be set: 
+// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+// Digimesh 900Mhz. Range from 0x00 to 0x0B
+uint8_t  channel = 0x01;
+
+/* 
+0x00 – Channel 0 -- 902 – 904,16 GHz
+0x01 – Channel 1 --  904,16 – 906,32 GHz
+0x02 – Channel 2 -- 906,32 – 908,48 GHz
+0x03 – Channel 3 -- 908,48 – 910,64 GHz
+0x04 – Channel 4 -- 910,64 – 912,80 GHz
+0x05 – Channel 5 -- 912,80 – 914,96 GHz
+0x06 – Channel 6 -- 914,96 – 917,12 GHz
+0x07 – Channel 7 -- 917,12 – 919,28 GHz
+0x08 – Channel 8 -- 919,28 – 921,44 GHz
+0x09 – Channel 9 -- 921,44 – 923,6 GHz
+0x0A – Channel 10 -- 923,6 – 925,76 GHz
+0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+
+
+//1.2
+
+// Destination MAC address
+//char RX_ADDRESS[] = "0013A200408DE1AF";
+
+//OR
+
+// Define BROADCAST MAC address
+char RX_ADDRESS[] = "000000000000FFFF";
+
+//1.3
+// Define the Waspmote ID
+char WASPMOTE_ID[] = "SECOND-MG1";
+
+// define variable
+uint8_t error;
+
+//1.4
+// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+uint8_t encryptionMode = 0;
+
+// Define the AES 16-byte Encryption Key
+char  encryptionKey[] = "WaspmoteValeKey!"; 
+ 
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%% Setup Loop %%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+void setup()
+{
+
+  
+  // open USB port
+  USB.ON();
+
+  USB.println(F("-------------------------------"));
+  USB.println(F("Configure XBee Digimesh"));
+  USB.println(F("-------------------------------"));
+  
+
+  // store Waspmote identifier in EEPROM memory
+  frame.setID( WASPMOTE_ID );
+  
+  // Turn on XBee radio 
+ xbeeDM.ON();    
+
+  
+  // Set channel 
+  xbeeDM.setChannel( channel );
+
+  // Check at commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("1. Channel set OK to: 0x"));
+    USB.printHex( xbeeDM.channel );
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("1. Error calling 'setChannel()'"));
+  }
+
+/////////Mesh Network Retries (4.7 manual digimesh)/////////////////////
+  xbeeDM.setMeshNetworkRetries(0x07);  
+  xbeeDM.getMeshNetworkRetries();  
+
+///////////////////// Set Power Lever ///////////////////
+/*
+Parameter   XBee-PRO
+0            10dBm
+1            12dBm
+2            14dBm
+3            16dBm 
+4            18dBm
+*/
+
+xbeeDM.setPowerLevel(4);
+xbeeDM.getPowerLevel();
+
+//////////////////////////////////////////////
+
+  /////////////////////////////////////
+  // 2. set PANID
+  /////////////////////////////////////
+  xbeeDM.setPAN( panID );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("2. PAN ID set OK to: 0x"));
+    USB.printHex( xbeeDM.PAN_ID[0] ); 
+    USB.printHex( xbeeDM.PAN_ID[1] ); 
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("2. Error calling 'setPAN()'"));  
+  }
+
+
+
+
+
+  /////////////////////////////////////
+  // 3. set encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.setEncryptionMode( encryptionMode );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbeeDM.encryptMode, DEC );
+  }
+  else 
+  {
+    USB.println(F("3. Error calling 'setEncryptionMode()'"));
+  }
+
+
+
+
+  /////////////////////////////////////
+  // 4. set encryption key
+  /////////////////////////////////////
+  xbeeDM.setLinkKey( encryptionKey );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("4. AES encryption key set OK"));
+  }
+  else 
+  {
+    USB.println(F("4. Error calling 'setLinkKey()'")); 
+  }
+
+
+  
+   ////////////Set RTC Time /////////////////////////
+ // Powers RTC up, init I2C bus and read initial values
+  USB.println(F("Init RTC"));
+  RTC.ON();
+  
+  // Setting time [yy:mm:dd:dow:hh:mm:ss]
+  RTC.setTime("16:07:27:00:09:55:00");
+  USB.print(F("Setting time: "));
+ // USB.println(F("13:01:16:06:12:33:00"));
+/////////////////////////////////////////////
+
+  /////////////////////////////////////
+  // 5. write values to XBee module memory
+  /////////////////////////////////////
+  xbeeDM.writeValues();
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("5. Changes stored OK"));
+  }
+  else 
+  {
+    USB.println(F("5. Error calling 'writeValues()'"));   
+  }
+
+  USB.println(F("-------------------------------")); 
+}
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%  Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+void loop()
+{
+    
+  
+  /////////////////////////////////////
+  // 1. get channel 
+  /////////////////////////////////////
+  xbeeDM.getChannel();
+  USB.print(F("channel: "));
+  USB.printHex(xbeeDM.channel);
+  USB.println();
+
+  USB.print(F("Set Retries: "));
+  USB.printHex(xbeeDM.meshNetRetries);
+  USB.println();
+ /////////////////////////////////////
+  // 2. get PAN ID
+  /////////////////////////////////////
+  xbeeDM.getPAN();
+  USB.print(F("panid: "));
+  USB.printHex(xbeeDM.PAN_ID[0]); 
+  USB.printHex(xbeeDM.PAN_ID[1]); 
+  USB.println(); 
+  
+  /////////////////////////////////////
+  // 3. get Encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.getEncryptionMode();
+  USB.print(F("encryption mode: "));
+  USB.printHex(xbeeDM.encryptMode);
+  USB.println(); 
+  
+  USB.println(F("-------------------------------")); 
+     
+  delay(3000);
+
+
+/////////////////////////////////////////////
+//////////// END Digi Mesh Config ////////////
+////////////////////////////////////////////
+
+////////////RTC Time /////////////////////
+ // get Time from RTC
+  RTC.getTime();
+/////////////////////////////////////////
+
+  
+///////////////////////////////////////////
+// 1. Create ASCII frame
+///////////////////////////////////////////  
+
+  // create new frame
+  frame.createFrame(ASCII);  
+  
+  // add frame fields
+  //frame.addSensor(SENSOR_STR, "new_sensor_frame");
+  
+  frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
+  frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
+  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+  
+  USB.println(F("-------------------------------"));
+  USB.println(F("Send Packet"));
+  USB.println(F("-------------------------------"));
+  
+///////////////////////////////////////////
+  // 2. Send packet
+///////////////////////////////////////////  
+
+  // send XBee packet
+  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+  
+  // check TX flag
+  if( error == 0 )
+  {
+    USB.println(F("send ok"));
+    
+    // blink green LED    
+    Utils.blinkGreenLED();
+    
+  }
+  else 
+  {
+    USB.println(F("send error"));
+    
+    // blink red LED
+    Utils.blinkRedLED();
+  }
+
+  // wait for five seconds
+  delay(5000);
+
+}
+
+ 
+
