@@ -11,6 +11,8 @@
   1.2 Set Gateway address or use BROADCAST mode. If you set the address the sensor will only send data to that spacific gateway
   1.3 Set snesor ID must be unique 
   1.4 Turn on Encryption or not
+  1.5 Set Encryption Key
+  1.6 Set Power Lever 
 
 
 
@@ -54,26 +56,27 @@ uint8_t  channel = 0x01;
 
 //1.2
 
-// Destination MAC address
+//Destination MAC address
 //char RX_ADDRESS[] = "0013A200408DE1AF";
 
 //OR
 
-// Define BROADCAST MAC address
+//Define BROADCAST MAC address
 char RX_ADDRESS[] = "000000000000FFFF";
 
 //1.3
-// Define the Waspmote ID
+//Define the Waspmote ID
 char WASPMOTE_ID[] = "SECOND-MG1";
 
-// define variable
+//Define variable
 uint8_t error;
 
 //1.4
-// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+//Define the Encryption mode: 1 (enabled) or 0 (disabled)
 uint8_t encryptionMode = 0;
 
-// Define the AES 16-byte Encryption Key
+//1.5 Set Encryption Key
+//Define the AES 16-byte Encryption Key
 char  encryptionKey[] = "WaspmoteValeKey!"; 
  
 
@@ -82,9 +85,8 @@ char  encryptionKey[] = "WaspmoteValeKey!";
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 void setup()
 {
-
   
-  // open USB port
+  //Open USB port
   USB.ON();
 
   USB.println(F("-------------------------------"));
@@ -92,17 +94,17 @@ void setup()
   USB.println(F("-------------------------------"));
   
 
-  // store Waspmote identifier in EEPROM memory
+  //Store Waspmote identifier in EEPROM memory
   frame.setID( WASPMOTE_ID );
   
-  // Turn on XBee radio 
+  //Turn on XBee radio 
  xbeeDM.ON();    
 
   
-  // Set channel 
+  //Set channel 
   xbeeDM.setChannel( channel );
 
-  // Check at commmand execution flag
+  //Check at commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
   {
     USB.print(F("1. Channel set OK to: 0x"));
@@ -114,11 +116,11 @@ void setup()
     USB.println(F("1. Error calling 'setChannel()'"));
   }
 
-/////////Mesh Network Retries (4.7 manual digimesh)/////////////////////
+//Mesh Network Retries 
   xbeeDM.setMeshNetworkRetries(0x07);  
   xbeeDM.getMeshNetworkRetries();  
 
-///////////////////// Set Power Lever ///////////////////
+//1.6 Set Power Lever 
 /*
 Parameter   XBee-PRO
 0            10dBm
@@ -131,14 +133,10 @@ Parameter   XBee-PRO
 xbeeDM.setPowerLevel(4);
 xbeeDM.getPowerLevel();
 
-//////////////////////////////////////////////
-
-  /////////////////////////////////////
-  // 2. set PANID
-  /////////////////////////////////////
+//Set PANID
   xbeeDM.setPAN( panID );
 
-  // check the AT commmand execution flag
+//Check the AT commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
   {
     USB.print(F("2. PAN ID set OK to: 0x"));
@@ -151,16 +149,11 @@ xbeeDM.getPowerLevel();
     USB.println(F("2. Error calling 'setPAN()'"));  
   }
 
+  //Set encryption mode (1:enable; 0:disable)
 
-
-
-
-  /////////////////////////////////////
-  // 3. set encryption mode (1:enable; 0:disable)
-  /////////////////////////////////////
   xbeeDM.setEncryptionMode( encryptionMode );
 
-  // check the AT commmand execution flag
+  //Check the AT commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
   {
     USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
@@ -171,12 +164,9 @@ xbeeDM.getPowerLevel();
     USB.println(F("3. Error calling 'setEncryptionMode()'"));
   }
 
+ 
+  //Set encryption key
 
-
-
-  /////////////////////////////////////
-  // 4. set encryption key
-  /////////////////////////////////////
   xbeeDM.setLinkKey( encryptionKey );
 
   // check the AT commmand execution flag
@@ -189,9 +179,8 @@ xbeeDM.getPowerLevel();
     USB.println(F("4. Error calling 'setLinkKey()'")); 
   }
 
-
   
-   ////////////Set RTC Time /////////////////////////
+ ////////////Set RTC Time /////////////////////////
  // Powers RTC up, init I2C bus and read initial values
   USB.println(F("Init RTC"));
   RTC.ON();
@@ -200,14 +189,12 @@ xbeeDM.getPowerLevel();
   RTC.setTime("16:07:27:00:09:55:00");
   USB.print(F("Setting time: "));
  // USB.println(F("13:01:16:06:12:33:00"));
-/////////////////////////////////////////////
 
-  /////////////////////////////////////
-  // 5. write values to XBee module memory
-  /////////////////////////////////////
+ // Write values to XBee module memory
+
   xbeeDM.writeValues();
 
-  // check the AT commmand execution flag
+ // check the AT commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
   {
     USB.println(F("5. Changes stored OK"));
@@ -219,18 +206,20 @@ xbeeDM.getPowerLevel();
 
   USB.println(F("-------------------------------")); 
 }
+//%%%%%%%%%%%%%%%%%%%%%% END Setup LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%  Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%  Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void loop()
 {
     
   
-  /////////////////////////////////////
-  // 1. get channel 
-  /////////////////////////////////////
+
+  // Get channel 
   xbeeDM.getChannel();
   USB.print(F("channel: "));
   USB.printHex(xbeeDM.channel);
@@ -239,18 +228,15 @@ void loop()
   USB.print(F("Set Retries: "));
   USB.printHex(xbeeDM.meshNetRetries);
   USB.println();
- /////////////////////////////////////
-  // 2. get PAN ID
-  /////////////////////////////////////
+
+  // Get PAN ID
   xbeeDM.getPAN();
   USB.print(F("panid: "));
   USB.printHex(xbeeDM.PAN_ID[0]); 
   USB.printHex(xbeeDM.PAN_ID[1]); 
   USB.println(); 
   
-  /////////////////////////////////////
   // 3. get Encryption mode (1:enable; 0:disable)
-  /////////////////////////////////////
   xbeeDM.getEncryptionMode();
   USB.print(F("encryption mode: "));
   USB.printHex(xbeeDM.encryptMode);
@@ -261,18 +247,14 @@ void loop()
   delay(3000);
 
 
-/////////////////////////////////////////////
-//////////// END Digi Mesh Config ////////////
-////////////////////////////////////////////
 
 ////////////RTC Time /////////////////////
  // get Time from RTC
   RTC.getTime();
-/////////////////////////////////////////
 
   
 ///////////////////////////////////////////
-// 1. Create ASCII frame
+// Create ASCII frame
 ///////////////////////////////////////////  
 
   // create new frame
@@ -289,10 +271,8 @@ void loop()
   USB.println(F("Send Packet"));
   USB.println(F("-------------------------------"));
   
-///////////////////////////////////////////
-  // 2. Send packet
-///////////////////////////////////////////  
 
+  // 2. Send packet
   // send XBee packet
   error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
   
