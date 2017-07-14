@@ -1,33 +1,31 @@
-/*
- Version:           0.1
- Change list
- 1.0 Change the LORA Gateway number uint8_t rx_address = 1;. 1 is defult
- 1.1 Change the node ID char nodeID[] = "node_001"; . Put a name for your location
- 
- 
- 6.0 If you need to change the frame type you can
- frame.createFrame(MAX_FRAME);  
- USB.println(frame.getFrameSize(),DEC); 
- or 
- 
- frame.createFrame(ASCII);
- USB.println(F("Frame created"));
- end
-*/
-
-///////////////////////////////////////////////
-/////////// Config DIGIMESH ///////////////////
-//////////////////////////////////////////////
 
 #include <WaspXBeeDM.h>
 #include <WaspFrame.h>
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Set Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
 // PAN (Personal Area Network) Identifier
-uint8_t  panID[2] = {0x7F,0xFF}; 
+uint8_t  panID[2] = {0x12,0x34}; 
+
+// Destination MAC address
+//////////////////////////////////////////
+char RX_ADDRESS[] = "0013A200408DE1A8";
+//////////////////////////////////////////
+
+//OR
+
+// Define BROADCAST MAC address
+//////////////////////////////////////////
+// RX_ADDRESS[] = "000000000000FFFF";
+//////////////////////////////////////////
 
 
-////////////////////////////////////////////
+// Define the Waspmote ID
+char WASPMOTE_ID[] = "R1_Vit_Lagoon";
+
+
 // Define Freq Channel to be set: 
 // Digimesh 2.4Ghz. Range from 0x0B to 0x1A
 // Digimesh 900Mhz. Range from 0x00 to 0x0B
@@ -47,47 +45,20 @@ uint8_t  channel = 0x01;
 0x0A – Channel 10 -- 923,6 – 925,76 GHz
 0x0B – Channel 11 -- 925,76 – 928 GHz
 */
-//////////////////////////////////////////
-
-
-
-
-
-
-
-// Destination MAC address
-//////////////////////////////////////////
-//char RX_ADDRESS[] = "0013A20040A5A041";
-//////////////////////////////////////////
-
-//OR
-
-// Define BROADCAST MAC address
-//////////////////////////////////////////
-char RX_ADDRESS[] = "000000000000FFFF";
-//////////////////////////////////////////
-
-
-// Define the Waspmote ID
-char WASPMOTE_ID[] = "R1_Vit_Lagoon";
-
-
-// define variable
-uint8_t error;
-
 
 // Define the Encryption mode: 1 (enabled) or 0 (disabled)
 uint8_t encryptionMode = 0;
 
 // Define the AES 16-byte Encryption Key
-char  encryptionKey[] = "WaspmoteValeKey!"; 
+char  encryptionKey[] = "WaspmoteLinkKey!"; 
  
+ // define variable
+uint8_t error;
 
-
-
-///////////////Config Xbee //////////////////
-////////////////////////////////////////////
-
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Setup Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
 void setup()
 {
   // open USB port
@@ -97,17 +68,21 @@ void setup()
   USB.println(F("Configure XBee Digimesh"));
   USB.println(F("-------------------------------"));
   
-
+  
+  // init XBee 
+  xbeeDM.ON();    
+  
   // store Waspmote identifier in EEPROM memory
   frame.setID( WASPMOTE_ID );
   
-  // init XBee 
- xbeeDM.ON();    
-
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Radio Settings  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   /////////////////////////////////////
   // 1. set channel 
   /////////////////////////////////////
+  
   xbeeDM.setChannel( channel );
 
   // check at commmand execution flag
@@ -122,29 +97,11 @@ void setup()
     USB.println(F("1. Error calling 'setChannel()'"));
   }
 
-/////////Mesh Network Retries (4.7 manual digimesh)/////////////////////
-  xbeeDM.setMeshNetworkRetries(0x07);  
-  xbeeDM.getMeshNetworkRetries();  
-
-///////////////////// Set Power Lever ///////////////////
-/*
-Parameter 	XBee-PRO
-0 	         10dBm
-1 	         12dBm
-2 	         14dBm
-3 	         16dBm 
-4 	         18dBm
-*/
-
-xbeeDM.setPowerLevel(4);
-xbeeDM.getPowerLevel();
-
-//////////////////////////////////////////////
-
   /////////////////////////////////////
   // 2. set PANID
   /////////////////////////////////////
-  xbeeDM.setPAN( panID );
+  
+   xbeeDM.setPAN(panID);
 
   // check the AT commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
@@ -158,10 +115,6 @@ xbeeDM.getPowerLevel();
   {
     USB.println(F("2. Error calling 'setPAN()'"));  
   }
-
-
-
-
 
   /////////////////////////////////////
   // 3. set encryption mode (1:enable; 0:disable)
@@ -179,9 +132,6 @@ xbeeDM.getPowerLevel();
     USB.println(F("3. Error calling 'setEncryptionMode()'"));
   }
 
-
-
-
   /////////////////////////////////////
   // 4. set encryption key
   /////////////////////////////////////
@@ -196,19 +146,6 @@ xbeeDM.getPowerLevel();
   {
     USB.println(F("4. Error calling 'setLinkKey()'")); 
   }
-
-
-  
-   ////////////Set RTC Time /////////////////////////
- // Powers RTC up, init I2C bus and read initial values
-  USB.println(F("Init RTC"));
-  RTC.ON();
-  
-  // Setting time [yy:mm:dd:dow:hh:mm:ss]
-  RTC.setTime("16:07:27:00:09:55:00");
-  USB.print(F("Setting time: "));
- // USB.println(F("13:01:16:06:12:33:00"));
-/////////////////////////////////////////////
 
   /////////////////////////////////////
   // 5. write values to XBee module memory
@@ -228,11 +165,13 @@ xbeeDM.getPowerLevel();
   USB.println(F("-------------------------------")); 
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void loop()
 {
     
-  
-  
   /////////////////////////////////////
   // 1. get channel 
   /////////////////////////////////////
@@ -241,10 +180,7 @@ void loop()
   USB.printHex(xbeeDM.channel);
   USB.println();
 
-  USB.print(F("Set Retries: "));
-  USB.printHex(xbeeDM.meshNetRetries);
-  USB.println();
- /////////////////////////////////////
+  /////////////////////////////////////
   // 2. get PAN ID
   /////////////////////////////////////
   xbeeDM.getPAN();
@@ -264,20 +200,33 @@ void loop()
   USB.println(F("-------------------------------")); 
      
   delay(3000);
+  
+///////////////////////////////////////////
+//  Set Time from Gateway 
+/////////////////////////////////////////// 
 
-
-/////////////////////////////////////////////
-//////////// END Digi Mesh Config ////////////
-////////////////////////////////////////////
-
-////////////RTC Time /////////////////////
- // get Time from RTC
-  RTC.getTime();
-/////////////////////////////////////////
-
+   // set RTC time
+  error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+      
+  // check flag
+  if( error == 0 )
+  {
+    USB.print(F("SET RTC ok. "));
+  }
+  else 
+  {
+    USB.print(F("SET RTC error. "));
+  }  
+  
+  USB.print(F("RTC Time:"));
+  USB.println(RTC.getTime());
+  
+  delay(5000);
+  
 ///////////////////////////////////////////
 // 1. Create Binnary frame
-///////////////////////////////////////////  
+/////////////////////////////////////////// 
+
 //frame.createFrame(MAX_FRAME);  
 // USB.println(frame.getFrameSize(),DEC);
   
@@ -325,10 +274,11 @@ void loop()
     Utils.blinkRedLED();
   }
 
-  // wait for five seconds
-  delay(5000);
+  // wait for 10 min seconds
+  USB.println(F("Wait 10 min"));
+  delay(600000);
 
+
+  
 }
-
-    
 
