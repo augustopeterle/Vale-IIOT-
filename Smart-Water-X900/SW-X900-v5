@@ -402,8 +402,8 @@ void loop()
 // Loop Start Sample N-Times Times
 //////////////////////////////////////////////////
     counter=1;
-    USB.print(F("Start LOOP 1 to 10 "));
-    while(counter < 10){
+    USB.print(F("Start Data Logger LOOP  "));
+    while(counter < 4){
 
 ////////////////////////////////////
   // 1. put XBee to sleep
@@ -471,7 +471,7 @@ USB.println(F("Error while reading turbidity sensor"));
   // 2. Read sensors
   ///////////////////////////////////////////  
   
-USB.println(F("5. Read Sensors"));
+USB.println(F("Read Sensors"));
 // Read the ph sensor
     value_pH = pHSensor.readpH();
 // Convert the value read with the information obtained in calibration
@@ -507,7 +507,7 @@ USB.println(F("5. Read Sensors"));
   /////////////////////////////////////////// 
 
 Water.OFF();
- USB.println(F("6. Sensors Off"));
+ USB.println(F("Sensors Off"));
  turbiditySensor.OFF();
   //wait 2 seconds
 delay(2000);
@@ -614,7 +614,7 @@ frame.addSensor(SENSOR_TURB, (uint8_t) value_turb);
   
   // get specified lines from file
   // get only the last file line
-  startLine = numLines-10; 
+  startLine = numLines-4; 
   endLine = numLines;
   
   // iterate to get the File lines specified
