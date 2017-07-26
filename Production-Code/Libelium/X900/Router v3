@@ -73,12 +73,14 @@ void setup()
   USB.println(F("Configure XBee Digimesh"));
   USB.println(F("-------------------------------"));
   
-  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Radio Settings  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   // init XBee 
   xbeeDM.ON();   
 
 /////////////////////////////////////
-// Set Radio Power Level 
+// Set Radio Identifier
 /////////////////////////////////////
  xbeeDM.setNodeIdentifier("R1-Vit_Lagoon");
  xbeeDM.getNodeIdentifier();
@@ -86,16 +88,9 @@ void setup()
   // store Waspmote identifier in EEPROM memory
   frame.setID( WASPMOTE_ID );
   
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//%%%%%%%%%%%%%%%%%%%%%%%%%   Radio Settings  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 /////////////////////////////////////
-// Set Radio Power Level 
+// Set Mesh Network Retries
 /////////////////////////////////////
-
-//Mesh Network Retries 
   xbeeDM.setMeshNetworkRetries(0x07);  
   xbeeDM.getMeshNetworkRetries();  
   
