@@ -1,3 +1,11 @@
+// Install Instrutions
+// 1.
+
+// 2.
+
+// 3. 
+
+
 
 // Frame and Digimeh Lib
 #include <WaspXBeeDM.h>
@@ -18,8 +26,9 @@ int counter = 0;
 
 //Sleep Setting
 #define ALL_OFF_SlEEP SENS_OFF | RTC_OFF | SOCKET0_ON 
+
 //////////////////////////////////////////
-// Datalogger 
+// 1. Datalogger 
 //////////////////////////////////////////
 
 // define folder and file to store data
@@ -43,7 +52,7 @@ uint8_t sd_answer;
 ////////////////////////////////////////// Data Logger END
 
 //////////////////////////////////////////
-// Smart Water Sensor Variables
+// 2. Smart Water Sensor Variables
 //////////////////////////////////////////
 turbidityClass turbiditySensor;
 float value_turb; // Turbidity Sensor
@@ -62,7 +71,7 @@ uint8_t error;
 //------------------------------------------------- Calibration ------------------------------------------------------------
 
 /////////////////////////////////////////
-// Calibration values
+// 3. Sensor Calibration values
 ////////////////////////////////////////
 #define cal_point_10 1.980
 #define cal_point_7 2.095
@@ -254,14 +263,14 @@ Parameter   XBee-PRO
   // check the AT commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
   {
-    USB.print(F("2. PAN ID set OK to: 0x"));
+    USB.print(F("PAN ID set OK to: 0x"));
     USB.printHex( xbeeDM.PAN_ID[0] ); 
     USB.printHex( xbeeDM.PAN_ID[1] ); 
     USB.println();
   }
   else 
   {
-    USB.println(F("2. Error calling 'setPAN()'"));  
+    USB.println(F("Error calling 'setPAN()'"));  
   }
 
   /////////////////////////////////////
@@ -272,12 +281,12 @@ Parameter   XBee-PRO
   // check the AT commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
   {
-    USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.print(F("AES encryption configured (1:enabled; 0:disabled):"));
     USB.println( xbeeDM.encryptMode, DEC );
   }
   else 
   {
-    USB.println(F("3. Error calling 'setEncryptionMode()'"));
+    USB.println(F("Error calling 'setEncryptionMode()'"));
   }
 
   /////////////////////////////////////
@@ -288,11 +297,11 @@ Parameter   XBee-PRO
   // check the AT commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
   {
-    USB.println(F("4. AES encryption key set OK"));
+    USB.println(F("AES encryption key set OK"));
   }
   else 
   {
-    USB.println(F("4. Error calling 'setLinkKey()'")); 
+    USB.println(F("Error calling 'setLinkKey()'")); 
   }
 
   /////////////////////////////////////
@@ -303,11 +312,11 @@ Parameter   XBee-PRO
   // check the AT commmand execution flag
   if( xbeeDM.error_AT == 0 ) 
   {
-    USB.println(F("5. Changes stored OK"));
+    USB.println(F("Changes stored OK"));
   }
   else 
   {
-    USB.println(F("5. Error calling 'writeValues()'"));   
+    USB.println(F("Error calling 'writeValues()'"));   
   }
 
   USB.println(F("-------------------------------")); 
@@ -402,7 +411,7 @@ void loop()
 // Loop Start Sample N-Times Times
 //////////////////////////////////////////////////
     counter=1;
-    USB.print(F("Start Data Logger LOOP  "));
+    USB.print(F("Start Data Logger LOOP"));
     while(counter < 4){
 
 ////////////////////////////////////
