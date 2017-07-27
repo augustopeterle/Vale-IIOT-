@@ -402,22 +402,21 @@ void loop()
 ////////////////////////////////////
   // 1. put XBee to sleep
   ////////////////////////////////////
-USB.println(F("Xbee going to sleep "));
-   xbeeDM.sleep();  
+//.println(F("Xbee going to sleep "));
+  xbeeDM.sleep();  
 
 //////////////////////////////////////////
 // Smart Water Sensor Read
 //////////////////////////////////////////
 
 ///////////////////////////////////////////
-  // 1. Turn on the board
-  /////////////////////////////////////////// 
+// 1. Turn on Turbidity board RS 485
+/////////////////////////////////////////// 
 
-  Water.ON();
-  delay(2000);
-// ------------------------------------------------------- Turbidity -------------------------------------------------------------------------
+ // ------------------------------------------------------- Turbidity -------------------------------------------------------------------------
  turbiditySensor.ON();
- delay(2000);
+   USB.print(F("Delay 10sec "));
+ delay(10000);
   // Result of the communication
     int result = -1;
     int retries = 0;
@@ -459,11 +458,18 @@ value_turb = turbiditySensor.getTurbidity();
   } else {
 USB.println(F("Error while reading turbidity sensor"));
   }
+  USB.println(F("Turbidity Off"));
+//  turbiditySensor.OFF();
 //----------------------------------------------------- Read Other Sensors ---------------------------------------------------
 
   ///////////////////////////////////////////
   // 2. Read sensors
   ///////////////////////////////////////////  
+/*
+USB.println(F("Turn On Smart Water Board "));
+  Water.ON();
+  delay(2000);
+  
   
 USB.println(F("Read Sensors"));
 // Read the ph sensor
@@ -501,17 +507,13 @@ USB.println(F("Read Sensors"));
   /////////////////////////////////////////// 
 
 Water.OFF();
- USB.println(F("Sensors Off"));
- turbiditySensor.OFF();
+ USB.println(F("Smart Water Board Off"));
   //wait 2 seconds
 delay(2000);
 
-
-
-
 ///////////////////////////////// Smart Water Sensor Read End
 
-
+*/
    
 //////////////////////////////////////////
 // Datalogger 
@@ -531,19 +533,19 @@ frame.createFrame(ASCII);
 frame.addSensor(SENSOR_BAT, (uint8_t) PWR.getBatteryLevel());
 
 // Add temperature
-  frame.addSensor(SENSOR_WT, (uint8_t) value_temp);
+//  frame.addSensor(SENSOR_WT, (uint8_t) value_temp);
   
 // Add PH
-  frame.addSensor(SENSOR_PH, (uint8_t) value_pH_calculated);
+//  frame.addSensor(SENSOR_PH, (uint8_t) value_pH_calculated);
   
 // Add ORP value
-  frame.addSensor(SENSOR_ORP, (uint8_t) value_orp_calculated);
+//  frame.addSensor(SENSOR_ORP, (uint8_t) value_orp_calculated);
   
 // Add DI value
   //frame.addSensor(SENSOR_DINA, (uint8_t) value_di);
   
 // Add DO value
-  frame.addSensor(SENSOR_DO, (uint8_t) value_do_calculated);
+//  frame.addSensor(SENSOR_DO, (uint8_t) value_do_calculated);
   
 // Add conductivity value
   //frame.addSensor(SENSOR_COND, (uint8_t) value_cond_calculated);
@@ -659,17 +661,11 @@ frame.addSensor(SENSOR_TURB, (uint8_t) value_turb);
   {
    USB.println(F("send error")); 
   }
-    
-   
+ 
     
   }
 
- // send XBee packet
- // error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
- //   error = xbeeDM.send( RX_ADDRESS, frameSD, lengthSD );   
-   
-
-
+ 
 counter=0;
 
 }
