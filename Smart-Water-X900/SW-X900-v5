@@ -24,9 +24,6 @@
 //Loop
 int counter = 0;
 
-//Sleep Setting
-#define ALL_OFF_SlEEP SENS_OFF | RTC_OFF | SOCKET0_ON 
-
 //////////////////////////////////////////
 // 1. Datalogger 
 //////////////////////////////////////////
@@ -181,15 +178,9 @@ void setup()
 // Smart Water Sensor Void Loop Items
 //////////////////////////////////////////
 // Configure the calibration values
-  pHSensor.setCalibrationPoints(cal_point_10, 
-                                cal_point_7, 
-                                cal_point_4, 
-                                cal_temp);
+  pHSensor.setCalibrationPoints(cal_point_10, cal_point_7, cal_point_4, cal_temp);                        
   DOSensor.setCalibrationPoints(air_calibration, zero_calibration);
-// ConductivitySensor.setCalibrationPoints(point1_cond,
-//                                         point1_cal, 
-//                                         point2_cond, 
-//                                         point2_cal);
+// ConductivitySensor.setCalibrationPoints(point1_cond, point1_cal, point2_cond, point2_cal);                                       
 ////////////////////////////////////////// Smart Water Sensor Variables END
 
 
@@ -364,12 +355,11 @@ Parameter   XBee-PRO
 
 void loop()
 {
-  /////////////////////////////////////////
-  // Low power mode
-  /////////////////////////////////////////
-//  USB.println(F("Going to Sleep"));  
-// PWR.deepSleep("00:00:00:10", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF_SlEEP);
-//  USB.println(F("Awake")); 
+
+       // switch on the XBee module
+  xbeeDM.ON(SOCKET1); 
+  
+  delay(3000);
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%  Pint Xbee Config
   /////////////////////////////////////
@@ -401,17 +391,12 @@ void loop()
   
   // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%End Print config
   
-       // switch on the XBee module
-  xbeeDM.ON(SOCKET1); 
-  
-  delay(3000);
-
 
 //////////////////////////////////////////////////
 // Loop Start Sample N-Times Times
 //////////////////////////////////////////////////
     counter=1;
-    USB.print(F("Start Data Logger LOOP"));
+    USB.println(F("Start Data Logger LOOP"));
     while(counter < 4){
 
 ////////////////////////////////////
@@ -650,7 +635,7 @@ frame.addSensor(SENSOR_TURB, (uint8_t) value_turb);
   ////////////////////////////////////
   
   // 2.1. wake XBee up
-  USB.print(F("Xbee Awake "));
+  USB.println(F("Xbee Awake "));
      xbeeDM.wake();  
 
       /************************************************
