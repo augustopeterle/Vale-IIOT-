@@ -416,7 +416,7 @@ void loop()
 //////////////////////////////////////////////////
 // Loop Start Sample N-Times Times
 //////////////////////////////////////////////////
-    counter=1;
+    counter=0;
     USB.println(F("Start Data Logger LOOP"));
     while(counter < 4)
     {
@@ -577,8 +577,10 @@ void loop()
         //frame.addSensor(SENSOR_ACC, ACC.getX(), ACC.getY(), ACC.getZ() );
         
         //show actual Frame 
-        frame.showFrame(); 
-      
+        frame.showFrame();
+     USB.print(F("File name For Alex"));    
+   SD.showFile(filename);
+     
         memset(toWrite, 0x00, sizeof(toWrite) ); 
       
         // Conversion from Binary to ASCII
@@ -602,18 +604,18 @@ void loop()
           USB.println(F("Append failed"));
         }
       
-             delay(10000);
-             counter ++;
+ //    delay(5000);
+       counter ++;
            //  USB.printf("\n Counter = %d \n", counter);
         USB.print(counter);
       
-             USB.print(F("  Loop "));
+      USB.print(F("  Loop "));
       ////////////////////////////////////////// END 
 
  // ----------------------------------------------------------------------END WHILE--------------------------------------------------------------------------------------     
    }
 
-   USB.print(F(" -----------  Data Log Loop Complete ----------- ")); 
+   USB.println(F(" -----------  Data Log Loop Complete ----------- ")); 
  
   /////////////////////////////////////////////////////
   // 3. Get information from File
@@ -699,5 +701,5 @@ counter=0;
     Utils.blinkLEDs(300);
     Utils.blinkLEDs(300);
   }
-
+  SD.showFile(filename);
 }
