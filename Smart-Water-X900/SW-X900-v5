@@ -391,11 +391,13 @@ Parameter   XBee-PRO
 void loop()
 {
 
+    // Set SD ON
+      SD.ON();
 
        // switch on the XBee module
-  xbeeDM.ON(SOCKET1); 
+      xbeeDM.ON(SOCKET1); 
   
-  delay(3000);
+      delay(3000);
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%  Pint Xbee Config
   /////////////////////////////////////
@@ -433,7 +435,7 @@ void loop()
 //////////////////////////////////////////////////
     counter=0;
     USB.println(F("Start Data Logger LOOP"));
-    while(counter < 4)
+    while(counter < 1)
     {
       
     ///////////////////////////////////////////
@@ -641,7 +643,7 @@ void loop()
   
   // get specified lines from file
   // get only the last file line
-  startLine = numLines-4; 
+  startLine = numLines-1; 
   endLine = numLines;
   
   // iterate to get the File lines specified
