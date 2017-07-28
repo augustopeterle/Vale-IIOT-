@@ -323,29 +323,43 @@ Parameter   XBee-PRO
   // Set SD ON
   SD.ON();
 
-  // create path
-  sd_answer = SD.mkdir(path);
+  //////////////////////////////////////
+  // 2. Delete all directories at the beginning of execution
+  //////////////////////////////////////
+      sd_answer = SD.rmRfDir(path);
+      
+      if( sd_answer == 1 )
+      {
+        USB.println(F("deleted FOLDER1 and all contained files"));
+      }
+      else
+      {
+        USB.println(F("rmdir failed"));
+      }
   
-  if( sd_answer == 1 )
-  { 
-    USB.println(F("path created"));
-  }
-  else
-  {
-    USB.println(F("mkdir failed"));
-  }
-  
-  // Create file for Waspmote Frames
-  sd_answer = SD.create(filename);
-  
-  if( sd_answer == 1 )
-  { 
-    USB.println(F("/data/log created"));
-  }
-  else
-  {
-    USB.println(F("/data/log not created"));
-  }
+      // create path
+      sd_answer = SD.mkdir(path);
+      
+      if( sd_answer == 1 )
+      { 
+        USB.println(F("path created"));
+      }
+      else
+      {
+        USB.println(F("mkdir failed"));
+      }
+      
+      // Create file for Waspmote Frames
+      sd_answer = SD.create(filename);
+      
+      if( sd_answer == 1 )
+      { 
+        USB.println(F("/data/log created"));
+      }
+      else
+      {
+        USB.println(F("/data/log not created"));
+      }
 
 /////////////////////////////////////////////
 // End Data Logger Setup 
@@ -361,10 +375,10 @@ Parameter   XBee-PRO
     turVal = turbidity.getTurbidity();
     i++;
     delay (1000);
-//    USB.println(F("\nInside while Turb= "));
-//    USB.print(turVal);
-//    USB.println(F("\ncounter while Turb= "));
-//    USB.print(i);
+    USB.println(F("\nInside while Turb= "));
+    USB.print(turVal);
+    USB.println(F("\ncounter while Turb= "));
+    USB.print(i);
   } 
   i=0;
 }
@@ -376,6 +390,7 @@ Parameter   XBee-PRO
 
 void loop()
 {
+
 
        // switch on the XBee module
   xbeeDM.ON(SOCKET1); 
@@ -431,7 +446,7 @@ void loop()
       ///////////////////////////////////////////////////////////  
 
       int i=0;
-      while(i<10)
+      while(i<15)
       {
         turVal = turbidity.getTurbidity();
         i++;
@@ -579,7 +594,7 @@ void loop()
         //show actual Frame 
         frame.showFrame();
      USB.print(F("File name For Alex"));    
-   SD.showFile(filename);
+
      
         memset(toWrite, 0x00, sizeof(toWrite) ); 
       
@@ -665,7 +680,7 @@ void loop()
     if( error == 0 )
     {
       USB.println(F("send ok"));
-         
+
     }
     else 
     {
@@ -680,7 +695,7 @@ counter=0;
 
  
 
- USB.println(F("enter deep sleep"));
+ USB.println(F("enter deep sleep 10 Sec"));
   // Go to sleep disconnecting all switches and modules
   // After 10 seconds, Waspmote wakes up thanks to the RTC Alarm
   PWR.deepSleep("00:00:00:10",RTC_OFFSET,RTC_ALM1_MODE1,ALL_OFF);
