@@ -7,7 +7,7 @@
 //%%%%%%%%%%%%%%%%%%%%%%%%%   Set Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#define ALL_OFF_ALEX SENS_OFF | RTC_OFF | SOCKET0_ON 
+#define ALL_OFF_ALEX SENS_OFF | ALL_OFF | SOCKET0_ON 
  
  
 // PAN (Personal Area Network) Identifier
@@ -108,8 +108,8 @@ Parameter   XBee-PRO
 4            18dBm
 */
 
-//xbeeDM.setPowerLevel(4);
-//xbeeDM.getPowerLevel();
+xbeeDM.setPowerLevel(3);
+xbeeDM.getPowerLevel();
 
   /////////////////////////////////////
   // 1. set channel 
@@ -296,7 +296,7 @@ void loop()
   // Low power mode
   /////////////////////////////////////////
   USB.println(F("Going to Sleep"));  
- PWR.deepSleep("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF_ALEX);
+ PWR.deepSleep("00:09:00:00", ALL_OFF_ALEX);
   USB.println(F("Awake")); 
   
   
