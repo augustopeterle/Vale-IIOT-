@@ -7,7 +7,7 @@
 //%%%%%%%%%%%%%%%%%%%%%%%%%   Set Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#define ALL_OFF_ALEX SENS_OFF | ALL_OFF | SOCKET0_ON 
+#define ALL_OFF_SLEEP SENS_OFF | ALL_OFF | SOCKET0_ON 
  
  
 // PAN (Personal Area Network) Identifier
@@ -317,7 +317,7 @@ void loop()
   // Low power mode
   /////////////////////////////////////////
   USB.println(F("Going to Sleep"));  
- //PWR.deepSleep("00:09:00:00", ALL_OFF_ALEX);
+ PWR.deepSleep("00:03:00:00", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF_SLEEP);
   USB.println(F("Awake")); 
   
   
