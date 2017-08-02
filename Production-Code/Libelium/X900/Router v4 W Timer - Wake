@@ -26,13 +26,13 @@
  
 //1.0 Set Pan ID
     // PAN (Personal Area Network) Identifier
-    uint8_t  panID[2] = {0x12,0x34}; 
+    uint8_t  panID[2] = {0x7F,0xFF}; 
 
 
 //2.0 Set MAC ID 
     // Destination MAC address
     //////////////////////////////////////////
-    char RX_ADDRESS[] = "0013A200408DE1A8";
+    char RX_ADDRESS[] = "0013A200408DE1AD";
     //////////////////////////////////////////
 
     //OR
@@ -130,7 +130,7 @@
     4            18dBm
     */
     
-    xbeeDM.setPowerLevel(3);
+    xbeeDM.setPowerLevel(4);
     xbeeDM.getPowerLevel();
 
     /////////////////////////////////////
@@ -379,7 +379,7 @@
 
 // 11.0 Set Router Wake Duration
     USB.println(F("Router Awake for 10min"));
-    //delay(600000);
+    delay(600000);
 
   
 }
