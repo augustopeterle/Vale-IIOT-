@@ -1,0 +1,327 @@
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Set Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+#define ALL_OFF_ALEX SENS_OFF | ALL_OFF | SOCKET0_ON 
+ 
+ 
+// PAN (Personal Area Network) Identifier
+uint8_t  panID[2] = {0x12,0x34}; 
+
+// Destination MAC address
+//////////////////////////////////////////
+char RX_ADDRESS[] = "0013A200408DE1A8";
+//////////////////////////////////////////
+
+//OR
+
+// Define BROADCAST MAC address
+//////////////////////////////////////////
+//char RX_ADDRESS[] = "000000000000FFFF";
+//////////////////////////////////////////
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Define the Waspmote ID
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+char WASPMOTE_ID[] = "R1_Vit_Lagoon";
+
+
+// Define Freq Channel to be set: 
+// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+// Digimesh 900Mhz. Range from 0x00 to 0x0B
+uint8_t  channel = 0x01;
+
+/* 
+0x00 – Channel 0 -- 902 – 904,16 GHz
+0x01 – Channel 1 --  904,16 – 906,32 GHz
+0x02 – Channel 2 -- 906,32 – 908,48 GHz
+0x03 – Channel 3 -- 908,48 – 910,64 GHz
+0x04 – Channel 4 -- 910,64 – 912,80 GHz
+0x05 – Channel 5 -- 912,80 – 914,96 GHz
+0x06 – Channel 6 -- 914,96 – 917,12 GHz
+0x07 – Channel 7 -- 917,12 – 919,28 GHz
+0x08 – Channel 8 -- 919,28 – 921,44 GHz
+0x09 – Channel 9 -- 921,44 – 923,6 GHz
+0x0A – Channel 10 -- 923,6 – 925,76 GHz
+0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+
+// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+uint8_t encryptionMode = 0;
+
+// Define the AES 16-byte Encryption Key
+char  encryptionKey[] = "WaspmoteIIOTKey!";
+ 
+ // define variable
+uint8_t error;
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Setup Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+void setup()
+{
+  // open USB port
+  USB.ON();
+
+  USB.println(F("-------------------------------"));
+  USB.println(F("Configure XBee Digimesh"));
+  USB.println(F("-------------------------------"));
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Radio Settings  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // init XBee 
+  xbeeDM.ON();   
+
+/////////////////////////////////////
+// Set Radio Identifier
+/////////////////////////////////////
+ xbeeDM.setNodeIdentifier("R1-Vit_Time2");
+ xbeeDM.getNodeIdentifier();
+  
+  // store Waspmote identifier in EEPROM memory
+  frame.setID( WASPMOTE_ID );
+  
+/////////////////////////////////////
+// Set Mesh Network Retries
+/////////////////////////////////////
+  xbeeDM.setMeshNetworkRetries(0x07);  
+  xbeeDM.getMeshNetworkRetries();  
+  
+  
+/////////////////////////////////////
+// Set Radio Power Level 
+/////////////////////////////////////
+
+/*
+Parameter   XBee-PRO
+0            10dBm
+1            12dBm
+2            14dBm
+3            16dBm 
+4            18dBm
+*/
+
+xbeeDM.setPowerLevel(3);
+xbeeDM.getPowerLevel();
+
+  /////////////////////////////////////
+  // 1. set channel 
+  /////////////////////////////////////
+  
+  xbeeDM.setChannel( channel );
+
+  // check at commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("1. Channel set OK to: 0x"));
+    USB.printHex( xbeeDM.channel );
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("1. Error calling 'setChannel()'"));
+  }
+
+  /////////////////////////////////////
+  // 2. set PANID
+  /////////////////////////////////////
+  
+   xbeeDM.setPAN(panID);
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("2. PAN ID set OK to: 0x"));
+    USB.printHex( xbeeDM.PAN_ID[0] ); 
+    USB.printHex( xbeeDM.PAN_ID[1] ); 
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("2. Error calling 'setPAN()'"));  
+  }
+
+  /////////////////////////////////////
+  // 3. set encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.setEncryptionMode( encryptionMode );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbeeDM.encryptMode, DEC );
+  }
+  else 
+  {
+    USB.println(F("3. Error calling 'setEncryptionMode()'"));
+  }
+
+  /////////////////////////////////////
+  // 4. set encryption key
+  /////////////////////////////////////
+  xbeeDM.setLinkKey( encryptionKey );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("4. AES encryption key set OK"));
+  }
+  else 
+  {
+    USB.println(F("4. Error calling 'setLinkKey()'")); 
+  }
+
+  /////////////////////////////////////
+  // 5. write values to XBee module memory
+  /////////////////////////////////////
+  xbeeDM.writeValues();
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("5. Changes stored OK"));
+  }
+  else 
+  {
+    USB.println(F("5. Error calling 'writeValues()'"));   
+  }
+
+  USB.println(F("-------------------------------")); 
+  
+
+   
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void loop()
+{
+ 
+ // init RTC  
+  RTC.ON();
+  USB.println(F("Set RTC Time"));
+// set RTC time
+  error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+      
+  // check flag
+  if( error == 0 )
+  {
+    USB.print(F("SET RTC ok. "));
+  }
+  else 
+  {
+    USB.print(F("SET RTC error. "));
+  }  
+  
+  USB.print(F("RTC Time:"));
+  USB.println(RTC.getTime());
+  
+  delay(5000);
+
+  
+  /////////////////////////////////////
+  // 1. get channel 
+  /////////////////////////////////////
+  xbeeDM.getChannel();
+  USB.print(F("channel: "));
+  USB.printHex(xbeeDM.channel);
+  USB.println();
+
+  /////////////////////////////////////
+  // 2. get PAN ID
+  /////////////////////////////////////
+  xbeeDM.getPAN();
+  USB.print(F("panid: "));
+  USB.printHex(xbeeDM.PAN_ID[0]); 
+  USB.printHex(xbeeDM.PAN_ID[1]); 
+  USB.println(); 
+  
+  /////////////////////////////////////
+  // 3. get Encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.getEncryptionMode();
+  USB.print(F("encryption mode: "));
+  USB.printHex(xbeeDM.encryptMode);
+  USB.println(); 
+  
+  USB.println(F("------------------------------")); 
+     
+  delay(3000);
+
+
+///////////////////////////////////////////
+// 1. Create Binnary frame
+/////////////////////////////////////////// 
+
+//frame.createFrame(MAX_FRAME);  
+// USB.println(frame.getFrameSize(),DEC);
+  
+//  OR
+  
+///////////////////////////////////////////
+// 1. Create ASCII frame
+///////////////////////////////////////////  
+
+  // create new frame
+  frame.createFrame(ASCII);  
+  
+  /*
+  // add frame fields
+  //frame.addSensor(SENSOR_STR, "new_sensor_frame");
+  
+  frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
+  frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
+  */
+  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+  
+  USB.println(F("-------------------------------"));
+  USB.println(F("Send Packet"));
+  USB.println(F("-------------------------------"));
+  
+///////////////////////////////////////////
+  // 2. Send packet
+///////////////////////////////////////////  
+
+  // send XBee packet
+  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+  
+  // check TX flag
+  if( error == 0 )
+  {
+    USB.println(F("send ok"));
+    
+    // blink green LED    
+   // Utils.blinkGreenLED();
+    
+  }
+  else 
+  {
+   USB.println(F("send error"));
+    
+    // blink red LED
+   // Utils.blinkRedLED();
+  }
+
+  
+ /////////////////////////////////////////
+  // Low power mode
+  /////////////////////////////////////////
+  USB.println(F("Going to Sleep"));  
+ //PWR.deepSleep("00:09:00:00", ALL_OFF_ALEX);
+  USB.println(F("Awake")); 
+  
+  
+
+
+  
+}
