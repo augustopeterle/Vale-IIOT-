@@ -22,7 +22,7 @@
     //%%%%%%%%%%%%%%%%%%%%%%%%%   Set Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    #define ALL_OFF_SLEEP SENS_OFF | ALL_OFF | SOCKET0_ON 
+ //   #define ALL_OFF_SLEEP SENS_OFF | ALL_OFF | SOCKET0_ON 
  
 //1.0 Set Pan ID
     // PAN (Personal Area Network) Identifier
