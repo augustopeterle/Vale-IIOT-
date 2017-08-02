@@ -1,17 +1,17 @@
 
 
 //Changes
-// 1.0 Set Pan ID
-// 2.0 Set MAC ID 
-// 3.0 Set Waspmote ID
-// 4.0 Set Channel
-// 5.0 Set Encryption On/Off
-// 6.0 Set Encrypton Key
-// 7.0 Set Waspmote ID (Radio Name)
-// 8.0 Set Network Retries
-// 9.0 Set Radio Power Output
-// 10.0 Set Wake Time
-// 11.0 Set Router Wake Duration
+// 1.0 Set Pan ID (Line 27)
+// 2.0 Set MAC ID (Line 32)
+// 3.0 Set Waspmote ID (Line 45)
+// 4.0 Set Channel (Line 51)
+// 5.0 Set Encryption On/Off (Line 72)
+// 6.0 Set Encrypton Key (Line 76)
+// 7.0 Set Waspmote ID (Radio Name) (Line 102)
+// 8.0 Set Network Retries (Line 112)
+// 9.0 Set Radio Power Output (Line 119)
+// 10.0 Set Wake Time (Line 255)
+// 11.0 Set Router Wake Duration (Line 380)
 
     #include <WaspXBeeDM.h>
     #include <WaspFrame.h>
@@ -256,7 +256,7 @@
       // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4:
       // This will wake the router every hout when the RTC clock reads 50:00 min
       // Alarm Delay is set for 10min Later 
-      RTC.setAlarm1("00:00:09:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
+      RTC.setAlarm1("00:00:33:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
       
       // Checking Alarm 1  
       USB.println(F("Wake Router Mode: "));
