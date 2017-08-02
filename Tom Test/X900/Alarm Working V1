@@ -1,0 +1,106 @@
+void setup()
+{
+  // Setup for Serial port over USB
+  USB.ON();
+  USB.println(F("RTC_4 example"));
+
+  // Powers RTC up, init I2C bus and read initial values
+  USB.println(F("Init RTC"));
+  RTC.ON(); 
+}
+
+void loop()
+{
+  USB.println(F("\n++++++++++++++ Alarm 1 - ABSOLUTE MODE ++++++++++++++++"));
+  
+  // Setting time
+  RTC.ON(); 
+  //RTC.setTime("12:07:20:06:11:25:00");
+  USB.print(F("Time: "));
+  USB.println(RTC.getTime());
+  
+  ///////////////////////////////////////////
+  // Alarm 1 - ABSOLUTE MODE - Alarm mode 2
+  ///////////////////////////////////////////
+  /*
+    RTC_ALM1_MODE1: Day, hours, minutes and seconds match 
+    RTC_ALM1_MODE2: Date, hours, minutes and seconds match 
+    RTC_ALM1_MODE3: Hours, minutes and seconds match 
+    RTC_ALM1_MODE4: Minutes and seconds match 
+    RTC_ALM1_MODE5: Seconds match 
+    RTC_ALM1_MODE6: Once per second 
+  
+  */
+  // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4:
+  // 50:00:00:00
+  // time 11:25:15 
+  // Alarm 1 is set 15 seconds later
+  RTC.setAlarm1("00:00:54:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
+  
+  // Checking Alarm 1  
+  USB.println(F("Alarm1 is set to ABSOLUTE mode: "));
+  USB.println(RTC.getAlarm1());
+  
+  // Setting Waspmote to Low-Power Consumption Mode
+  USB.println(F("Waspmote goes into sleep mode until the RTC alarm causes an interrupt"));
+  PWR.sleep(ALL_OFF);
+  
+  // After setting Waspmote to power-down, UART is closed, so it
+  // is necessary to open it again
+  USB.ON();
+  RTC.ON(); 
+  USB.println(F("\r\nWaspmote wake up!!"));
+  USB.print(F("Time: "));
+  USB.println(RTC.getTime());
+  
+  // Waspmote wakes up at '11:25:15'
+  if( intFlag & RTC_INT )
+  {
+    intFlag &= ~(RTC_INT); // Clear flag
+    Utils.blinkLEDs(1000); // Blinking LEDs
+    Utils.blinkLEDs(1000); // Blinking LEDs
+  }
+  
+  USB.println();
+
+  
+  
+  ///////////////////////////////////////////
+  // Alarm 1 - OFFSET - Alarm mode 4
+  ///////////////////////////////////////////
+    
+  USB.println(F("\n++++++++++++++ Alarm 1 - OFFSET MODE ++++++++++++++++"));
+  
+  // Setting alarm 1 in offset mode:
+  // Alarm 1 is set 15 seconds later
+  RTC.setAlarm1("00:00:01:00",RTC_OFFSET,RTC_ALM1_MODE4);
+  
+  // Checking Alarm 1  
+  USB.println(F("Alarm1 is set to OFFSET mode 20: "));
+  USB.println(RTC.getAlarm1());
+  
+  // Setting Waspmote to Low-Power Consumption Mode
+  USB.println(F("Waspmote goes into sleep mode until the RTC alarm causes an interrupt"));
+  PWR.sleep(ALL_OFF);
+  
+  // After setting Waspmote to power-down, UART is closed, so it
+  // is necessary to open it again
+  USB.ON();
+  USB.println(F("\r\nWaspmote wake up!!"));
+  USB.print(F("Time: "));
+  RTC.ON(); 
+  USB.println(RTC.getTime());
+  
+  // Waspmote wakes up at '11:25:30'
+  if( intFlag & RTC_INT )
+  {
+    intFlag &= ~(RTC_INT); // Clear flag
+    Utils.blinkLEDs(1000); // Blinking LEDs
+    Utils.blinkLEDs(1000); // Blinking LEDs
+  }  
+  
+  USB.println();
+  delay(5000);
+  
+  
+}
