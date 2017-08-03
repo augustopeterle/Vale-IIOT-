@@ -1,236 +1,729 @@
+// Install Instrutions
+// 1.
 
+// 2.
 
-//Changes
-// 1.0 Set Pan ID (Line 27)
-// 2.0 Set MAC ID (Line 32)
-// 3.0 Set Waspmote ID (Line 45)
-// 4.0 Set Channel (Line 51)
-// 5.0 Set Encryption On/Off (Line 72)
-// 6.0 Set Encrypton Key (Line 76)
-// 7.0 Set Waspmote ID (Radio Name) (Line 102)
-// 8.0 Set Network Retries (Line 112)
-// 9.0 Set Radio Power Output (Line 119)
-// 10.0 Set Wake Time (Line 255)
-// 11.0 Set Router Wake Duration (Line 402)
-
-    #include <WaspXBeeDM.h>
-    #include <WaspFrame.h>
+// 3. 
 
 
 
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //%%%%%%%%%%%%%%%%%%%%%%%%%   Set Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+// Smart water Lib
+#include <WaspSensorSW.h>
+#include <TurbiditySensor.h>
+#include <ModbusMaster485.h>
+#include <Wasp485.h>
 
- //   #define ALL_OFF_SLEEP SENS_OFF | ALL_OFF | SOCKET0_ON 
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Set Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//Loop
+int counter = 0;
+
+//////////////////////////////////////////
+// 1. Datalogger 
+//////////////////////////////////////////
+
+// define folder and file to store data
+char path[]="/data2";
+char filename[]="/data2/log2";
+
+// buffer to write into Sd File
+char toWrite[200];
+
+// define variables to read stored frames 
+uint8_t frameSD[MAX_FRAME+1];
+uint16_t lengthSD;
+int32_t numLines;
+
+// variables to define the file lines to be read
+int startLine;
+int endLine;
+
+// define variable
+uint8_t sd_answer;
+////////////////////////////////////////// Data Logger END
+
+//////////////////////////////////////////
+// 2. Smart Water Sensor Variables
+//////////////////////////////////////////
+
+// Create an instance of the class
+turbidityClass turbidity;
+float turVal=0;
+
+//turbidityClass turbiditySensor;
+//float value_turb; // Turbidity Sensor
+float value_pH; //PH sensor
+float value_temp; //Temp 
+float value_pH_calculated; //PH sensor
+float value_orp; //Oxidation-reduction
+float value_orp_calculated; //Oxidation-reduction
+float value_di; //Dissolved Ions
+float value_do; // Dissolved Oxygen
+float value_do_calculated; // Dissolved Oxygen
+float value_cond; //Conductivity Sensor
+float value_cond_calculated; ////Conductivity Sensor
+uint8_t error;
+
+//------------------------------------------------- Calibration ------------------------------------------------------------
+
+/////////////////////////////////////////
+// 3. Sensor Calibration values
+////////////////////////////////////////
+#define cal_point_10 1.980
+#define cal_point_7 2.095
+#define cal_point_4 2.245
+
+// Temperature at which calibration was carried out
+#define cal_temp 22.115
+
+// Offset obtained from sensor calibration
+#define calibration_offset 0.016
+
+// %%%%%%% Dissolved Oxygen Sensor Reading %%%%%%%%%
+// Calibration of the sensor in normal air
+#define air_calibration 2.848
+// Calibration of the sensor under 0% solution
+#define zero_calibration 0.0023585968
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
+    
+// Value 1 used to calibrate the sensor
+//#define point1_cond 10500
+// Value 2 used to calibrate the sensor
+//#define point2_cond 40000
+// Point 1 of the calibration 
+#define point1_cal 197.00
+// Point 2 of the calibration 
+#define point2_cal 150.00
+
+// deifne variable to get running time
+    unsigned long startTime;
+
+
+    pHClass pHSensor;
+    ORPClass ORPSensor;
+    DIClass DISensor;
+    DOClass DOSensor;
+    conductivityClass ConductivitySensor;
+    pt1000Class TemperatureSensor;
+
+////////////////////////////////////////// Smart Water Sensor Variables END
+
+
+  
+// PAN (Personal Area Network) Identifier
+uint8_t  panID[2] = {0x7F,0xFF}; 
+
+// Destination MAC address
+//////////////////////////////////////////
+char RX_ADDRESS[] = "0013A200408DE1AD";
+//////////////////////////////////////////
+
+//OR
+
+// Define BROADCAST MAC address
+//////////////////////////////////////////
+//char RX_ADDRESS[] = "000000000000FFFF";
+//////////////////////////////////////////
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Define the Waspmote ID
+//char WASPMOTE_ID[] = "Vit_Lagoon_Sensor-t";
+ //or
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+char nodeID[] = "Vit_Lagon_Sen";
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+// Define Freq Channel to be set: 
+// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+// Digimesh 900Mhz. Range from 0x00 to 0x0B
+uint8_t  channel = 0x01;
+
+/* 
+0x00 – Channel 0 -- 902 – 904,16 GHz
+0x01 – Channel 1 --  904,16 – 906,32 GHz
+0x02 – Channel 2 -- 906,32 – 908,48 GHz
+0x03 – Channel 3 -- 908,48 – 910,64 GHz
+0x04 – Channel 4 -- 910,64 – 912,80 GHz
+0x05 – Channel 5 -- 912,80 – 914,96 GHz
+0x06 – Channel 6 -- 914,96 – 917,12 GHz
+0x07 – Channel 7 -- 917,12 – 919,28 GHz
+0x08 – Channel 8 -- 919,28 – 921,44 GHz
+0x09 – Channel 9 -- 921,44 – 923,6 GHz
+0x0A – Channel 10 -- 923,6 – 925,76 GHz
+0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+
+// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+uint8_t encryptionMode = 0;
+
+// Define the AES 16-byte Encryption Key
+char  encryptionKey[] = "ValeiiotLinkKey!";
  
-//1.0 Set Pan ID
-    // PAN (Personal Area Network) Identifier
-    uint8_t  panID[2] = {0x7F,0xFF}; 
 
 
-//2.0 Set MAC ID 
-    // Destination MAC address
-    //////////////////////////////////////////
-    char RX_ADDRESS[] = "0013A200408DE1AD";
-    //////////////////////////////////////////
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Setup Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    //OR
 
-    // Define BROADCAST MAC address
-    //////////////////////////////////////////
-    //char RX_ADDRESS[] = "000000000000FFFF";
-    //////////////////////////////////////////
 
-//3.0 Set Waspmote ID
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    // Define the Waspmote ID
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    char WASPMOTE_ID[] = "R1_Vit_Lagoon";
+void setup()
+{
+  // open USB port
+  USB.ON();
 
-// 4.0 Set Channel
-    // Define Freq Channel to be set: 
-    // Digimesh 2.4Ghz. Range from 0x0B to 0x1A
-    // Digimesh 900Mhz. Range from 0x00 to 0x0B
-    uint8_t  channel = 0x01;
+   //////////////////////////////////////////
+// Smart Water Sensor Void Loop Items
+//////////////////////////////////////////
+// Configure the calibration values
+  pHSensor.setCalibrationPoints(cal_point_10, cal_point_7, cal_point_4, cal_temp);                        
+  DOSensor.setCalibrationPoints(air_calibration, zero_calibration);
+// ConductivitySensor.setCalibrationPoints(point1_cond, point1_cal, point2_cond, point2_cal);                                       
+////////////////////////////////////////// Smart Water Sensor Variables END
 
-    /* 
-    0x00 – Channel 0 -- 902 – 904,16 GHz
-    0x01 – Channel 1 --  904,16 – 906,32 GHz
-    0x02 – Channel 2 -- 906,32 – 908,48 GHz
-    0x03 – Channel 3 -- 908,48 – 910,64 GHz
-    0x04 – Channel 4 -- 910,64 – 912,80 GHz
-    0x05 – Channel 5 -- 912,80 – 914,96 GHz
-    0x06 – Channel 6 -- 914,96 – 917,12 GHz
-    0x07 – Channel 7 -- 917,12 – 919,28 GHz
-    0x08 – Channel 8 -- 919,28 – 921,44 GHz
-    0x09 – Channel 9 -- 921,44 – 923,6 GHz
-    0x0A – Channel 10 -- 923,6 – 925,76 GHz
-    0x0B – Channel 11 -- 925,76 – 928 GHz
-    */
 
-// 5.0 Set Encryption On/Off
-    // Define the Encryption mode: 1 (enabled) or 0 (disabled)
-    uint8_t encryptionMode = 0;
+  USB.println(F("-------------------------------"));
+  USB.println(F("Configure XBee Digimesh"));
+  USB.println(F("-------------------------------"));
+  
+  
+  // init XBee 
+  xbeeDM.ON(SOCKET1);    
+  
+  // store Waspmote identifier in EEPROM memory
+  frame.setID( nodeID );
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Radio Settings  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-// 6.0 Set Encrypton Key
-    // Define the AES 16-byte Encryption Key
-    char  encryptionKey[] = "WaspmoteIIOTKey!";
-     
-    // define variable
-    uint8_t error;
+/////////////////////////////////////
+// Set Radio Identifier
+/////////////////////////////////////
+ xbeeDM.setNodeIdentifier("Vit_Lagon_Sen");
+ xbeeDM.getNodeIdentifier();
 
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //%%%%%%%%%%%%%%%%%%%%%%%%%   Setup Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/////////////////////////////////////
+// Mesh Network Retries 
+/////////////////////////////////////
+  xbeeDM.setMeshNetworkRetries(0x07);  
+  xbeeDM.getMeshNetworkRetries();  
+  
+  
+/////////////////////////////////////
+// Set Radio Power Level 
+/////////////////////////////////////
+/*
+Parameter   XBee-PRO
+0            10dBm
+1            12dBm
+2            14dBm
+3            16dBm 
+4            18dBm
+*/
+
+//xbeeDM.setPowerLevel(4);
+//xbeeDM.getPowerLevel();
+
+  /////////////////////////////////////
+  // 1. set channel 
+  /////////////////////////////////////
+  
+  xbeeDM.setChannel( channel );
+
+  // check at commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("1. Channel set OK to: 0x"));
+    USB.printHex( xbeeDM.channel );
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("1. Error calling 'setChannel()'"));
+  }
+
+  /////////////////////////////////////
+  // 2. set PANID
+  /////////////////////////////////////
+  
+   xbeeDM.setPAN(panID);
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("PAN ID set OK to: 0x"));
+    USB.printHex( xbeeDM.PAN_ID[0] ); 
+    USB.printHex( xbeeDM.PAN_ID[1] ); 
+    USB.println();
+  }
+  else 
+  {
+    USB.println(F("Error calling 'setPAN()'"));  
+  }
+
+  /////////////////////////////////////
+  // 3. set encryption mode (1:enable; 0:disable)
+  /////////////////////////////////////
+  xbeeDM.setEncryptionMode( encryptionMode );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.print(F("AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbeeDM.encryptMode, DEC );
+  }
+  else 
+  {
+    USB.println(F("Error calling 'setEncryptionMode()'"));
+  }
+
+  /////////////////////////////////////
+  // 4. set encryption key
+  /////////////////////////////////////
+  xbeeDM.setLinkKey( encryptionKey );
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("AES encryption key set OK"));
+  }
+  else 
+  {
+    USB.println(F("Error calling 'setLinkKey()'")); 
+  }
+
+  /////////////////////////////////////
+  // 5. write values to XBee module memory
+  /////////////////////////////////////
+  xbeeDM.writeValues();
+
+  // check the AT commmand execution flag
+  if( xbeeDM.error_AT == 0 ) 
+  {
+    USB.println(F("Changes stored OK"));
+  }
+  else 
+  {
+    USB.println(F("Error calling 'writeValues()'"));   
+  }
+
+  USB.println(F("-------------------------------")); 
+
+
+  
+//////////////////////////////////////////
+// Datalogger Setup
+//////////////////////////////////////////
+
+  // Set SD ON
+  SD.ON();
+
+  //////////////////////////////////////
+  // 2. Delete all directories at the beginning of execution
+  //////////////////////////////////////
+      sd_answer = SD.rmRfDir(path);
+      
+      if( sd_answer == 1 )
+      {
+        USB.println(F("deleted FOLDER1 and all contained files"));
+      }
+      else
+      {
+        USB.println(F("rmdir failed"));
+      }
+  
+      // create path
+      sd_answer = SD.mkdir(path);
+      
+      if( sd_answer == 1 )
+      { 
+        USB.println(F("path created"));
+      }
+      else
+      {
+        USB.println(F("mkdir failed"));
+      }
+      
+      // Create file for Waspmote Frames
+      sd_answer = SD.create(filename);
+      
+      if( sd_answer == 1 )
+      { 
+        USB.println(F("/data/log created"));
+      }
+      else
+      {
+        USB.println(F("/data/log not created"));
+      }
+
+/////////////////////////////////////////////
+// End Data Logger Setup 
+////////////////////////////////////////////
+
+   ///////////////////////////////////////////
+  // 1. Power on  sensors
+  /////////////////////////////////////////// 
+  turbidity.ON();
+  int i=0;
+  while(i<10)
+  {
+    turVal = turbidity.getTurbidity();
+    i++;
+    delay (1000);
+    USB.println(F("\nInside while Turb= "));
+    USB.print(turVal);
+    USB.println(F("\ncounter while Turb= "));
+    USB.print(i);
+  } 
+  i=0;
+}
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%   Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void loop()
+{
+
+    // Set SD ON
+      SD.ON();
+
+      delay(1000);
+
+      ///////////////////////////////////////////
+      // 1. Power on  sensors
+      /////////////////////////////////////////// 
+      turbidity.ON();
+    
+
+//////////////////////////////////////////////////
+// Loop Start Sample N-Times Times
+//////////////////////////////////////////////////
+    counter=0;
+    USB.println(F("Start Data Logger LOOP"));
+    while(counter < 1)
+    {
+      
+    ///////////////////////////////////////////
+    // 1. Turn on Turbidity board RS 485
+    /////////////////////////////////////////// 
+
+    
+    
+// ------------------------------------------------------- Turbidity -------------------------------------------------------------------------
+     //////////////////////////////////////////////////////////
+      // 2. Get Turbidity Measure
+      ///////////////////////////////////////////////////////////  
+
+      int i=0;
+      while(i<15)
+      {
+        turVal = turbidity.getTurbidity();
+        i++;
+        delay (500);
+        USB.print(F("\nInside LOOP while Turb= "));
+        USB.println(turVal);
+        USB.print(F("\nCounter while LOOP= "));
+        USB.println(i);
+      } 
+      i=0;
+
+      turVal = turbidity.getTurbidity();
+      USB.print(F("Turbidity Value: "));
+      USB.print(turVal);    
+      USB.print(F(" NTU | "));    
+      
+      ///////////////////////////////////////////////////////////
+      // 3. Get Temperature Measure from Turbidity sensor
+      ///////////////////////////////////////////////////////////  
+    
+      float temperature = turbidity.getTemperature();
+      USB.print(F("Temperature Value: "));
+      USB.print(temperature);    
+      USB.println(F(" Celsius Degrees"));     
+    
+      delay(2000); 
+
  
-    void setup()
-    {
-      // open USB port
-      USB.ON();
-    
-      USB.println(F("-------------------------------"));
-      USB.println(F("Configure XBee Digimesh"));
-      USB.println(F("-------------------------------"));
-  
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //%%%%%%%%%%%%%%%%%%%%%%%%%   Radio Settings  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      // init XBee 
-      xbeeDM.ON();   
-
-//7.0 Set Waspmote ID (Radio Name)
-    /////////////////////////////////////
-    // Set Radio Identifier
-    /////////////////////////////////////
-     xbeeDM.setNodeIdentifier("R1_Vit_Lagoon");
-     xbeeDM.getNodeIdentifier();
+      //----------------------------------------------------- Read Other Sensors ---------------------------------------------------
       
-      // store Waspmote identifier in EEPROM memory
-      frame.setID( WASPMOTE_ID );
-
-//8.0 Set Network Retries
-    /////////////////////////////////////
-    // Set Mesh Network Retries
-    /////////////////////////////////////
-      xbeeDM.setMeshNetworkRetries(0x07);  
-      xbeeDM.getMeshNetworkRetries();  
-  
-// 9.0 Set Radio Power Output
-    /////////////////////////////////////
-    // Set Radio Power Level 
-    /////////////////////////////////////
-    
-    /*
-    Parameter   XBee-PRO
-    0            10dBm
-    1            12dBm
-    2            14dBm
-    3            16dBm 
-    4            18dBm
-    */
-    
-    xbeeDM.setPowerLevel(4);
-    xbeeDM.getPowerLevel();
-
-    /////////////////////////////////////
-    //  Set channel 
-    /////////////////////////////////////
-    
-    xbeeDM.setChannel( channel );
-  
-    // check at commmand execution flag
-    if( xbeeDM.error_AT == 0 ) 
-    {
-      USB.print(F("1. Channel set OK to: 0x"));
-      USB.printHex( xbeeDM.channel );
-      USB.println();
-    }
-    else 
-    {
-      USB.println(F("1. Error calling 'setChannel()'"));
-    }
-
-     /////////////////////////////////////
-     // 2. set PANID
-     /////////////////////////////////////
+      //////////////////////////////////////////
+      // Turn on Smart Water Board 
+      //////////////////////////////////////////
+        ///////////////////////////////////////////
+        // 2. Read sensors
+        ///////////////////////////////////////////  
+      /*
       
-       xbeeDM.setPAN(panID);
-    
-      // check the AT commmand execution flag
-      if( xbeeDM.error_AT == 0 ) 
-      {
-        USB.print(F("2. PAN ID set OK to: 0x"));
-        USB.printHex( xbeeDM.PAN_ID[0] ); 
-        USB.printHex( xbeeDM.PAN_ID[1] ); 
-        USB.println();
-      }
-      else 
-      {
-        USB.println(F("2. Error calling 'setPAN()'"));  
-      }
-    
-      /////////////////////////////////////
-      // 3. set encryption mode (1:enable; 0:disable)
-      /////////////////////////////////////
-      xbeeDM.setEncryptionMode( encryptionMode );
-    
-      // check the AT commmand execution flag
-      if( xbeeDM.error_AT == 0 ) 
-      {
-        USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
-        USB.println( xbeeDM.encryptMode, DEC );
-      }
-      else 
-      {
-        USB.println(F("3. Error calling 'setEncryptionMode()'"));
-      }
-    
-      /////////////////////////////////////
-      // Set encryption key
-      /////////////////////////////////////
-      xbeeDM.setLinkKey( encryptionKey );
-    
-      // check the AT commmand execution flag
-      if( xbeeDM.error_AT == 0 ) 
-      {
-        USB.println(F("4. AES encryption key set OK"));
-      }
-      else 
-      {
-        USB.println(F("4. Error calling 'setLinkKey()'")); 
-      }
-    
-      /////////////////////////////////////
-      // 5. write values to XBee module memory
-      /////////////////////////////////////
-      xbeeDM.writeValues();
-    
-      // check the AT commmand execution flag
-      if( xbeeDM.error_AT == 0 ) 
-      {
-        USB.println(F("5. Changes stored OK"));
-      }
-      else 
-      {
-        USB.println(F("5. Error calling 'writeValues()'"));   
-      }
-    
-      USB.println(F("-------------------------------")); 
+      USB.println(F("Turn On Smart Water Board "));
+        Water.ON();
+        delay(2000);
+        
+        
+      USB.println(F("Read Sensors"));
+      // Read the ph sensor
+          value_pH = pHSensor.readpH();
+      // Convert the value read with the information obtained in calibration
+          value_pH_calculated = pHSensor.pHConversion(value_pH,value_temp);
       
-    
+      // Read the temperature sensor
+          value_temp = TemperatureSensor.readTemperature();
+      
+      // Reading of the ORP sensor
+          value_orp = ORPSensor.readORP();
+      // Apply the calibration offset
+          value_orp_calculated = value_orp - calibration_offset;
        
-    }
+      // Reading of the DI sensor
+      //   value_di = DISensor.readDI();
+      
+        
+        delay(500);  
+      
+      // Reading of the ORP sensor
+          value_do = DOSensor.readDO();
+      // Conversion from volts into dissolved oxygen percentage
+          value_do_calculated = DOSensor.DOConversion(value_do);
+        
+      // Reading of the Conductivity sensor
+        //  value_cond = ConductivitySensor.readConductivity();
+      // Conversion from resistance into ms/cm
+        // value_cond_calculated = ConductivitySensor.conductivityConversion(value_cond);
+        //delay(1000);
+        
+        ///////////////////////////////////////////
+        // 3. Turn off the sensors
+        /////////////////////////////////////////// 
+      
+      Water.OFF();
+       USB.println(F("Smart Water Board Off"));
+        //wait 2 seconds
+      delay(2000);
+      
+      ///////////////////////////////// Smart Water Sensor Read End
+      
+      */
+         
+      //////////////////////////////////////////
+      // Datalogger 
+      //////////////////////////////////////////
 
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //%%%%%%%%%%%%%%%%%%%%%%%%%   Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      USB.println("TEST here");
+      USB.print(temperature);
+      
+      
+      // Create new frame (ASCII)or (Binary) "MAX Frame"
+      //  frame.createFrame(ASCII,"Waspmote_Pro"); 
+      frame.createFrame(ASCII); 
+      // Binary Frame
+      //frame.createFrame(MAX_FRAME); 
+      
+      //////////////////////////////////////////////////
+      // Smart Water Frames
+      //////////////////////////////////////////////////
+      
+      // Add Bettery
+      frame.addSensor(SENSOR_BAT, (uint8_t) PWR.getBatteryLevel());
+      
+      // Add temperature
+      
+      frame.addSensor(SENSOR_WT, (uint8_t) temperature);
+        
+      // Add PH
+      //  frame.addSensor(SENSOR_PH, (uint8_t) value_pH_calculated);
+        
+      // Add ORP value
+      //  frame.addSensor(SENSOR_ORP, (uint8_t) value_orp_calculated);
+        
+      // Add DI value
+        //frame.addSensor(SENSOR_DINA, (uint8_t) value_di);
+        
+      // Add DO value
+      //  frame.addSensor(SENSOR_DO, (uint8_t) value_do_calculated);
+        
+      // Add conductivity value
+        //frame.addSensor(SENSOR_COND, (uint8_t) value_cond_calculated);
+      
+      // Add TurbiditySensor
+      //frame.addSensor(SENSOR_TURB, (uint8_t) value_turb);
+       frame.addSensor(SENSOR_TURB, (float) turVal);
 
-    void loop()
-    {
+    
+      ////////////////////////////////////////// End Smart Water Frames
+      
+       // add frame field (String message)
+       // frame.addSensor(SENSOR_STR, (char*) "data frame");
+        
+        // add frame field (Battery level)
+        //frame.addSensor(SENSOR_BAT, (uint8_t) PWR.getBatteryLevel());
+       
+        
+        // add frame field (Accelerometer axis)
+        //frame.addSensor(SENSOR_ACC, ACC.getX(), ACC.getY(), ACC.getZ() );
+        
+        //show actual Frame 
+        frame.showFrame();
+        USB.print(F("File name For Alex"));    
 
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    // %%%%%%%%%%%%%%%%%%% Router sleep %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     
+        memset(toWrite, 0x00, sizeof(toWrite) ); 
+      
+        // Conversion from Binary to ASCII
+        Utils.hex2str( frame.buffer, toWrite, frame.length);
+      
+        USB.print(F("Frame to be stored:"));
+        USB.println(toWrite);
+      
+      
+        /////////////////////////////////////////////////////   
+        // 2. Append data into file
+        /////////////////////////////////////////////////////  
+        sd_answer = SD.appendln(filename, toWrite);
+        
+        if( sd_answer == 1 )
+        {
+          USB.println(F("Frame appended to file"));
+        }
+        else 
+        {
+          USB.println(F("Append failed"));
+        }
+      
+    // delay(5000);
+       counter ++;
+           //  USB.printf("\n Counter = %d \n", counter);
+        USB.print(counter);
+      
+      USB.print(F("  Loop "));
+      ////////////////////////////////////////// END 
+
+ // ----------------------------------------------------------------------END WHILE--------------------------------------------------------------------------------------     
+   }
+
+     USB.println(F(" -----------  Data Log Loop Complete ----------- ")); 
+ 
+    /////////////////////////////////////////////////////
+    // 3. Get information from File
+    /////////////////////////////////////////////////////  
+
+      // get number of lines in file
+        numLines = SD.numln(filename);
+        
+      // get specified lines from file
+      // get only the last file line
+        startLine = numLines-1; 
+        endLine = numLines;
+  
+      // iterate to get the File lines specified
+        for( int i=startLine; i<endLine ; i++ )
+        {  
+      // Get 'i' line -> SD.buffer
+         SD.catln( filename, i, 1); 
+        
+      // initialize frameSD
+        memset(frameSD, 0x00, sizeof(frameSD) ); 
+        
+      // conversion from ASCII to Binary 
+        lengthSD = Utils.str2hex(SD.buffer, frameSD );
+    
+      // Conversion from ASCII to Binary 
+        USB.print(F("Get previously stored frame:"));
+        for(int j=0; j<lengthSD; j++)
+        {    
+          USB.print(frameSD[j],BYTE);
+        }
+
+    /////////////////////////////////////////////////////
+    // Turn on Xbee
+    ///////////////////////////////////////////////////// 
+
+    // switch on the XBee module
+      xbeeDM.ON(SOCKET1); 
+
+  // %%%%%%%%%%%%%%%%%%%%%%%%%  Pint Xbee Config
+      /////////////////////////////////////
+      // 1. get channel 
+      /////////////////////////////////////
+      xbeeDM.getChannel();
+      USB.print(F("channel: "));
+      USB.printHex(xbeeDM.channel);
+      USB.println();
+    
+      /////////////////////////////////////
+      // 2. get PAN ID
+      /////////////////////////////////////
+      xbeeDM.getPAN();
+      USB.print(F("panid: "));
+      USB.printHex(xbeeDM.PAN_ID[0]); 
+      USB.printHex(xbeeDM.PAN_ID[1]); 
+      USB.println(); 
+      
+      /////////////////////////////////////
+      // 3. get Encryption mode (1:enable; 0:disable)
+      /////////////////////////////////////
+      xbeeDM.getEncryptionMode();
+      USB.print(F("encryption mode: "));
+      USB.printHex(xbeeDM.encryptMode);
+      USB.println(); 
+      
+      USB.println(F("------------------------------")); 
+     
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%End Print config
+    
+     // send XBee packet
+        USB.println();
+        error = xbeeDM.send( RX_ADDRESS, frameSD, lengthSD ); 
+          
+     // check TX flag
+        if( error == 0 )
+        {
+          USB.println(F("send ok"));
+    
+        }
+        else 
+        {
+         USB.println(F("send error")); 
+        }
+     
+        
+      }
+
+ 
+    counter=0;
+
+    /////////////////////////////////////////////////////
+    // Set Time From Gateway
+    /////////////////////////////////////////////////////  
+      // set RTC time
+        error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+            
+      // check flag
+        if( error == 0 )
+        {
+          USB.print(F("SET RTC ok. "));
+        }
+        else 
+        {
+          USB.print(F("SET RTC error. "));
+        }  
+        
+        USB.print(F("RTC Time:"));
+        USB.println(RTC.getTime());
+        
+        delay(3000);
+
+
+
+   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   // %%%%%%%%%%%%%%%%%%% Router sleep %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     
       USB.println(F("\n++++++++++++++ Alarm 1 - ABSOLUTE MODE ++++++++++++++++"));
@@ -256,7 +749,7 @@
       // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4:
       // This will wake the router every hout when the RTC clock reads 50:00 min
       // Alarm Delay is set for 10min Later 
-      RTC.setAlarm1("00:00:55:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
+      RTC.setAlarm1("00:00:59:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
       
       // Checking Alarm 1  
       USB.println(F("Wake Router Mode: "));
@@ -288,120 +781,6 @@
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-     // init XBee 
-      xbeeDM.ON();   
-     /////////////////////////////////////
-     // Set Time From Gateway 
-     /////////////////////////////////////
-
-    // set RTC time
-      error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
-          
-      // check flag
-      if( error == 0 )
-      {
-        USB.print(F("SET RTC ok. "));
-      }
-      else 
-      {
-        USB.print(F("SET RTC error. "));
-      }  
-      
-      USB.print(F("RTC Time:"));
-      USB.println(RTC.getTime());
-      
-      delay(2000);
-
-      
-      /////////////////////////////////////
-      // Get channel 
-      /////////////////////////////////////
-      xbeeDM.getChannel();
-      USB.print(F("channel: "));
-      USB.printHex(xbeeDM.channel);
-      USB.println();
-    
-      /////////////////////////////////////
-      // 2. get PAN ID
-      /////////////////////////////////////
-      xbeeDM.getPAN();
-      USB.print(F("panid: "));
-      USB.printHex(xbeeDM.PAN_ID[0]); 
-      USB.printHex(xbeeDM.PAN_ID[1]); 
-      USB.println(); 
-      
-      /////////////////////////////////////
-      // 3. get Encryption mode (1:enable; 0:disable)
-      /////////////////////////////////////
-      xbeeDM.getEncryptionMode();
-      USB.print(F("encryption mode: "));
-      USB.printHex(xbeeDM.encryptMode);
-      USB.println(); 
-      
-      USB.println(F("------------------------------")); 
-         
-      delay(3000);
 
 
-    ///////////////////////////////////////////
-    // Create Binnary frame
-    /////////////////////////////////////////// 
-
-    //frame.createFrame(MAX_FRAME);  
-    // USB.println(frame.getFrameSize(),DEC);
-      
-    //  OR
-  
-    ///////////////////////////////////////////
-    // Create ASCII frame
-    ///////////////////////////////////////////  
-
-    // create new frame
-    frame.createFrame(ASCII);  
-  
-    /*
-   // add frame fields
-   //frame.addSensor(SENSOR_STR, "new_sensor_frame");
-  
-    frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
-    frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
-    */
-    frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
-    
-    USB.println(F("-------------------------------"));
-    USB.println(F("Send Packet"));
-    USB.println(F("-------------------------------"));
-  
-    ///////////////////////////////////////////
-    // Send packet
-    ///////////////////////////////////////////  
-
-    // send XBee packet
-    error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
-    
-    // check TX flag
-    if( error == 0 )
-    {
-      USB.println(F("send ok"));
-      
-      // blink green LED    
-     // Utils.blinkGreenLED();
-      
-    }
-    else 
-    {
-     USB.println(F("send error"));
-      
-      // blink red LED
-     // Utils.blinkRedLED();
-    }
-
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    // %%%%%%%%%%%%%%%%%%% Router Awake for 10min  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-// 11.0 Set Router Wake Duration
-    USB.println(F("Router Awake for 10min"));
-   // delay(600000);
-
-  
 }
