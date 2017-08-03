@@ -11,7 +11,7 @@
 // 8.0 Set Network Retries (Line 112)
 // 9.0 Set Radio Power Output (Line 119)
 // 10.0 Set Wake Time (Line 255)
-// 11.0 Set Router Wake Duration (Line 380)
+// 11.0 Set Router Wake Duration (Line 402)
 
     #include <WaspXBeeDM.h>
     #include <WaspFrame.h>
@@ -103,7 +103,7 @@
     /////////////////////////////////////
     // Set Radio Identifier
     /////////////////////////////////////
-     xbeeDM.setNodeIdentifier("R1-Vit_Time2");
+     xbeeDM.setNodeIdentifier("R1_Vit_Lagoon");
      xbeeDM.getNodeIdentifier();
       
       // store Waspmote identifier in EEPROM memory
@@ -256,7 +256,7 @@
       // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4:
       // This will wake the router every hout when the RTC clock reads 50:00 min
       // Alarm Delay is set for 10min Later 
-      RTC.setAlarm1("00:00:33:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
+      RTC.setAlarm1("00:00:55:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
       
       // Checking Alarm 1  
       USB.println(F("Wake Router Mode: "));
@@ -278,8 +278,8 @@
       if( intFlag & RTC_INT )
       {
         intFlag &= ~(RTC_INT); // Clear flag
-        Utils.blinkLEDs(1000); // Blinking LEDs
-        Utils.blinkLEDs(1000); // Blinking LEDs
+       // Utils.blinkLEDs(1000); // Blinking LEDs
+       // Utils.blinkLEDs(1000); // Blinking LEDs
       }
       
       USB.println();
@@ -290,6 +290,28 @@
 
      // init XBee 
       xbeeDM.ON();   
+     /////////////////////////////////////
+     // Set Time From Gateway 
+     /////////////////////////////////////
+
+    // set RTC time
+      error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+          
+      // check flag
+      if( error == 0 )
+      {
+        USB.print(F("SET RTC ok. "));
+      }
+      else 
+      {
+        USB.print(F("SET RTC error. "));
+      }  
+      
+      USB.print(F("RTC Time:"));
+      USB.println(RTC.getTime());
+      
+      delay(2000);
+
       
       /////////////////////////////////////
       // Get channel 
