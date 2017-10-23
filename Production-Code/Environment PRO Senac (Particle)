@@ -47,10 +47,9 @@
   {
   }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%END initial %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   void loop()
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%END initial %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Run Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 {
 // Init USB port
@@ -73,49 +72,47 @@
     USB.println(F("----------------------------------------"));
   
 // Init sx1272 module
-    sx1272.ON();
+   sx1272.ON();
 
 // Select frequency channel
   e = sx1272.setChannel(CH_12_900);
-    USB.print(F("Setting Channel CH_12_900.\t state ")); 
-    USB.println(e);
+   USB.print(F("Setting Channel CH_12_900.\t state ")); 
+   USB.println(e);
 
 // Select implicit (off) or explicit (on) header mode
   e = sx1272.setHeaderON();
-    USB.print(F("Setting Header ON.\t\t state "));  
-    USB.println(e); 
+   USB.print(F("Setting Header ON.\t\t state "));  
+   USB.println(e); 
 
 // Select mode (mode 1)
   e = sx1272.setMode(1);  
-    USB.print(F("Setting Mode '1'.\t\t state "));
-    USB.println(e);  
+   USB.print(F("Setting Mode '1'.\t\t state "));
+   USB.println(e);  
 
 // Select CRC on or off
   e = sx1272.setCRC_ON();
-    USB.print(F("Setting CRC ON.\t\t\t state "));
-    USB.println(e); 
+   USB.print(F("Setting CRC ON.\t\t\t state "));
+   USB.println(e); 
 
 // Select output power (Max, High or Low)
   e = sx1272.setPower('H');
-    USB.print(F("Setting Power to 'H'.\t\t state ")); 
-    USB.println(e); 
+   USB.print(F("Setting Power to 'H'.\t\t state ")); 
+   USB.println(e); 
 
 ////////// IMPORTANT //////////////////////////
 // Select the node address value: from 2 to 255
 // CHANGING NODE ADDRESS FOR A NEW DEVICE 
   
   e = sx1272.setNodeAddress(node_address);
-    USB.print(F("Setting Node Address to '21'.\t state "));
-    USB.println(e);
-    USB.println();
+  USB.print(F("Setting Node Address to '21'.\t state "));
+  USB.println(e);
+  USB.println();
 
-  delay(1000);
-  
+delay(1000);
  
 // get Time from RTC
   RTC.getTime();
-  
-  
+   
 ///////////////////////////////////////////
 // 1a. Turn on particle sensor
 ///////////////////////////////////////////  
@@ -236,7 +233,6 @@
     USB.print(PWR.getBatteryVolts());
     USB.println(F(" V"));
   
-
 ///////////////////////////////////////////
 // 2c. Turn off the gas sensors
 /////////////////////////////////////////// 
@@ -254,7 +250,6 @@
 
   USB.println(F("Create a new Frame:"));
   
-
 /////////////////////////////////////////////
 // 6. set frame size via parameter given by the user
 /////////////////////////////////////////////
@@ -266,10 +261,10 @@
 
 // create new frame
     frame.createFrame(MAX_FRAME);  
-    USB.println(frame.getFrameSize(),DEC);  
+//  USB.println(frame.getFrameSize(),DEC);  
 // add frame fields
-    frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
-    frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
+//  frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
+//  frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
 //  frame.addSensor(SENSOR_ACC, ACC.getX(), ACC.getY(), ACC.getZ());
 //  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
 
