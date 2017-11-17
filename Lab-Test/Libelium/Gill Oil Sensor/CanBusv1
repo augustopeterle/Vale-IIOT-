@@ -1,1 +1,80 @@
-xxx
+#include <WaspCAN.h>
+
+#define myPID 0x0000 // <------- Define here your PID
+
+void setup()
+{   
+  // Turn on the USB 
+  USB.ON();
+  delay(100);
+
+  // Print initial message 
+  USB.println("Initializing CAN Bus..."); 
+
+  // Configuring the BUS at 500 Kbit/s
+  CAN.ON(250);   
+  USB.println("CAN Bus initialized at 250 KBits/s");  
+  USB.println();
+ 
+  delay(100);
+}
+
+void loop()
+{
+  int data;
+  delay(100);
+
+  //CAN.CiARequest(myPID);
+
+   USB.println("Inicio loop\n");  
+
+  // is message available ?
+  if (CAN.messageAvailable() == 1)
+  {
+     // read received message
+    CAN.getMessage(&CAN.messageRx);
+    USB.println("Dentro de messageAvailable ");  
+    data = uint16_t(CAN.messageRx.data[0]);
+
+    //Oil quality read
+    USB.print("Data Bit[0]: ");  
+    USB.println(data);
+    
+    USB.print("Data Bit[0] Hex: ");  
+    USB.printHex(data);
+    USB.println("\n");
+      
+    USB.println("PrintMessage Data Struct");    
+    CAN.printMessage(&CAN.messageRx);
+    USB.println("\n");
+   
+// is it from oil debris sensor? Teste para comparar o ID disponivel na Estrutura
+
+//    if ((CAN.messageRx.id & 0x67F) == 0x67F) // OK
+//    if ((CAN.messageRx.id & 0x19FF0064) == 0x19FF0064) //Não funciona. Id aparentemente diferente
+//    if ((CAN.messageRx.id) == 0x19FF0064)
+
+    if ((CAN.messageRx.id) == 0x67F)
+     {
+        USB.println("Dentro do IF MessageRX"); 
+
+        CAN.printMessage(&CAN.messageRx);
+
+        delay(200);
+        
+        USB.print("ID (printHex): "); 
+        USB.printHex(CAN.messageRx.id); 
+        USB.println();
+        
+        USB.print("ID (printInt): "); 
+        USB.println(CAN.messageRx.id); 
+        USB.println();
+ 
+     }
+  }
+
+  USB.print("\n---------------------------------------------------");
+  USB.print("\n\n");
+  delay(2000); 
+
+}
