@@ -25,13 +25,13 @@
  
 //1.0 Set Pan ID
     // PAN (Personal Area Network) Identifier
-    uint8_t  panID[2] = {0x22,0x22}; 
+    uint8_t  panID[2] = {0x12,0x34}; 
 
 
 //2.0 Set MAC ID 
     // Destination MAC address
     //////////////////////////////////////////
-    char RX_ADDRESS[] = "0013A200408DE1AF";
+    char RX_ADDRESS[] = "0013A200408DE1A8";
     //////////////////////////////////////////
 
     //OR
@@ -45,13 +45,13 @@
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     // Define the Waspmote ID
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    char WASPMOTE_ID[] = "R9-BH";
+    char WASPMOTE_ID[] = "R3-BH-Lab";
 
 // 4.0 Set Channel
     // Define Freq Channel to be set: 
     // Digimesh 2.4Ghz. Range from 0x0B to 0x1A
     // Digimesh 900Mhz. Range from 0x00 to 0x0B
-    uint8_t  channel = 0x01;
+    uint8_t  channel = 0x00;
 
     /* 
     0x00 – Channel 0 -- 902 – 904,16 GHz
@@ -102,7 +102,7 @@
     /////////////////////////////////////
     // Set Radio Identifier
     /////////////////////////////////////
-     xbeeDM.setNodeIdentifier("R9-BH");
+     xbeeDM.setNodeIdentifier(WASPMOTE_ID);
      xbeeDM.getNodeIdentifier();
       
       // store Waspmote identifier in EEPROM memory
@@ -249,13 +249,13 @@
       RTC_ALM1_MODE4: Minutes and seconds match 
       RTC_ALM1_MODE5: Seconds match 
       RTC_ALM1_MODE6: Once per second 
-   
+    */
 
 //10.0 Set Wake Time
       // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4:
       // This will wake the router every hout when the RTC clock reads 50:00 min
       // Alarm Delay is set for 10min Later 
-      //RTC.setAlarm1("00:00:55:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
+      RTC.setAlarm1("00:00:55:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
       
       // Checking Alarm 1  
       USB.println(F("Wake Router Mode: "));
@@ -285,7 +285,7 @@
 
     // %%%%%%%%%%%%%%%%%%% Router sleep END %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- */
+
 
      // init XBee 
       xbeeDM.ON();   
@@ -400,7 +400,7 @@
 
 // 11.0 Set Router Wake Duration
     USB.println(F("Router Awake for 10min"));
-    //delay(600000);
+    delay(600000);
 
   
 }
