@@ -1,0 +1,617 @@
+
+// Coded created by Alex and Tom Nov 13 2017
+// Alex Calegari Fracaroli C0479831@vale.com
+// Tom Massicotte Tom.massicotte@vale.com
+
+//Code Change list
+//1.0
+  // Define BROADCAST MAC address (This si the MAC Address of your gateway)
+  //1.1
+  // Define the Waspmote ID
+  // Define Pan ID
+  // 1.2
+  //Define Freq Channel to be set:
+  // 1.3
+//Set Waspmote Radio ID
+//2.0
+//Set Router Sleep Time
+
+//3.0
+
+//last code we made
+#include <Wasp232.h>
+#include <ModbusMaster232.h>
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+
+// Instantiate ModbusMaster object as slave ID 1
+ModbusMaster232 slave(1);
+
+//1.0 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Define BROADCAST MAC address
+//////////////////////////////////////////
+//char RX_ADDRESS[] = "000000000000FFFF";
+//////////////////////////////////////////
+char RX_ADDRESS[] =   "0013A200408DE1A8";
+
+//char RX_ADDRESS[] = "0013A20040A5A041";
+//char meshlium[] = "0013A200408DE1AF";
+// 1.1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Define the Waspmote ID
+char WASPMOTE_ID[] = "Turbidity test";
+// Define Pan ID
+//uint8_t  panID[2] = {0x7F,0xFF};
+uint8_t  panID[2] = {0x12, 0x34};
+
+// 1.2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Define Freq Channel to be set:
+// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+// Digimesh 900Mhz. Range from 0x00 to 0x0B
+uint8_t  channel = 0x00;
+
+/*
+    0x00 – Channel 0 -- 902 – 904,16 GHz
+    0x01 – Channel 1 --  904,16 – 906,32 GHz
+    0x02 – Channel 2 -- 906,32 – 908,48 GHz
+    0x03 – Channel 3 -- 908,48 – 910,64 GHz
+    0x04 – Channel 4 -- 910,64 – 912,80 GHz
+    0x05 – Channel 5 -- 912,80 – 914,96 GHz
+    0x06 – Channel 6 -- 914,96 – 917,12 GHz
+    0x07 – Channel 7 -- 917,12 – 919,28 GHz
+    0x08 – Channel 8 -- 919,28 – 921,44 GHz
+    0x09 – Channel 9 -- 921,44 – 923,6 GHz
+    0x0A – Channel 10 -- 923,6 – 925,76 GHz
+    0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// define variable
+uint8_t error;
+float battery = 0;
+float battery_min = 0;
+float inc = 0;
+float temp = 0;
+float pH;
+float orp = 0;
+float turb = 0;
+float od = 0;
+float bat_sonda = 0;
+float alim_sonda = 0;
+float wipper = 0;
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// Float Sensor Data
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// Water Temp
+char temp2string[20] = "nd";
+
+//Solar Battery Level
+char battery2srt[20] = "nd";
+
+// Ph Value
+char number2[20];
+
+// ORP Vale
+char number3[20];
+
+// Trubidity
+char number4[20];
+
+// OD Sensor
+char number5[20];
+
+//Betery voltage inside the Sensor
+char bat_sonda2str[20] = "nd";
+
+//Voltage recived by sensor
+char alim_sonda2str[20] = "nd";
+
+// Wiper amp used
+char wipper2str[20] = "nd";
+
+int result;
+
+
+// define folder and file to store data
+char path[] = "/data";
+char filename[] = "/data/log";
+
+// buffer to write into Sd File
+char toWrite[200];
+
+// define variables to read stored frames
+uint8_t frameSD[MAX_FRAME + 1];
+uint16_t lengthSD;
+int32_t numLines;
+
+int32_t  diskSize;
+// variables to define the file lines to be read
+
+int startLine;
+int endLine;
+int countFrames = 0;
+int countFramesWhlie = 0;
+int sendok = 0;
+int senderror = 0;
+
+// define variable
+uint8_t sd_answer;
+
+void pegaEnvia (char filename[]);
+
+void setup()
+{
+  //Power on the USB for viewing data in the serial monitor.
+  USB.ON();
+
+  // store Waspmote identifier in EEPROM memory
+  frame.setID(WASPMOTE_ID);
+  // init XBee
+  xbeeDM.ON(SOCKET1);
+  //painID
+  xbeeDM.setPAN(panID);
+  //  xbeeDM.setEncryptionMode(0);
+  //  xbeeDM.setLinkKey(KEY);
+  //  xbeeDM.setMeshNetworkRetries(0x03);
+
+  // 1.3
+  // Set Waspmote Radio ID %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  /////////////////////////////////////
+  // Set Radio Identifier
+  /////////////////////////////////////
+  xbeeDM.setNodeIdentifier("Trib #1 BH");
+  xbeeDM.getNodeIdentifier();
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  // Initialize Modbus communication baud rate
+  slave.begin(9600, SOCKET0);
+
+  //Print hello message
+  USB.println("Modbus communication over RS-232 - Turbidity Sensor MG");
+  delay(100);
+  RTC.ON();
+
+  // slave.readHoldingRegisters(0,20);
+  result =  slave.readHoldingRegisters(0, 20);
+  /////////////////////////////////////
+  // Set Time From Gateway
+  /////////////////////////////////////
+
+  // set RTC time
+  error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+  // check flag
+
+  if ( error == 0 )
+  {
+    USB.print(F("SET RTC ok. "));
+  }
+  else
+  {
+    USB.print(F("SET RTC error. "));
+  }
+  USB.print(F("RTC Time:"));
+  USB.println(RTC.getTime());
+  delay(2000);
+}
+
+void loop()
+{
+  /*
+
+    //   2.0
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    // %%%%%%%%%%%%%%%%%%% Router Sleep Time%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    ///////////////////////////////////////////
+    // Wake Roughter Every 50min - ABSOLUTE MODE - Wake Router
+    ///////////////////////////////////////////
+    /*
+    RTC_ALM1_MODE1: Day, hours, minutes and seconds match
+    RTC_ALM1_MODE2: Date, hours, minutes and seconds match
+    RTC_ALM1_MODE3: Hours, minutes and seconds match
+    RTC_ALM1_MODE4: Minutes and seconds match
+    RTC_ALM1_MODE5: Seconds match
+    RTC_ALM1_MODE6: Once per second
+
+  */
+
+  RTC.setAlarm1("00:00:59:00", RTC_ABSOLUTE, RTC_ALM1_MODE4);
+
+  PWR.sleep(ALL_OFF);
+  USB.ON();
+  RTC.ON();
+  delay(100);
+  SD.ON();
+  slave.begin(9600, SOCKET0);
+  delay(200);
+
+  // INTERRUPÇÃO PARA SLEEP AND WAKE NA HORA DETERMINADA
+  if ( intFlag & RTC_INT )
+  {
+    intFlag &= ~(RTC_INT); // Clear flag
+    USB.println("+++++++++++++++++++++++++++++Acorda na hora determinada+++++++++++++++++++++++++++ ");
+
+    while (countFramesWhlie <= 4)
+    {
+
+      // init XBee
+      xbeeDM.ON(SOCKET1);
+      delay(200);
+
+      // %%%%%%%%%%%%%%%%%%% Router sleep END %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+      // For float point variable
+      union
+      {
+        unsigned int i[2];
+        float f;
+      } foo;
+
+      //              Reading from the temperature sensor
+      // *****************************************************************************************
+      //This variable will store the result of the communication.
+      //result = 0 : no errors.
+      //result = 1 : error occurred.
+
+      //int result =  slave.readHoldingRegisters(batteryLevel ,bytesQty);
+
+      /**************************************************************************************************
+        This function is used to read the contents of a contiguous block of holding registers in a slave
+        The request specifies the starting register address and the number of registers.
+        In the registers are addressed starting at zero. Therefore registers numbered 1-16 are addressed as 0-15.
+        The register data in the response message are packed as two bytes per register.
+       **************************************************************************************************/
+
+      //  int result =  slave.readHoldingRegisters(0,6);
+
+
+      result =  slave.readHoldingRegisters(0, 20);
+      delay(200);
+
+      if (result != 0)
+      {
+        //If no response from the slave, print an error message.
+        USB.print("Communication error. Couldn't read from slave: ");
+        USB.println(result);
+        delay(200);
+      }
+      else
+      {
+
+        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        //%%%%%%%%%%%%%%%%%%%%%%% Sensor Collection From Data Logger %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        //=======================================================
+        // Register one
+        // foo.i[0] = slave.getResponseBuffer(RegisterAddress)
+        //=======================================================
+
+        // Register 2 2
+        USB.println("\n Temp");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(2); // Part 1 - address inside getResponseBuffer it is the register address.
+        foo.i[1] = slave.getResponseBuffer(3); // Part 2 - address inside getResponseBuffer it is the register address.
+        // USB.println(foo.f);
+        temp = foo.f;
+        USB.println(temp);
+        Utils.float2String(temp, temp2string, 3);
+        //  USB.println(temp2string);
+
+        // Register 0 1
+        USB.println("\n Battery");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(0); // Part 1 - address inside getResponseBuffer it is the register address.
+        foo.i[1] = slave.getResponseBuffer(1); // Part 2 - address inside getResponseBuffer it is the register address.
+        USB.println(foo.f);
+        battery = foo.f;
+        Utils.float2String(battery, battery2srt, 3);
+        //    USB.println(battery2srt);
+
+        // Register 6 7
+        USB.println("\n pH");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(6);
+        foo.i[1] = slave.getResponseBuffer(7);
+        USB.println(foo.f);
+        pH = foo.f;
+        USB.println("\n Print PH Number");
+        Utils.float2String(pH, number2, 3);
+        //   USB.println(number2);
+
+        // Register 6 7
+        USB.println("\n ORP");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(8);
+        foo.i[1] = slave.getResponseBuffer(9);
+        USB.println(foo.f);
+        orp = foo.f;
+        Utils.float2String(orp, number3, 3);
+        //  USB.println(number3);
+
+        // Register 8 9
+        USB.println("\n Turbidity ");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(10);
+        foo.i[1] = slave.getResponseBuffer(11);
+        USB.println(foo.f);
+        turb = foo.f;
+        Utils.float2String(turb, number4, 3);
+        //  USB.println(number4);
+
+        // Register 10 11
+        USB.println("\n OD");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(12);
+        foo.i[1] = slave.getResponseBuffer(13);
+        USB.println(foo.f);
+        od = foo.f;
+        Utils.float2String(od, number5, 3);
+        //    USB.println(number5);
+
+        // Register 12 13
+        USB.println("\n Bat_Sonda");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(14);
+        foo.i[1] = slave.getResponseBuffer(15);
+        //  USB.println(foo.f);
+        bat_sonda = foo.f;
+        Utils.float2String(bat_sonda, bat_sonda2str, 3);
+        USB.println(bat_sonda2str);
+
+
+        // Register 14 15
+        USB.println("\n Alim Sonda");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(16);
+        foo.i[1] = slave.getResponseBuffer(17);
+        //  USB.println(foo.f);
+        alim_sonda = foo.f;
+        Utils.float2String(alim_sonda, alim_sonda2str, 3);
+        USB.println(alim_sonda2str);
+
+        // Register 16 17
+        USB.println("\n Wipper mA");
+        USB.print(F("\t"));
+        foo.i[0] = slave.getResponseBuffer(18);
+        foo.i[1] = slave.getResponseBuffer(19);
+        //  USB.println(foo.f);
+        wipper = foo.f;
+        Utils.float2String(wipper, wipper2str, 3);
+        USB.println(wipper2str);
+        USB.println(" Passed wiper");
+      }
+
+      USB.println("\n====================================== \n");
+      USB.print("\n");
+      delay(1000);
+
+      //Clear the response buffer.
+      slave.clearResponseBuffer();
+      delay(500);
+
+      ///////////////////////////////////////////
+      // 1. Create ASCII frame
+      ///////////////////////////////////////////
+
+      // create new frame
+      // frame.createFrame(MAX_FRAME);
+      frame.createFrame(ASCII);
+
+      // add frame fields
+      frame.addSensor(SENSOR_TCA, temp);
+      //frame.addSensor(SENSOR_STR, battery2srt);
+      frame.addSensor(SENSOR_PH, number2);
+      frame.addSensor(SENSOR_ORP, number3);
+
+      frame.showFrame();
+
+      //Parte 1
+
+      /////////////////////////////////////////
+      // DATA LOGGER 1
+      ////////////////////////////////////////
+
+      // Inicializa o array toWrite com 0
+      memset(toWrite, 0x00, sizeof(toWrite) );
+      // Conversion from Binary to ASCII
+      Utils.hex2str( frame.buffer, toWrite, frame.length);
+      // Imprime o buffer armazenado em toWrite
+      USB.print(F("Frame to be stored:"));
+      USB.println(toWrite);
+
+      /////////////////////////////////////////////////////
+      // 2. Append data into file
+      /////////////////////////////////////////////////////
+
+      // grava o frame no arquivo
+      sd_answer = SD.appendln(filename, toWrite);
+
+      if ( sd_answer == 1 )
+      {
+        USB.println(F("Frame appended to file"));
+      }
+      else
+      {
+        USB.println(F("Append failed"));
+      }
+
+
+      ///////////////////////////////////////////
+      // 2.1. Create ASCII frame
+      ///////////////////////////////////////////
+
+      // create new frame
+      //frame.createFrame(MAX_FRAME);
+      frame.createFrame(ASCII);
+      frame.addSensor(SENSOR_TURB, number4);
+      frame.addSensor(SENSOR_DO, number5);
+      //frame.addSensor(SENSOR_STR, bat_sonda2str);
+      //frame.addSensor(SENSOR_STR, alim_sonda2str);
+      frame.addSensor(SENSOR_WV, wipper);
+      //frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
+      frame.addSensor(SENSOR_BAT, battery);
+
+      frame.showFrame();
+
+      /////////////////////////////////////////
+      // DATA LOGGER 2
+      ////////////////////////////////////////
+
+      // Inicializa o array toWrite com 0
+      memset(toWrite, 0x00, sizeof(toWrite) );
+      // Conversion from Binary to ASCII
+      Utils.hex2str( frame.buffer, toWrite, frame.length);
+      // Imprime o buffer armazenado em toWrite
+      USB.print(F("Frame to be stored:"));
+      USB.println(toWrite);
+
+      /////////////////////////////////////////////////////
+      // 2. Append data into file
+      /////////////////////////////////////////////////////
+
+      // grava o frame no arquivo
+      sd_answer = SD.appendln(filename, toWrite);
+
+      if ( sd_answer == 1 )
+      {
+        USB.println(F("Frame appended to file"));
+      }
+      else
+      {
+        USB.println(F("Append failed"));
+      }
+
+      //Sleep por 1 min
+      countFramesWhlie++;
+
+
+      pegaEnvia(filename);
+      
+
+      USB.println("+++++++++++++++++++++++++++++Dormir por 15+++++++++++++++++++++++++++ ");
+
+      RTC.setAlarm1("00:00:15:00", RTC_OFFSET, RTC_ALM1_MODE4);
+
+      PWR.sleep(ALL_OFF);
+      USB.ON();
+      RTC.ON();
+      delay(100);
+      SD.ON();
+      slave.begin(9600, SOCKET0);
+
+      // INTERRUPÇÃO PARA SLEEP AND WAKE NA HORA DETERMINADA
+      if ( intFlag & RTC_INT )
+      {
+        intFlag &= ~(RTC_INT); // Clear flag
+        USB.println("+++++++++++++++++++++++++++++Acorda depois de 1 min+++++++++++++++++++++++++++ ");
+      }
+    } //end while
+
+    /////////////////////////////////////////////////////
+    // 3. Get information from File
+    /////////////////////////////////////////////////////
+
+    // get number of lines in file
+    numLines = SD.numln(filename);
+
+  //  pegaEnvia(filename);
+
+    // set RTC time
+    error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+
+    // check flag
+    if ( error == 0 )
+    {
+      USB.print(F("SET RTC ok. "));
+    }
+    else
+    {
+      USB.print(F("SET RTC error. "));
+    }
+
+    USB.print(F("RTC Time:"));
+    USB.println(RTC.getTime());
+
+    USB.println();
+
+    USB.println("Show File: ");
+    SD.showFile(filename);
+    delay(1000);
+
+    countFramesWhlie = 0;
+
+    // Setting time
+    RTC.ON();
+    USB.print(F("Time: "));
+    USB.println(RTC.getTime());
+
+  }//end if
+
+}
+
+void pegaEnvia (char filename[])
+{
+  // get number of lines in file
+  numLines = SD.numln(filename);
+  startLine = numLines - 2;
+  endLine = numLines;
+
+  USB.print("StartLine: ");
+  USB.println(startLine);
+
+  USB.print("Numero de Linhas: ");
+  USB.println(numLines);
+
+  // iterate to get the File lines specified
+  // O valor 3 é o numero de linhas que o
+  for (int i = startLine; i < endLine ; i++)
+  {
+    // Get 'i' line -> SD.buffer
+    SD.catln( filename, i, 1);
+
+    // initialize frameSD
+    memset(frameSD, 0x00, sizeof(frameSD) );
+
+    // conversion from ASCII to Binary
+    lengthSD = Utils.str2hex(SD.buffer, frameSD );
+
+    // Conversion from ASCII to Binary
+    USB.print(F("Get previously stored frame:"));
+
+    for (int j = 0; j < lengthSD; j++)
+    {
+      USB.print(frameSD[j], BYTE);
+    }
+    USB.println();
+
+    /************************************************
+        At this point 'frameSD' and 'lengthSD' can be
+        used as 'frame.buffer' and 'frame.length' to
+        send information via some communication module
+    *************************************************/
+
+    xbeeDM.ON(SOCKET1);
+    delay(100);
+    xbeeDM.setPAN(panID);
+    delay(100);
+
+    // send XBee packet
+    error = xbeeDM.send( RX_ADDRESS, frameSD, lengthSD );
+
+    // check TX flag
+    if ( error == 0 )
+    {
+      USB.println(F("send ok"));
+    }
+    else
+    {
+      USB.println(F("send error"));
+      // blink red LED
+      Utils.blinkRedLED();
+      senderror++;
+    }
+  }
+}
+
