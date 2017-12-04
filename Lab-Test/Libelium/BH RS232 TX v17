@@ -3,53 +3,47 @@
 // Alex Calegari Fracaroli C0479831@vale.com
 // Tom Massicotte Tom.massicotte@vale.com
 
-//Code Change list
-//1.0
-  // Define BROADCAST MAC address (This si the MAC Address of your gateway)
-  //1.1
-  // Define the Waspmote ID
-  // Define Pan ID
-  // 1.2
-  //Define Freq Channel to be set:
-  // 1.3
-//Set Waspmote Radio ID
-//2.0
-//Set Router Sleep Time
+//Changes
+// Area #1.0 Set Pan ID 
+// Area #2.0 Set MAC ID 
+// Area #3.0 Set Waspmote ID 
+// Area #4.0 Set Channel 
+// Area #5.0 Set Modbus Slave ID 
+// Area #6.0 Float Sensor Data 
+// Area #7.0 Set Network Retries 
+// Area #8.0 Set Radio Power Output 
+// Area #9.0 Sync Time to Gateway
+// Area #10.0 Set Router Wake Time (Every houre 57min)
+// Area #11.0 Modbus Sensor Collection From Data Logger
+// Area #12.0 Sensor Time Offset Sleep (for 14min)
 
-//3.0
 
-//last code we made
 #include <Wasp232.h>
 #include <ModbusMaster232.h>
 #include <WaspXBeeDM.h>
 #include <WaspFrame.h>
 
-// Instantiate ModbusMaster object as slave ID 1
-ModbusMaster232 slave(1);
+//================================================================================
+//                      Set Variables
+//================================================================================
+ 
+//Area #1 Set Pan ID
+      // PAN (Personal Area Network) Identifier
+        uint8_t  panID[2] = {0x12, 0x34};
 
-//1.0 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// Define BROADCAST MAC address
-//////////////////////////////////////////
-//char RX_ADDRESS[] = "000000000000FFFF";
-//////////////////////////////////////////
-char RX_ADDRESS[] =   "0013A200408DE1A8";
+//Area #2 Set MAC ID 
+       // Destination MAC address
+       char RX_ADDRESS[] = "0013A200408DE1A8";
+      //OR
+      // Define BROADCAST MAC address
+      //char RX_ADDRESS[] = "000000000000FFFF";
+      
+//Area #3 Set Waspmote ID
+      char WASPMOTE_ID[] = "Turbidity test";
 
-//char RX_ADDRESS[] = "0013A20040A5A041";
-//char meshlium[] = "0013A200408DE1AF";
-// 1.1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// Define the Waspmote ID
-char WASPMOTE_ID[] = "Turbidity test";
-// Define Pan ID
-//uint8_t  panID[2] = {0x7F,0xFF};
-uint8_t  panID[2] = {0x12, 0x34};
-
-// 1.2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// Define Freq Channel to be set:
-// Digimesh 2.4Ghz. Range from 0x0B to 0x1A
-// Digimesh 900Mhz. Range from 0x00 to 0x0B
-uint8_t  channel = 0x00;
-
-/*
+// Area #4 Set Channel
+      uint8_t  channel = 0x00;
+    /*
     0x00 – Channel 0 -- 902 – 904,16 GHz
     0x01 – Channel 1 --  904,16 – 906,32 GHz
     0x02 – Channel 2 -- 906,32 – 908,48 GHz
@@ -62,248 +56,251 @@ uint8_t  channel = 0x00;
     0x09 – Channel 9 -- 921,44 – 923,6 GHz
     0x0A – Channel 10 -- 923,6 – 925,76 GHz
     0x0B – Channel 11 -- 925,76 – 928 GHz
-*/
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    */
 
-// define variable
-uint8_t error;
-float battery = 0;
-float battery_min = 0;
-float inc = 0;
-float temp = 0;
-float pH;
-float orp = 0;
-float turb = 0;
-float od = 0;
-float bat_sonda = 0;
-float alim_sonda = 0;
-float wipper = 0;
+//Area #5 Set Pan ID
+    // Instantiate ModbusMaster object as slave ID 1
+      ModbusMaster232 slave(1);
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// Float Sensor Data
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//Area #6 Float Sensor Data
+      // Float Sensor Data and define char names for sensor data
+        uint8_t error;
+        float battery = 0;
+        float battery_min = 0;
+        float inc = 0;
+        float temp = 0;
+        float pH;
+        float orp = 0;
+        float turb = 0;
+        float od = 0;
+        float bat_sonda = 0;
+        float alim_sonda = 0;
+        float wipper = 0;
 
-// Water Temp
-char temp2string[20] = "nd";
+        // Water Temp
+        char temp2string[20] = "nd";
+        
+        //Solar Battery Level
+        char battery2srt[20] = "nd";
+        
+        // Ph Value
+        char number2[20];
+        
+        // ORP Vale
+        char number3[20];
+        
+        // Trubidity
+        char number4[20];
+        
+        // OD Sensor
+        char number5[20];
+        
+        //Betery voltage inside the Sensor
+        char bat_sonda2str[20] = "nd";
+        
+        //Voltage recived by sensor
+        char alim_sonda2str[20] = "nd";
+        
+        // Wiper amp used
+        char wipper2str[20] = "nd";
 
-//Solar Battery Level
-char battery2srt[20] = "nd";
+        int result;
 
-// Ph Value
-char number2[20];
+// Define SD Data Storage to Store Data
+          char path[] = "/data";
+          char filename[] = "/data/log";
+      
+          // buffer to write into Sd File
+          char toWrite[200];
+      
+          // define variables to read stored frames
+         uint8_t frameSD[MAX_FRAME + 1];
+         uint16_t lengthSD;
+         int32_t numLines;
+         
+        // variables to define the file lines to be read
+        int32_t  diskSize;   
+        int startLine;
+        int endLine;
+        int countFrames = 0;
+        int countFramesWhlie = 0;
+        int sendok = 0;
+        int senderror = 0;
+        
+        // define variable
+        uint8_t sd_answer;
+        
+        void pegaEnvia (char filename[]);
 
-// ORP Vale
-char number3[20];
+//END Variables =================================================================
 
-// Trubidity
-char number4[20];
+//================================================================================
+//                      Setup Loop
+//================================================================================
 
-// OD Sensor
-char number5[20];
-
-//Betery voltage inside the Sensor
-char bat_sonda2str[20] = "nd";
-
-//Voltage recived by sensor
-char alim_sonda2str[20] = "nd";
-
-// Wiper amp used
-char wipper2str[20] = "nd";
-
-int result;
-
-// define folder and file to store data
-char path[] = "/data";
-char filename[] = "/data/log";
-
-// buffer to write into Sd File
-char toWrite[200];
-
-// define variables to read stored frames
-uint8_t frameSD[MAX_FRAME + 1];
-uint16_t lengthSD;
-int32_t numLines;
-
-int32_t  diskSize;
-// variables to define the file lines to be read
-
-int startLine;
-int endLine;
-int countFrames = 0;
-int countFramesWhlie = 0;
-int sendok = 0;
-int senderror = 0;
-
-// define variable
-uint8_t sd_answer;
-
-void pegaEnvia (char filename[]);
-
-void setup()
+      void setup()
 {
-  //Power on the USB for viewing data in the serial monitor.
-  USB.ON();
+          
+          USB.ON();
+          SD.ON();
+        
+          USB.println("Modbus communication over RS-232 - Turbidity Sensor MG");
+        
+          //Waspmote identifier in EEPROM memory
+          frame.setID(WASPMOTE_ID);
+          // init XBee
+          xbeeDM.ON(SOCKET1);
+          //painID
+          xbeeDM.setPAN(panID);
+        //set Channel
+          xbeeDM.setChannel( channel );
+          xbeeDM.getChannel();
+          delay(1000);
+            // check at commmand execution flag
+          if( xbeeDM.error_AT == 0 ) 
+          {
+            USB.print(F("Channel set OK to: 0x"));
+            USB.printHex( xbeeDM.channel );
+            USB.println();
+          }
+            else 
+          {
+            USB.println(F("Error calling 'setChannel()'"));
+          }  
+//================================================================================
+//Area #7 Set Network Retries for Mesh Network
+      xbeeDM.setMeshNetworkRetries(0x07);  
+      xbeeDM.getMeshNetworkRetries();  
 
-  // Set SD ON
-  SD.ON();
+//================================================================================
+//Area #8 Set Radio Power Output
+          /*
+          Parameter   XBee-PRO
+          0            10dBm
+          1            12dBm
+          2            14dBm
+          3            16dBm 
+          4            18dBm
+          */
+          xbeeDM.setPowerLevel(4);  
+          xbeeDM.getPowerLevel();  
+                 
+          // Set Radio Identifier
+          xbeeDM.setNodeIdentifier(WASPMOTE_ID);
+          xbeeDM.getNodeIdentifier();              
+        
+          // 5. write values to XBee module memory
+          xbeeDM.writeValues();
+        
+          // check the AT commmand execution flag
+          if( xbeeDM.error_AT == 0 ) 
+          {
+            USB.println(F("Changes stored OK"));
+          }
+          else 
+          {
+            USB.println(F("Error calling 'writeValues()'"));   
+          }
+        
+          // Initialize Modbus communication baud rate
+          slave.begin(9600, SOCKET0);
+        
+          delay(100);
+          RTC.ON();
+        
+          // slave.readHoldingRegisters(0,20);
+          result =  slave.readHoldingRegisters(0, 20);
 
-  //Print hello message
-  USB.println("Modbus communication over RS-232 - Turbidity Sensor MG");
-
-  // store Waspmote identifier in EEPROM memory
-  frame.setID(WASPMOTE_ID);
-  // init XBee
-  xbeeDM.ON(SOCKET1);
-  //painID
-  xbeeDM.setPAN(panID);
-  //  xbeeDM.setEncryptionMode(0);
-  //  xbeeDM.setLinkKey(KEY);
-  //  xbeeDM.setMeshNetworkRetries(0x03);
-
-//set Channel
-  xbeeDM.setChannel( channel );
-  xbeeDM.getChannel();
-  delay(1000);
-    // check at commmand execution flag
-  if( xbeeDM.error_AT == 0 ) 
-  {
-    USB.print(F("Channel set OK to: 0x"));
-    USB.printHex( xbeeDM.channel );
-    USB.println();
-  }
-  else 
-  {
-    USB.println(F("Error calling 'setChannel()'"));
-  }  
-  
-  xbeeDM.setPowerLevel(4);  
-  xbeeDM.getPowerLevel();  
-
-  // 1.3
-  // Set Waspmote Radio ID %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  /////////////////////////////////////
-  // Set Radio Identifier
-  /////////////////////////////////////
-  xbeeDM.setNodeIdentifier("Trib #1 BH");
-  xbeeDM.getNodeIdentifier();
-  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  /////////////////////////////////////
-  // 5. write values to XBee module memory
-  /////////////////////////////////////
-  xbeeDM.writeValues();
-
-  // check the AT commmand execution flag
-  if( xbeeDM.error_AT == 0 ) 
-  {
-    USB.println(F("Changes stored OK"));
-  }
-  else 
-  {
-    USB.println(F("Error calling 'writeValues()'"));   
-  }
-
-  // Initialize Modbus communication baud rate
-  slave.begin(9600, SOCKET0);
-
-  delay(100);
-  RTC.ON();
-
-  // slave.readHoldingRegisters(0,20);
-  result =  slave.readHoldingRegisters(0, 20);
- 
-  /////////////////////////////////////
-  // Set Time From Gateway
-  /////////////////////////////////////
-
-  int errorSinc=0;
-
-  while(errorSinc<2)
-  {
-    // set RTC time
-    error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
-    // check flag
-  
-    if ( error == 0 )
-    {
-      USB.print(F("SET RTC ok. "));
-      errorSinc=5;
-    }
-    else
-    {
-      USB.print(F("SET RTC error. "));
-      errorSinc++;
-    }
-  }
- 
-  USB.print(F("RTC Time:"));
-  USB.println(RTC.getTime());
-  delay(2000);
-
-  // create path FILE
-  sd_answer = SD.mkdir(path);
-  
-  if( sd_answer == 1 )
-  { 
-    USB.println(F("path created"));
-  }
-  else
-  {
-    USB.println(F("mkdir failed"));
-  }
- 
-  // Create file for Waspmote Frames
-  sd_answer = SD.create(filename);
-  
-  if( sd_answer == 1 )
-  { 
-    USB.println(F("/data/log created"));
-  }
-  else
-  {
-    USB.println(F("/data/log not created"));
-  }
-  
- 
+// Area #9  ================================================================================
+// Sync Time to Gateway   
+                      
+          int errorSinc=0;
+        
+          while(errorSinc<2)
+          {
+            // set RTC time
+            error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+            // check flag
+          
+            if ( error == 0 )
+            {
+              USB.print(F("SET RTC ok. "));
+              errorSinc=5;
+            }
+            else
+            {
+              USB.print(F("SET RTC error. "));
+              errorSinc++;
+            }
+          }
+         
+          USB.print(F("RTC Time:"));
+          USB.println(RTC.getTime());
+          delay(2000);
+        
+          // create path FILE
+          sd_answer = SD.mkdir(path);
+          
+          if( sd_answer == 1 )
+          { 
+            USB.println(F("path created"));
+          }
+          else
+          {
+            USB.println(F("mkdir failed"));
+          }
+         
+          // Create file for Waspmote Frames
+          sd_answer = SD.create(filename);
+          
+          if( sd_answer == 1 )
+          { 
+            USB.println(F("/data/log created"));
+          }
+          else
+          {
+            USB.println(F("/data/log not created"));
+          }
+         
 }
 
+//================================================================================
+//                              Run Loop   
+//================================================================================
 void loop()
 {
-  /*
-    //   2.0
-    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    // %%%%%%%%%%%%%%%%%%% Router Sleep Time%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    ///////////////////////////////////////////
-    // Wake Roughter Every 50min - ABSOLUTE MODE - Wake Router
-    ///////////////////////////////////////////
-    /*
-    RTC_ALM1_MODE1: Day, hours, minutes and seconds match
-    RTC_ALM1_MODE2: Date, hours, minutes and seconds match
-    RTC_ALM1_MODE3: Hours, minutes and seconds match
-    RTC_ALM1_MODE4: Minutes and seconds match
-    RTC_ALM1_MODE5: Seconds match
-    RTC_ALM1_MODE6: Once per second
-  */
-  USB.println("+++++++++++++++++++++++ Sleep: Aguardando o Alarm (XX:59:00) +++++++++++++++++++++++++++ ");
-  RTC.setAlarm1("00:00:59:00", RTC_ABSOLUTE, RTC_ALM1_MODE4);
-
-  PWR.sleep(ALL_OFF);
-  USB.ON();
-  RTC.ON();
-  delay(100);
-//  SD.ON();
-  slave.begin(9600, SOCKET0);
-  delay(200);
-
-  // INTERRUPÇÃO PARA SLEEP AND WAKE NA HORA DETERMINADA
-  if ( intFlag & RTC_INT )
-  {
-    intFlag &= ~(RTC_INT); // Clear flag
-    USB.println("----------------------------- Acorda na hora determinada ------------------------------- ");
-
-    while (countFramesWhlie <= 4)
-    {
+//Area #10 Set Wake Time. What time do you want the router to wake up?
+          // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4: (RTC_ALM1_MODE4: Minutes and seconds match )
+          // This will wake the Sensor every hour when the RTC clock reads 59:00 min
+          // Then it will sleep for 14 min and awake again and send data repeating this loop 3 times
+            /*
+            RTC_ALM1_MODE1: Day, hours, minutes and seconds match 
+            RTC_ALM1_MODE2: Date, hours, minutes and seconds match 
+            RTC_ALM1_MODE3: Hours, minutes and seconds match 
+            RTC_ALM1_MODE4: Minutes and seconds match 
+            RTC_ALM1_MODE5: Seconds match 
+            RTC_ALM1_MODE6: Once per second 
+            */
+          
+        USB.println("+++++++++++++++++++++++ Sleep: Aguardando o Alarm (XX:59:00) +++++++++++++++++++++++++++ ");
+        RTC.setAlarm1("00:00:59:00", RTC_ABSOLUTE, RTC_ALM1_MODE4);
+        PWR.sleep(ALL_OFF);
+        USB.ON();
+        RTC.ON();
+        delay(100);
+        //  SD.ON();
+        slave.begin(9600, SOCKET0);
+        delay(200);
+      
+        // INTERRUPÇÃO PARA SLEEP AND WAKE NA HORA DETERMINADA
+        if ( intFlag & RTC_INT )
+        {
+          intFlag &= ~(RTC_INT); // Clear flag
+          USB.println("----------------------------- Acorda na hora determinada ------------------------------- ");
+      
+          while (countFramesWhlie <= 4)
+          {
 
         // init XBee
         xbeeDM.ON(SOCKET1);
@@ -311,35 +308,14 @@ void loop()
         RTC.ON();
         delay(100);
         SD.ON();
-  
-        // %%%%%%%%%%%%%%%%%%% Router sleep END %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+          
         // For float point variable
         union
         {
           unsigned int i[2];
           float f;
         } foo;
-  
-        //              Reading from the temperature sensor
-        // *****************************************************************************************
-        //This variable will store the result of the communication.
-        //result = 0 : no errors.
-        //result = 1 : error occurred.
-  
-        //int result =  slave.readHoldingRegisters(batteryLevel ,bytesQty);
-  
-        /**************************************************************************************************
-          This function is used to read the contents of a contiguous block of holding registers in a slave
-          The request specifies the starting register address and the number of registers.
-          In the registers are addressed starting at zero. Therefore registers numbered 1-16 are addressed as 0-15.
-          The register data in the response message are packed as two bytes per register.
-         **************************************************************************************************/
-  
-        //  int result =  slave.readHoldingRegisters(0,6);
-  
-  
+        
         result =  slave.readHoldingRegisters(0, 20);
         delay(200);
   
@@ -352,16 +328,10 @@ void loop()
         }
         else
         {
-  
-          //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-          //%%%%%%%%%%%%%%%%%%%%%%% Sensor Collection From Data Logger %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-          //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-          //=======================================================
-          // Register one
-          // foo.i[0] = slave.getResponseBuffer(RegisterAddress)
-          //=======================================================
-  
-          // Register 2 2
+
+//Area #11 ====================== Sensor Collection From Data Logger=====================
+                       
+          // Read Register 2 4
           USB.println("\n Temp");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(2); // Part 1 - address inside getResponseBuffer it is the register address.
@@ -372,7 +342,7 @@ void loop()
           Utils.float2String(temp, temp2string, 3);
           //  USB.println(temp2string);
   
-          // Register 0 1
+          // Read Register 0 1
           USB.println("\n Battery");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(0); // Part 1 - address inside getResponseBuffer it is the register address.
@@ -382,7 +352,7 @@ void loop()
           Utils.float2String(battery, battery2srt, 3);
           //    USB.println(battery2srt);
   
-          // Register 6 7
+          // Read Register 6 7
           USB.println("\n pH");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(6);
@@ -393,7 +363,7 @@ void loop()
           Utils.float2String(pH, number2, 3);
           //   USB.println(number2);
   
-          // Register 6 7
+          // Read Register 6 7
           USB.println("\n ORP");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(8);
@@ -403,7 +373,7 @@ void loop()
           Utils.float2String(orp, number3, 3);
           //  USB.println(number3);
   
-          // Register 8 9
+          // Read Register 8 9
           USB.println("\n Turbidity ");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(10);
@@ -413,7 +383,7 @@ void loop()
           Utils.float2String(turb, number4, 3);
           //  USB.println(number4);
   
-          // Register 10 11
+          // Read Register 10 11
           USB.println("\n OD");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(12);
@@ -423,7 +393,7 @@ void loop()
           Utils.float2String(od, number5, 3);
           //    USB.println(number5);
   
-          // Register 12 13
+          // Read Register 12 13
           USB.println("\n Bat_Sonda");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(14);
@@ -433,8 +403,7 @@ void loop()
           Utils.float2String(bat_sonda, bat_sonda2str, 3);
           USB.println(bat_sonda2str);
   
-  
-          // Register 14 15
+          // Read Register 14 15
           USB.println("\n Alim Sonda");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(16);
@@ -444,7 +413,7 @@ void loop()
           Utils.float2String(alim_sonda, alim_sonda2str, 3);
           USB.println(alim_sonda2str);
   
-          // Register 16 17
+          // Read Register 16 17
           USB.println("\n Wipper mA");
           USB.print(F("\t"));
           foo.i[0] = slave.getResponseBuffer(18);
@@ -463,11 +432,7 @@ void loop()
         //Clear the response buffer.
         slave.clearResponseBuffer();
         delay(500);
-  
-        ///////////////////////////////////////////
-        // 1. Create ASCII frame
-        ///////////////////////////////////////////
-  
+    
         // create new frame
         // frame.createFrame(MAX_FRAME);
         frame.createFrame(ASCII);
@@ -480,8 +445,7 @@ void loop()
   
         frame.showFrame();
   
-        //Parte 1
-  
+        //Part one of the Frame
         /////////////////////////////////////////
         // DATA LOGGER 1
         ////////////////////////////////////////
@@ -495,7 +459,7 @@ void loop()
         USB.println(toWrite);
   
         /////////////////////////////////////////////////////
-        // 2. Append data into file
+        //Append data into file
         /////////////////////////////////////////////////////
   
         // grava o frame no arquivo
@@ -512,7 +476,7 @@ void loop()
   
   
         ///////////////////////////////////////////
-        // 2.1. Create ASCII frame
+        // Create ASCII frame
         ///////////////////////////////////////////
   
         // create new frame
@@ -556,15 +520,14 @@ void loop()
           USB.println(F("Append failed"));
         }
   
-        //Sleep por 1 min
+        //Loop Count
         countFramesWhlie++;
-    
         pegaEnvia(filename);
-        
-//      SD.showFile(filename);
-      
+        //SD.showFile(filename);
+
+//Area #12 ====================== Sensor Time Offset Sleep for 14min=====================
         USB.println("+++++++++++++++++++++++++++++Dormir por 14min++++++++++++++++++++++++++++++++++ ");
-  
+        // Set time offset here
         RTC.setAlarm1("00:00:14:00", RTC_OFFSET, RTC_ALM1_MODE4);
   
         PWR.sleep(ALL_OFF);
@@ -584,9 +547,7 @@ void loop()
         USB.println(RTC.getTime());
     } //end while
 
-    /////////////////////////////////////////////////////
-    // 3. Get information from File
-    /////////////////////////////////////////////////////
+
 
     // get number of lines in file
     numLines = SD.numln(filename);
