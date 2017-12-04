@@ -260,7 +260,7 @@
 //=================================================================================    
 //Area 10 Set Wake Time. What time do you want the router to wake up?
       // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4: (RTC_ALM1_MODE4: Minutes and seconds match )
-      // This will wake the router every hout when the RTC clock reads 57:00 min
+      // This will wake the router every hour when the RTC clock reads 57:00 min
       // THe current setup will cause the router to wake up everytime the clock hit 57min
       // Then it will stay awake for 5min (creating a window to make the network and send data
       // Then it will sleep for 10 min and awake again for 5mins repeating this loop 3 times
