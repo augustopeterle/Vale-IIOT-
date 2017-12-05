@@ -1,7 +1,4 @@
 //Pre Prod Test Code (Tom)
-// Coded created by Alex and Tom Nov 13 2017
-// Alex Calegari Fracaroli C0479831@vale.com
-// Tom Massicotte Tom.massicotte@vale.com
 
 //Changes
 // Area #1.0 Set Pan ID 
@@ -29,13 +26,13 @@
  
 //Area #1 Set Pan ID
       // PAN (Personal Area Network) Identifier
-      uint8_t  panID[2] = {0x12,0x34}; 
+      uint8_t  panID[2] = {0x22,0x22}; 
 
 
 //Area #2 Set MAC ID 
        // Destination MAC address
        //////////////////////////////////////////
-       char RX_ADDRESS[] = "0013A200408DE1A8";
+       char RX_ADDRESS[] = "0013A200408DE1AF";
        //////////////////////////////////////////
   
       //OR
@@ -49,7 +46,7 @@
       //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       // Define the Waspmote ID
       //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      char WASPMOTE_ID[] = "R3-BH-Lab";
+      char WASPMOTE_ID[] = "R2-MG";
 
 // Area #4 Set Channel
     // Define Freq Channel to be set: 
@@ -256,11 +253,21 @@
           USB.print(F("Time: "));
           USB.println(RTC.getTime());
       
- 
+          // Show the remaining battery level
+          USB.print(F("Battery Level: "));
+          USB.print(PWR.getBatteryLevel(),DEC);
+          USB.print(F(" %"));
+          
+          // Show the battery Volts
+          USB.print(F(" | Battery (Volts): "));
+          USB.print(PWR.getBatteryVolts());
+          USB.println(F(" V"));
+          
+          delay(1000);
 //=================================================================================    
 //Area 10 Set Wake Time. What time do you want the router to wake up?
       // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4: (RTC_ALM1_MODE4: Minutes and seconds match )
-      // This will wake the router every hour when the RTC clock reads 57:00 min
+      // This will wake the router every hout when the RTC clock reads 57:00 min
       // THe current setup will cause the router to wake up everytime the clock hit 57min
       // Then it will stay awake for 5min (creating a window to make the network and send data
       // Then it will sleep for 10 min and awake again for 5mins repeating this loop 3 times
