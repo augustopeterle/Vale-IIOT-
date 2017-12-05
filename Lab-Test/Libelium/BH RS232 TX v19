@@ -19,16 +19,16 @@ ModbusMaster232 slave(1);
 //1.0 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     // Define BROADCAST MAC address
     //////////////////////////////////////////
-        char RX_ADDRESS[] = "000000000000FFFF";
+      //  char RX_ADDRESS[] = "000000000000FFFF";
     //////////////////////////////////////////
 
     //char RX_ADDRESS[] = "0013A20040A5A041";
-        //char meshlium[] = "0013A200408DE1AF";
+        char RX_ADDRESS[] = "0013A200408DE1AF";
 // 1.1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     // Define the Waspmote ID 
-      char WASPMOTE_ID[] = "Turbidity #1";
+      char WASPMOTE_ID[] = "PMAI-02";
     // Define Pan ID
-      uint8_t  panID[2] = {0x7F,0xFF}; 
+      uint8_t  panID[2] = {0x22,0x22}; 
 
 // 1.2 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     // Define Freq Channel to be set: 
@@ -361,6 +361,7 @@ ModbusMaster232 slave(1);
       frame.addSensor(SENSOR_PH, number2);
       frame.addSensor(SENSOR_ORP, number3);
       frame.showFrame();
+      
       ///////////////////////////////////////////
       // 2. Send packet
       ///////////////////////////////////////////  
@@ -372,13 +373,13 @@ ModbusMaster232 slave(1);
       {
         USB.println(F("send ok"));
        // blink green LED    
-        Utils.blinkGreenLED();
+        //Utils.blinkGreenLED();
       }
          else 
       {
         USB.println(F("send error"));
        // blink red LED
-        Utils.blinkRedLED();
+        //Utils.blinkRedLED();
       }
          delay(2000);
 
@@ -427,54 +428,12 @@ ModbusMaster232 slave(1);
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%% Router Sleep Time%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    USB.println(F("\n++++++++++++++ Alarm 1 - ABSOLUTE MODE ++++++++++++++++"));
-
-
-    ///////////////////////////////////////////
-    // Wake Roughter Every 50min - ABSOLUTE MODE - Wake Router
-    ///////////////////////////////////////////
-/*
-     RTC_ALM1_MODE1: Day, hours, minutes and seconds match
-     RTC_ALM1_MODE2: Date, hours, minutes and seconds match
-     RTC_ALM1_MODE3: Hours, minutes and seconds match
-     RTC_ALM1_MODE4: Minutes and seconds match
-     RTC_ALM1_MODE5: Seconds match
-     RTC_ALM1_MODE6: Once per second
-     
- */
-
-    //10.0 Set Wake Time
-    // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4:
-    // This will wake the router every hout when the RTC clock reads 50:00 min
-    // Alarm Delay is set for 10min Later
+    USB.println(F("\n++++++++++++++ 40 Sec Time Off-Set ++++++++++++++++"));
     
-      RTC.setAlarm1("00:00:00:59",RTC_ABSOLUTE,RTC_ALM1_MODE5);
+      RTC.setAlarm1("00:00:00:40", RTC_OFFSET, RTC_ALM1_MODE4);
+      //RTC.setAlarm1("00:00:00:59",RTC_ABSOLUTE,RTC_ALM1_MODE5);
 
-    // Checking Alarm 1 
-      USB.println(F("Wake Router Mode: "));
-      USB.println(RTC.getAlarm1());
-
-    // Setting Waspmote to Low-Power Consumption Mode
-      USB.println(F("Waspmote goes into sleep mode until the RTC alarm causes an interrupt"));
-      PWR.sleep(ALL_OFF);
-
-    // After setting Waspmote to power-down, UART is closed, so it
-    // is necessary to open it again
-      USB.ON();
-      RTC.ON();
-      USB.println(F("\r\nWaspmote wake up!!"));
-      USB.print(F("Time: "));
-      USB.println(RTC.getTime());
-      
-      
-      // Waspmote wakes up at '11:25:15'
-      if( intFlag & RTC_INT )
-      {
-        intFlag &= ~(RTC_INT); // Clear flag
-       // Utils.blinkLEDs(1000); // Blinking LEDs
-       // Utils.blinkLEDs(1000); // Blinking LEDs
-    }
-     USB.println();
+    
 
         
  // %%%%%%%%%%%%%%%%%%% Router sleep END %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
