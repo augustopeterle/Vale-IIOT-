@@ -17,7 +17,7 @@
 // Area #7.0 Set Network Retries 
 // Area #8.0 Set Radio Power Output 
 // Area #9.0 Sync Time to Gateway
-// Area #10.0 Sync Time to Gateway
+// Area #10.0 Set Router Bettery packet Send Time
 
  
     #include <WaspXBeeDM.h>
@@ -342,7 +342,7 @@
 
 //Area #10 =================================================================================
   
-        // 11.0 Set Router Bettery packet Send Time
+        // Set Router Bettery packet Send Time
         USB.println(F("Wait 30min to send Batery Frame"));
         USB.println(F("Router Awake"));
         delay(1800000);
