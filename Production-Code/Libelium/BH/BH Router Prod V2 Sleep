@@ -1,0 +1,446 @@
+//Pre Prod Test Code (Tom)
+
+//Changes
+// Area #1.0 Set Pan ID 
+// Area #2.0 Set MAC ID 
+// Area #3.0 Set Waspmote ID 
+// Area #4.0 Set Channel 
+// Area #5.0 Set Encryption On/Off 
+// Area #6.0 Set Encrypton Key 
+// Area #7.0 Set Network Retries 
+// Area #8.0 Set Radio Power Output 
+// Area #9.0 Sync Time to Gateway
+// Area #10.0 Set Router Wake Time (Every houre 57min)
+// Area #11.0 Set Loop Count for time offset 
+// Area #12.0 Router Awake time (10min)
+// Area #13.0 Set Router sleep time in offset loop (10min)
+ 
+    #include <WaspXBeeDM.h>
+    #include <WaspFrame.h>
+
+
+
+//================================================================================
+//                      Set Variables
+//================================================================================
+ 
+//Area #1 Set Pan ID
+      // PAN (Personal Area Network) Identifier
+      uint8_t  panID[2] = {0x12,0x23}; 
+
+
+//Area #2 Set MAC ID 
+       // Destination MAC address
+       //////////////////////////////////////////
+       char RX_ADDRESS[] = "0013A200408DE1A8";
+       //////////////////////////////////////////
+  
+      //OR
+  
+      // Define BROADCAST MAC address
+      //////////////////////////////////////////
+      //char RX_ADDRESS[] = "000000000000FFFF";
+      //////////////////////////////////////////
+
+//Area #3 Set Waspmote ID
+      //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      // Define the Waspmote ID
+      //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      char WASPMOTE_ID[] = "R2-MG";
+
+// Area #4 Set Channel
+    // Define Freq Channel to be set: 
+    // Digimesh 2.4Ghz. Range from 0x0B to 0x1A
+    // Digimesh 900Mhz. Range from 0x00 to 0x0B
+    uint8_t  channel = 0x00;
+
+    /* 
+    0x00 – Channel 0 -- 902 – 904,16 GHz
+    0x01 – Channel 1 --  904,16 – 906,32 GHz
+    0x02 – Channel 2 -- 906,32 – 908,48 GHz
+    0x03 – Channel 3 -- 908,48 – 910,64 GHz
+    0x04 – Channel 4 -- 910,64 – 912,80 GHz
+    0x05 – Channel 5 -- 912,80 – 914,96 GHz
+    0x06 – Channel 6 -- 914,96 – 917,12 GHz
+    0x07 – Channel 7 -- 917,12 – 919,28 GHz
+    0x08 – Channel 8 -- 919,28 – 921,44 GHz
+    0x09 – Channel 9 -- 921,44 – 923,6 GHz
+    0x0A – Channel 10 -- 923,6 – 925,76 GHz
+    0x0B – Channel 11 -- 925,76 – 928 GHz
+    */
+
+// Area #5 Set Encryption On/Off
+    // Define the Encryption mode: 1 (enabled) or 0 (disabled)
+    uint8_t encryptionMode = 0;
+
+// Area #6 Set Encrypton Key
+    // Define the AES 16-byte Encryption Key
+    char  encryptionKey[] = "WaspmoteIIOTKey!";
+
+    int countFramesWhlie = 0;
+     
+    // define variable
+    uint8_t error;
+//END Variables =================================================================
+
+//================================================================================
+//                      Setup Loop
+//================================================================================
+ 
+    void setup()
+{
+      // open USB port
+      USB.ON();
+    
+      USB.println(F("-------------------------------"));
+      USB.println(F("Configure XBee Digimesh"));
+      USB.println(F("-------------------------------"));
+  
+      //================================================================================
+      //                   Radio Settings  
+      //================================================================================
+      // init XBee 
+      xbeeDM.ON();   
+
+      // Set Waspmote Radio ID Waspmote Name(Radio Name in XCTU Program)
+      xbeeDM.setNodeIdentifier(WASPMOTE_ID);
+      xbeeDM.getNodeIdentifier();
+      
+      // store Waspmote identifier in EEPROM memory
+      frame.setID( WASPMOTE_ID );
+      
+//================================================================================
+//Area #7 Set Network Retries for Mesh Network
+      xbeeDM.setMeshNetworkRetries(0x07);  
+      xbeeDM.getMeshNetworkRetries();  
+
+//================================================================================
+//Area #8 Set Radio Power Output
+   
+      /*
+      Parameter   XBee-PRO
+      0            10dBm
+      1            12dBm
+      2            14dBm
+      3            16dBm 
+      4            18dBm
+      */
+    
+     xbeeDM.setPowerLevel(4);
+      xbeeDM.getPowerLevel();
+
+   
+        //  Set channel 
+            
+        xbeeDM.setChannel( channel );
+      
+        // check at commmand execution flag
+        if( xbeeDM.error_AT == 0 ) 
+        {
+          USB.print(F("1. Channel set OK to: 0x"));
+          USB.printHex( xbeeDM.channel );
+          USB.println();
+        }
+        else 
+        {
+          USB.println(F("1. Error calling 'setChannel()'"));
+        }
+    
+         // 2. set PANID
+           RTC.ON();
+           xbeeDM.setPAN(panID);
+        
+          // check the AT commmand execution flag
+          if( xbeeDM.error_AT == 0 ) 
+          {
+            USB.print(F("2. PAN ID set OK to: 0x"));
+            USB.printHex( xbeeDM.PAN_ID[0] ); 
+            USB.printHex( xbeeDM.PAN_ID[1] ); 
+            USB.println();
+          }
+          else 
+          {
+            USB.println(F("2. Error calling 'setPAN()'"));  
+          }
+        
+       
+        // 3. set encryption mode (1:enable; 0:disable)
+         xbeeDM.setEncryptionMode( encryptionMode );
+    
+          // check the AT commmand execution flag
+          if( xbeeDM.error_AT == 0 ) 
+          {
+            USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
+            USB.println( xbeeDM.encryptMode, DEC );
+          }
+          else 
+          {
+            USB.println(F("3. Error calling 'setEncryptionMode()'"));
+          }
+             
+          // Set encryption key
+           xbeeDM.setLinkKey( encryptionKey );
+        
+          // check the AT commmand execution flag
+          if( xbeeDM.error_AT == 0 ) 
+          {
+            USB.println(F("4. AES encryption key set OK"));
+          }
+          else 
+          {
+            USB.println(F("4. Error calling 'setLinkKey()'")); 
+          }
+        
+       
+          // 5. write values to XBee module memory
+          xbeeDM.writeValues();
+        
+          // check the AT commmand execution flag
+          if( xbeeDM.error_AT == 0 ) 
+          {
+            USB.println(F("5. Changes stored OK"));
+          }
+          else 
+          {
+            USB.println(F("5. Error calling 'writeValues()'"));   
+          }
+        
+          USB.println(F("-------------------------------")); 
+
+
+// Area #9  ================================================================================
+// Sync Time to Gateway     
+       
+        int errorSinc=0;
+      //Set Number for Newtwork sync time retrys here
+        while(errorSinc<2)
+        {
+              // set RTC time
+              error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+              // check flag
+            
+              if ( error == 0 )
+              {
+                USB.println(F("SET RTC ok. "));
+                errorSinc=11;
+              }
+              else
+              {
+                USB.println(F("SET RTC error. "));
+                errorSinc++;
+              }
+          }
+
+          USB.println(F("RTC Time:"));
+          USB.println(RTC.getTime());
+          delay(2000);
+          //END Time Sync ===================================================================
+       
+      //END Setup LOOP =============================================================
+       
+ }
+
+//================================================================================
+//                              Run Loop   
+//================================================================================
+
+    void loop()
+ {
+  
+         USB.println(F("\n++++++++++++++ Alarm #1 - ABSOLUTE MODE ++++++++++++++++"));
+      
+          // Setting time
+          USB.print(F("Time: "));
+          USB.println(RTC.getTime());
+      
+          // Show the remaining battery level
+          USB.print(F("Battery Level: "));
+          USB.print(PWR.getBatteryLevel(),DEC);
+          USB.print(F(" %"));
+          
+          // Show the battery Volts
+          USB.print(F(" | Battery (Volts): "));
+          USB.print(PWR.getBatteryVolts());
+          USB.println(F(" V"));
+          
+          delay(1000);
+//=================================================================================    
+//Area 10 Set Wake Time. What time do you want the router to wake up?
+      // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4: (RTC_ALM1_MODE4: Minutes and seconds match )
+      // This will wake the router every hout when the RTC clock reads 57:00 min
+      // THe current setup will cause the router to wake up everytime the clock hit 57min
+      // Then it will stay awake for 5min (creating a window to make the network and send data
+      // Then it will sleep for 10 min and awake again for 5mins repeating this loop 3 times
+
+            /*
+            RTC_ALM1_MODE1: Day, hours, minutes and seconds match 
+            RTC_ALM1_MODE2: Date, hours, minutes and seconds match 
+            RTC_ALM1_MODE3: Hours, minutes and seconds match 
+            RTC_ALM1_MODE4: Minutes and seconds match 
+            RTC_ALM1_MODE5: Seconds match 
+            RTC_ALM1_MODE6: Once per second 
+        */
+          RTC.setAlarm1("00:00:57:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
+      
+      // Checking Alarm 1  
+          USB.println(F("Wake Router Mode: "));
+          USB.println(RTC.getAlarm1());
+      
+      // Setting Waspmote to Low-Power Consumption Mode
+          USB.println(F("Waspmote goes into sleep mode until the RTC alarm causes an interrupt"));
+          PWR.sleep(ALL_OFF);
+      
+      // After setting Waspmote to power-down, UART is closed, so it
+      // is necessary to open it again
+          USB.ON();
+          RTC.ON(); 
+            
+      // Waspmote wakes up at '00:57:00'
+          if( intFlag & RTC_INT )
+      {
+          intFlag &= ~(RTC_INT); // Clear flag
+        
+      }
+      
+      USB.println();
+
+      //END Time Sync ABSOLUTE MODE ===================================================================
+
+
+      //===============================================================================================
+      // Start time offset delay (three loops
+      //===============================================================================================
+        USB.println("+++++++++++++++++++++++++++++  Start Delay loop +++++++++++++++++++++++++++ ");
+        
+//Area #11 =================================================================================    
+// Loop Count Set How many loops you want
+
+        // Wlile loop to repeat the loop 4 times (Open four windows to allow the sensors to send data
+        while (countFramesWhlie <= 3)
+    {
+    
+          USB.println(F("\r\n Time Waspmote woke up !!"));
+          USB.println(F("\r\nWaspmote wake up!!"));
+          USB.print(F("Time: "));
+          USB.println(RTC.getTime());
+         // init XBee 
+          xbeeDM.ON();   
+        
+          
+          /////////////////////////////////////
+          // Get channel 
+          /////////////////////////////////////
+          xbeeDM.getChannel();
+          USB.print(F("channel: "));
+          USB.printHex(xbeeDM.channel);
+          USB.println();
+        
+          /////////////////////////////////////
+          // 2. get PAN ID
+          /////////////////////////////////////
+          xbeeDM.getPAN();
+          USB.print(F("panid: "));
+          USB.printHex(xbeeDM.PAN_ID[0]); 
+          USB.printHex(xbeeDM.PAN_ID[1]); 
+          USB.println(); 
+          
+          /////////////////////////////////////
+          // 3. get Encryption mode (1:enable; 0:disable)
+          /////////////////////////////////////
+          xbeeDM.getEncryptionMode();
+          USB.print(F("encryption mode: "));
+          USB.printHex(xbeeDM.encryptMode);
+          USB.println(); 
+          
+          USB.println(F("------------------------------")); 
+             
+          delay(3000);
+
+          //===============================================================================================
+          // Create Binnary frame
+      
+          //frame.createFrame(MAX_FRAME);  
+          // USB.println(frame.getFrameSize(),DEC);
+            
+          //  OR
+                        
+          // create new frame
+          frame.createFrame(ASCII);  
+        
+          /*
+         // add frame fields
+         //frame.addSensor(SENSOR_STR, "new_sensor_frame");
+        
+          frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
+          frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
+          */
+          frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+          
+          USB.println(F("-------------------------------"));
+          USB.println(F("Send Packet"));
+          USB.println(F("-------------------------------"));
+  
+          //===============================================================================================
+          // Send packet
+          error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+    
+          // check TX flag
+          if( error == 0 )
+          {
+            USB.println(F("send ok"));
+            
+            // blink green LED    
+           // Utils.blinkGreenLED();
+            
+          }
+          else 
+          {
+           USB.println(F("send error"));
+      
+         }
+
+//Area #12 =================================================================================
+// Router Awake for 5min   
+        // 11.0 Set Router Wake Duration
+        USB.print(F("Time: "));
+        USB.println(RTC.getTime());
+          
+        USB.println(F("Router Awake for 4 min"));
+        delay(240000);
+        // 1 min 60000
+        // 2 min 120000
+        // 4 min 240000
+        // 5 min 300000
+
+        //=================================================================================
+        //                    Loop Count 
+         countFramesWhlie++;
+        //=================================================================================
+             
+        
+              USB.println("+++++++++++++++++++++++++++++ Sleep for 11 min+++++++++++++++++++++++++++ ");
+              USB.println(F("\r\nTime Waspmote goes to Sleep!!"));
+              USB.println(F("\r\nWaspmote Goes to Sleep!!"));
+              USB.print(F("Time: "));
+              USB.println(RTC.getTime());
+              
+// Area #13 =================================================================================             
+// Set Offset Time (How long will the Router Sleep       
+              RTC.setAlarm1("00:00:11:00", RTC_OFFSET, RTC_ALM1_MODE4);
+        
+              PWR.sleep(ALL_OFF);
+              USB.ON();
+              RTC.ON();
+              delay(100);
+              SD.ON();
+              // INTERRUPÇÃO PARA SLEEP AND WAKE NA HORA DETERMINADA
+              if ( intFlag & RTC_INT )
+              {
+                intFlag &= ~(RTC_INT); // Clear flag
+                      }
+     } //end while
+            //END Time delay loop ===================================================================
+}
+
+    
+
