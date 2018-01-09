@@ -4,7 +4,7 @@
 
 /*  
  *  ------ GMX VALE Libelium Weather Station -------- 
- *          Sigma Sensors Engenharia  
+ *  Sigma Sensors Engenharia  
  *  Author: Saulo at sigmasensors.com.br
  *
  *  Weather station with GMX 551 and Tip bucket rain gage
@@ -14,241 +14,266 @@
    const int NODE_ID  = 8                      -- LoRa Network Node ID
    char STATION[] = "Sigma_Sensor_GMX"         -- Weather Station name
    char LOG_INTERVAL = "00:00:00:00"           -- Time interval to send and log data
-      
+
+Vale Change list
+
+//Changes
+// Area #1.0 Set Node ID, Station ID and Send data intervolt 
+// Area #2.0 Set Lora Chennel Info
+// Area #3.0 Set Waspmote ID 
+// Area #4.0 Set Channel 
+// Area #7.0 Set Network Retries 
+// Area #8.0 Set Radio Power Output 
+// Area #9.0 Sync Time to Gateway
+// Area #10.0 Sync Time to Gateway
  */
+
+//================================================================================
+//                      Set Variables
+//================================================================================
  
-const int NODE_ID = 8;
-char STATION[] = "Sigma_GMX";
-const char LOG_INTERVAL[] = "00:00:01:00";
-char filename[]="000000.DAT";
-uint8_t sd_answer;
-char toWrite[200];
+// Area #1 Set Node ID, Station ID, Send data intervolt  
+    const int NODE_ID = 8; // Set Node ID
+    char STATION[] = "Sigma_GMX"; // Station Name
+    const char LOG_INTERVAL[] = "00:00:05:00"; // Send data intervolt 
+    char filename[]="000000.DAT";
+    uint8_t sd_answer;
+    char toWrite[200];
 
-// Variables
-uint8_t i = 0;
-int8_t e;
 
-int year;
-int month;
-int day;
-int hour;
-int minute;
-int second;
+    // Variables
+    uint8_t i = 0;
+    int8_t e;
 
-char floffer[10];
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+    int second;
+    
+    char floffer[10];
 
-// buffer to set the date and time
-char buffer[100];
-char input[100];
+    // buffer to set the date and time
+    char buffer[100];
+    char input[100];
 
-//Buffer from GMX 551:
-//Q,005,000.02,125,0952.2,048,+026.4,+014.6,00000.000,000.000,0004,2017-10-16T14:48:06.9,+11.9,0000,15
-//NODE,DIR,SPEED,CDIR,PRESS,RH,TEMP,DEWPOINT,PRECIPT,PRECIPI,SOLARRAD,TIME,VOLT,STATUS,CHECK
-//Node, Wind direction, Wind speed, Corrected Wind direction, Barometric Pressure, 
-//Relative Humidity, Temperature, Dewpoint,Total Precipitation,Precipitation Intensity, Global Hemispheric irradiation, Datetime, power supply Voltage, status, checksum.
+    //Buffer from GMX 551:
+    //Q,005,000.02,125,0952.2,048,+026.4,+014.6,00000.000,000.000,0004,2017-10-16T14:48:06.9,+11.9,0000,15
+    //NODE,DIR,SPEED,CDIR,PRESS,RH,TEMP,DEWPOINT,PRECIPT,PRECIPI,SOLARRAD,TIME,VOLT,STATUS,CHECK
+    //Node, Wind direction, Wind speed, Corrected Wind direction, Barometric Pressure, 
+    //Relative Humidity, Temperature, Dewpoint,Total Precipitation,Precipitation Intensity, Global Hemispheric irradiation, Datetime, power supply Voltage, status, checksum.
+    
+    int     GMX_WindRDir  = 0;
+    float   GMX_WindSpeed = 0.0;
+    int     GMX_WindCDir  = 0;
+    float   GMX_Pressure  = 0.0;
+    int     GMX_RH        = 0;
+    float   GMX_Temp      = 0.0;
+    float   GMX_DewPoint  = 0.0;
+    float   GMX_Precipt   = 0.0;
+    float   GMX_Precipi   = 0.0;
+    int     GMX_Radiation = 0;
+    float   GMX_Battery   = 0.0;
+    char    GMX_Node[1]   = {0};
+    char    GMX_Buffer[124]  = {0};
 
-int     GMX_WindRDir  = 0;
-float   GMX_WindSpeed = 0.0;
-int     GMX_WindCDir  = 0;
-float   GMX_Pressure  = 0.0;
-int     GMX_RH        = 0;
-float   GMX_Temp      = 0.0;
-float   GMX_DewPoint  = 0.0;
-float   GMX_Precipt   = 0.0;
-float   GMX_Precipi   = 0.0;
-int     GMX_Radiation = 0;
-float   GMX_Battery   = 0.0;
-char    GMX_Node[1]   = {0};
-char    GMX_Buffer[124]  = {0};
-
+//================================================================================
+//                      Setup Loop
+//================================================================================
 void setup() {
   
-  W232.ON(SOCKET1);
-  W232.baudRateConfig(9600);
-  W232.parityBit(NONE);
-  W232.stopBitConfig(1);  
-  
-  USB.ON();
-  sx1272.ON();
-  Utils.setMuxSocket1();
- 
-  // Select frequency channel
-  e = sx1272.setChannel(CH_12_900);  
-  USB.print(F("Setting Channel CH_12_900.\t state "));  
-  USB.println(e);  
+    W232.ON(SOCKET1);
+    W232.baudRateConfig(9600);
+    W232.parityBit(NONE);
+    W232.stopBitConfig(1);  
+    
+    USB.ON();
+    sx1272.ON();
+    Utils.setMuxSocket1();
 
-  // Select implicit (off) or explicit (on) header mode
-  e = sx1272.setHeaderON();
-  USB.print(F("Setting Header ON.\t\t state "));  
-  USB.println(e); 
+// Area #2 Set Lora Chennel Info
+    // Select frequency channel
+    e = sx1272.setChannel(CH_12_900);  
+    USB.print(F("Setting Channel CH_12_900.\t state "));  
+    USB.println(e);  
 
-  // Select mode: from 1 to 10
-  e = sx1272.setMode(1);
-  USB.print(F("Setting Mode '1'.\t\t state ")); 
-  USB.println(e);  
+    // Select implicit (off) or explicit (on) header mode
+    e = sx1272.setHeaderON();
+    USB.print(F("Setting Header ON.\t\t state "));  
+    USB.println(e); 
 
-  // Select CRC on or off
-  e = sx1272.setCRC_ON();
-  USB.print(F("Setting CRC ON.\t\t\t state "));
-  USB.println(e); 
+    // Select mode: from 1 to 10
+    e = sx1272.setMode(1);
+    USB.print(F("Setting Mode '1'.\t\t state ")); 
+    USB.println(e);  
 
-  // Select output power (Max, High or Low)
-  e = sx1272.setPower('H');
-  USB.print(F("Setting Power to 'H'.\t\t state "));  
-  USB.println(e);  
+    // Select CRC on or off
+    e = sx1272.setCRC_ON();
+    USB.print(F("Setting CRC ON.\t\t\t state "));
+    USB.println(e); 
 
-  // Select the node address value: from 2 to 255
-  e = sx1272.setNodeAddress(NODE_ID);
-  USB.print(F("Setting Node Address to '8'.\t state "));
-  USB.println(e); 
+    // Select output power (Max, High or Low)
+    e = sx1272.setPower('H');
+    USB.print(F("Setting Power to 'H'.\t\t state "));  
+    USB.println(e);  
 
-  USB.println(F("-------------------------------------"));
-  USB.println(F("Set RTC Date and Time via USB port"));
-  USB.println(F("-------------------------------------"));  
-  /////////////////////////////////
-  //  YEAR
-  /////////////////////////////////
-  do
-  {
-    USB.print("Insert year [yy]:");    
-  }
-  while( getData(2) != true );
-  
-  year=atoi(input);
-  USB.println(year);
-  
+    // Select the node address value: from 2 to 255
+    e = sx1272.setNodeAddress(NODE_ID);
+    USB.print(F("Setting Node Address to '8'.\t state "));
+    USB.println(e); 
 
-  /////////////////////////////////
-  //  MONTH
-  /////////////////////////////////
-  do
-  {
-    USB.print("Insert month [mm]:");    
-  }
-  while( getData(2) != true );
+    USB.println(F("-------------------------------------"));
+    USB.println(F("Set RTC Date and Time via USB port"));
+    USB.println(F("-------------------------------------")); 
+     
+      /////////////////////////////////
+      //  YEAR
+      /////////////////////////////////
+      do
+      {
+        USB.print("Insert year [yy]:");    
+      }
+      while( getData(2) != true );
+      
+      year=atoi(input);
+      USB.println(year);
+      
+    
+      /////////////////////////////////
+      //  MONTH
+      /////////////////////////////////
+      do
+      {
+        USB.print("Insert month [mm]:");    
+      }
+      while( getData(2) != true );
+      
+      month=atoi(input);
+      USB.println(month);
+      
+    
+      /////////////////////////////////
+      //  DAY
+      /////////////////////////////////
+      do
+      {
+        USB.print("Insert day [dd]:");    
+      }
+      while( getData(2) != true );
+      
+      day=atoi(input);
+      USB.println(day);
+      
+    
+      /////////////////////////////////
+      //  HOUR
+      /////////////////////////////////
+      do
+      {
+        USB.print("Insert Hour [HH]:");    
+      }
+      while( getData(2) != true );
+      
+      hour=atoi(input);
+      USB.println(hour);
+    
+      /////////////////////////////////
+      //  MINUTE
+      /////////////////////////////////
+      do
+      {
+        USB.print("Insert minute [MM]:");    
+      }
+      while( getData(2) != true );
+      
+      minute=atoi(input);
+      USB.println(minute);
+    
+      /////////////////////////////////
+      //  SECOND
+      /////////////////////////////////
+      do
+      {
+        USB.print("Insert second [SS]:");    
+      }
+      while( getData(2) != true );
+      
+      second=atoi(input);
+      USB.println(second);
+      
   
-  month=atoi(input);
-  USB.println(month);
-  
-
-  /////////////////////////////////
-  //  DAY
-  /////////////////////////////////
-  do
-  {
-    USB.print("Insert day [dd]:");    
-  }
-  while( getData(2) != true );
-  
-  day=atoi(input);
-  USB.println(day);
-  
-
-  /////////////////////////////////
-  //  HOUR
-  /////////////////////////////////
-  do
-  {
-    USB.print("Insert Hour [HH]:");    
-  }
-  while( getData(2) != true );
-  
-  hour=atoi(input);
-  USB.println(hour);
-
-  /////////////////////////////////
-  //  MINUTE
-  /////////////////////////////////
-  do
-  {
-    USB.print("Insert minute [MM]:");    
-  }
-  while( getData(2) != true );
-  
-  minute=atoi(input);
-  USB.println(minute);
-
-  /////////////////////////////////
-  //  SECOND
-  /////////////////////////////////
-  do
-  {
-    USB.print("Insert second [SS]:");    
-  }
-  while( getData(2) != true );
-  
-  second=atoi(input);
-  USB.println(second);
-  
-  
-  /////////////////////////////////
-  //  create buffer
-  /////////////////////////////////
-  sprintf(buffer, "%02u:%02u:%02u:%02u:%02u:%02u:%02u",
-                                                        year, 
-                                                        month, 
-                                                        day, 
-                                                        RTC.dow(year, month,day), 
-                                                        hour, 
-                                                        minute, 
-                                                        second );
-  RTC.ON();
-  RTC.setTime(buffer);
-  USB.println(buffer);
-  sprintf(filename, "%02u%02u%02u.DAT",
-                                                        year, 
-                                                        month, 
-                                                        day);
+      /////////////////////////////////
+      //  create buffer
+      /////////////////////////////////
+      sprintf(buffer, "%02u:%02u:%02u:%02u:%02u:%02u:%02u",
+                                                            year, 
+                                                            month, 
+                                                            day, 
+                                                            RTC.dow(year, month,day), 
+                                                            hour, 
+                                                            minute, 
+                                                            second );
+      RTC.ON();
+      RTC.setTime(buffer);
+      USB.println(buffer);
+      sprintf(filename, "%02u%02u%02u.DAT",
+                                                            year, 
+                                                            month, 
+                                                            day);
                                                         
-  SD.ON();
+     SD.ON();
   
-  sd_answer = SD.create(filename);
-  sd_answer = SD.appendln(filename,"\"Date\",\"Time\",\"Battery\",\"Temperature\",\"Relative Humidity\",\"Dewpoint\",\"Wind Direction\",\"Wind Speed\",\"Pressure\",\"Total Precipitation\",\"Precipitation Intensity\",\"Global Hemispheric Irradiation\",\"Status Envio\"");
-  sd_answer = SD.appendln(filename,"YY-MM-DD,HH-mm-SS,Volts,degC,%,degC,deg,m/s,hPa,mm/dia,mm/h,W/(m^2),Bool"); 
-  if( sd_answer == 1 )
-  {
-    USB.println(F("file created"));
-  }
-  else 
-  {
-    USB.println(F("file NOT created"));  
-  }
-  
-  //Syncing GMX for pluviometer measurements
-  
-  sprintf(buffer, "TIME 20%02u-%02u-%02uT%02u:%02u:%02u",
-                                                        year, 
-                                                        month, 
-                                                        day, 
-                                                        hour, 
-                                                        minute, 
-                                                        second );
+      sd_answer = SD.create(filename);
+      sd_answer = SD.appendln(filename,"\"Date\",\"Time\",\"Battery\",\"Temperature\",\"Relative Humidity\",\"Dewpoint\",\"Wind Direction\",\"Wind Speed\",\"Pressure\",\"Total Precipitation\",\"Precipitation Intensity\",\"Global Hemispheric Irradiation\",\"Status Envio\"");
+      sd_answer = SD.appendln(filename,"YY-MM-DD,HH-mm-SS,Volts,degC,%,degC,deg,m/s,hPa,mm/dia,mm/h,W/(m^2),Bool"); 
+      if( sd_answer == 1 )
+      {
+        USB.println(F("file created"));
+      }
+      else 
+      {
+        USB.println(F("file NOT created"));  
+      }
+      
+      //Syncing GMX for pluviometer measurements
+      
+      sprintf(buffer, "TIME 20%02u-%02u-%02uT%02u:%02u:%02u",
+                                                            year, 
+                                                            month, 
+                                                            day, 
+                                                            hour, 
+                                                            minute, 
+                                                            second );
+    
+      
+       if ( W232.available()){
+       W232.send("*\r");
+       }
+      delay(100);
+      if ( W232.available()){
+      W232.send(buffer);
+      W232.send("\r");
+      }
+      delay(100);
+      if ( W232.available()){
+      W232.send("Q\r");
+      }
+      W232.flush();
+      USB.println("-- Wapsmote and GMX sensor on same timestamp --");
+      
+    }      
 
-  
-   if ( W232.available()){
-   W232.send("*\r");
-   }
-  delay(100);
-  if ( W232.available()){
-  W232.send(buffer);
-  W232.send("\r");
-  }
-  delay(100);
-  if ( W232.available()){
-  W232.send("Q\r");
-  }
-  W232.flush();
-  USB.println("-- Wapsmote and GMX sensor on same timestamp --");
-  
-}      
-
+//================================================================================
+//                              Run Loop   
+//================================================================================
 
 void loop() {
 
-  PWR.deepSleep(LOG_INTERVAL,RTC_OFFSET,RTC_ALM1_MODE1,ALL_OFF); // RTC Interrupt over LOG_INTERVAL
+    PWR.deepSleep(LOG_INTERVAL,RTC_OFFSET,RTC_ALM1_MODE1,ALL_OFF); // RTC Interrupt over LOG_INTERVAL
   
-  if( intFlag & RTC_INT )
-   { 
+    if( intFlag & RTC_INT )
+    { 
     
       Utils.setMuxSocket1();
       intFlag &= ~(RTC_INT);
@@ -335,36 +360,41 @@ void loop() {
     itoa(GMX_Radiation,floffer,10);
     sd_answer = SD.append(filename,floffer);
   
-  if( sd_answer == 1 )
-  {
-    USB.println(F("Frame appended to file"));
+    if( sd_answer == 1 )
+    {
+      USB.println(F("Frame appended to file"));
+      
+    }
+    else 
+    {
+      USB.println(F("Append failed"));
+    }
     
-  }
-  else 
-  {
-    USB.println(F("Append failed"));
-  }
+    e = sx1272.sendPacketTimeout( 1, frame.buffer, frame.length);
   
-  e = sx1272.sendPacketTimeout( 1, frame.buffer, frame.length);
-
-  // Check sending status
-  if( e == 0 ) 
-  {
-    USB.println(F("Packet sent OK"));    
-    sd_answer = SD.appendln(filename,",OK");
-  }
-  else 
-  {
-    USB.println(F("Error sending the packet"));  
-    USB.print(F("state: "));
-    USB.println(e, DEC);
-    itoa(e,floffer,10);
-    sd_answer = SD.append(filename,",ERRO: ");
-    sd_answer = SD.appendln(filename,floffer);
-  } 
+    // Check sending status
+    if( e == 0 ) 
+    {
+      USB.println(F("Packet sent OK"));    
+      sd_answer = SD.appendln(filename,",OK");
+    }
+    else 
+    {
+      USB.println(F("Error sending the packet"));  
+      USB.print(F("state: "));
+      USB.println(e, DEC);
+      itoa(e,floffer,10);
+      sd_answer = SD.append(filename,",ERRO: ");
+      sd_answer = SD.appendln(filename,floffer);
+    } 
   
  } 
 }
+
+
+//================================================================================
+//                              GMX Convert Data Loop 
+//================================================================================
 
 void GMXparseData() {
 
@@ -408,6 +438,11 @@ void GMXparseData() {
   strtokIndx = strtok(&GMX_Buffer[89], ",0"); 
   GMX_Battery = atof(strtokIndx);     // convert this part to a float
 }
+
+
+//================================================================================
+//                              Boolean Get Data Loop   
+//================================================================================
 
 boolean getData(int numBytes)
 { 
