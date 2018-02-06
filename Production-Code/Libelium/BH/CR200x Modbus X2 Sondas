@@ -1,0 +1,111 @@
+'CR200/CR200X Series
+'Created by Short Cut (3.2)
+
+'Declare Variables and Units
+Dim N
+Dim N_2
+Public BattV
+Public SDI12(6)
+Public SDI12_2(6)
+
+Alias SDI12(1)=Temp
+Alias SDI12(2)=SpCond
+Alias SDI12(3)=pH
+Alias SDI12(4)=Turbidez
+Alias SDI12(5)=OD
+Alias SDI12(6)=Wipper
+Alias SDI12_2(1)=Temp1
+Alias SDI12_2(2)=SpCond1
+Alias SDI12_2(3)=pH1
+Alias SDI12_2(4)=Turbidez1
+Alias SDI12_2(5)=OD1
+Alias SDI12_2(6)=Wipper1
+
+Public MBReg(14) 'array of modbus inputs / registers 
+Public MBCoil(14) 'array of modbus coils 
+
+Units BattV=Volts
+Units Temp=C
+Units SpCond=uS/cm
+Units pH=pH
+Units Turbidez=NTU
+Units OD=mg/L
+Units Temp1=C
+Units SpCond1=us/cm
+Units pH1=pH
+Units Turbidez1=NTU
+Units OD1=mg/L
+Units Wipper=mA
+Units Wipper1=mA
+
+'Define Data Tables
+DataTable(Tabela1,True,-1)
+                DataInterval(0,2,Min)
+                Sample(1,BattV)
+                Sample(1,Temp)
+                Sample(1,SpCond)
+                Sample(1,pH)
+                Sample(1,Turbidez)
+                Sample(1,OD)
+                Sample(1,Wipper)
+                Sample(1,Temp1)
+                Sample(1,SpCond1)
+                Sample(1,pH1)
+                Sample(1,Turbidez1)
+                Sample(1,OD1)
+                Sample(1,Wipper1)
+EndTable
+
+DataTable(Tabela2,True,-1)
+               DataInterval(0,60,Min)
+               Minimum(1,BattV,False,False)
+               Sample(1,Turbidez)
+EndTable
+'Main Program
+BeginProg
+    ModBusSlave (2,9600,1,MBReg,MBCoil,0,0)
+'Main Program
+BeginProg
+                'Main Scan
+                Scan(10,Sec)
+                               'Default CR200 Series Datalogger Battery Voltage measurement 'BattV'
+                               Battery(BattV)
+                               'Generic SDI-12 Sensor measurements 'Temp', 'SpCond', 'pH', 
+                               'Turbidez', and 'OD'
+                               SDI12Recorder(SDI12(),"0M!",1,0)
+                               'Reset all Generic SDI-12 Sensor measurements if NaN is returned to SDI12(1)
+                               If SDI12(1)=NaN Then
+                                               For N=1 To 5
+                                                               SDI12(N)=NaN
+                                               Next
+                               EndIf
+                               'Generic SDI-12 Sensor measurements 'Temp1', 'SpCond1', 'pH1', 
+                               'Turbidez1', and 'OD1'
+                               SDI12Recorder(SDI12_2(),"1M!",1,0)
+                               'Reset all Generic SDI-12 Sensor measurements if NaN is returned to SDI12_2(1)
+                               If SDI12_2(1)=NaN Then
+                                               For N_2=1 To 5
+                                                               SDI12_2(N_2)=NaN
+                                               Next
+    EndIf
+    MBReg(1) = BattV 'reg 1&2 = latest batt_volt measurement
+    MBReg(2) = SDI12(1) 'reg 3&4 = minimum batt_volt from table
+    MBReg(3) = SDI12(2) 'reg 4&5 = counter
+    MBReg(4) = SDI12(3)
+    MBReg(5) = SDI12(4)
+    MBReg(6) = SDI12(5)
+    MBReg(7) = SDI12(6)
+
+    MBReg(8) = BattV 'reg 1&2 = latest batt_volt measurement
+    MBReg(9) = SDI12_2(1) 'reg 3&4 = minimum batt_volt from table
+    MBReg(10) = SDI12_2(2) 'reg 4&5 = counter
+    MBReg(11) = SDI12_2(3)
+    MBReg(12) = SDI12_2(4)
+    MBReg(13) = SDI12_2(5)
+    MBReg(14) = SDI12_2(6)
+
+                               'Call Data Tables and Store Data
+                               CallTable Tabela1
+                               CallTable Tabela2
+                NextScan
+EndProg
