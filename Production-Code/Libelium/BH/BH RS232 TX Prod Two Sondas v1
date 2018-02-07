@@ -45,7 +45,7 @@
                 char RX_ADDRESS[] = "0013A200408DE1A8";
         
         //Area #3 Set Waspmote ID
-               char WASPMOTE_ID[] = "Lab-01";
+               char WASPMOTE_ID[] = "Lab-02";
             
         // Area #4 Set Channel
                 uint8_t  channel = 0x00;
@@ -68,83 +68,61 @@
             // define variable
               uint8_t error;
               float battery= 0;
+              float battery2= 0;
               float battery_min= 0;
               float inc = 0;
               float temp=0;
+              float temp2=0;
               float pH;
+              float pH2;
               float orp=0;
+              float orp2=0;
               float turb=0;
+              float turb2=0;
               float od = 0;
-              float bat_sonda = 0;
-              float alim_sonda = 0;
+              float od2 = 0;
+              float Sp_Cond = 0;
+              float Sp_Cond2 = 0;
+              
               float wipper =0;
+              float wipper2 =0;
         
             // Instantiate ModbusMaster object as slave ID 1
                ModbusMaster232 slave(1); 
 
     
-    // Float Sensor Data Sonda #1
+    // Float Sensor Data
           // Water Temp
         char temp2string[20]="nd";
-    // Float Sensor Data Sonda #2
-       // Water Temp
-        char temp3string[20]="nd";
-
-     // Float Sensor Data Sonda #1
-        //Solar Battery Level 
+        char temp22string[20]="nd"; // Sonda #2
+        
+        //Solar Battery Level #1
         char battery2srt[20]="nd";
-     // Float Sensor Data Sonda #2
-       //Solar Battery Level 
-        char battery3srt[20]="nd";
-
-     // Float Sensor Data Sonda #1
+        char battery22srt[20]="nd"; // Sonda #2
+        
         // Ph Value
         char number2[20];
-     // Float Sensor Data Sonda #2
-         // Ph Value
-        char number2.5[20];
-
-     // Float Sensor Data Sonda #1    
+        char number22[20]; // Sonda #2
+        
         // ORP Vale
         char number3[20];
-     // Float Sensor Data Sonda #2 
-        // ORP Vale
-        char number3.5[20];
-
-      // Float Sensor Data Sonda #1
+        char number33[20]; // Sonda #2
+        
         // Trubidity
         char number4[20];
-      // Float Sensor Data Sonda #2
-         // Trubidity
-        char number4.5[20];
-
-        // Float Sensor Data Sonda #1
+        char number44[20]; // Sonda #2
+        
         // OD Sensor
         char number5[20];
-        // Float Sensor Data Sonda #2
-        // OD Sensor
-        char number5.5[20];
-
-        // Float Sensor Data Sonda #1
+        char number55[20]; // Sonda #2
+        
         //Betery voltage inside the Sensor
-        char bat_sonda2str[20]="nd";
-         // Float Sensor Data Sonda #2
-        //Betery voltage inside the Sensor
-        char bat_sonda3str[20]="nd";
-
-        // Float Sensor Data Sonda #1
-        //Voltage recived by sensor
-        char alim_sonda2str[20]="nd";
-        // Float Sensor Data Sonda #2
-        //Voltage recived by sensor
-        char alim_sonda3str[20]="nd";
-
-        // Float Sensor Data Sonda #1
+        char Sp_Cond2str[20]="nd";
+        char Sp_Cond22str[20]="nd"; // Sonda #2
+        
         // Wiper amp used 
         char wipper2str[20]="nd";
-        // Float Sensor Data Sonda #2
-         // Wiper amp used 
-        char wipper3str[20]="nd";
+        char wipper22str[20]="nd";
     
     
     int result;
@@ -186,18 +164,14 @@
           */
         
          xbeeDM.setPowerLevel(4);
-          xbeeDM.getPowerLevel();
+         xbeeDM.getPowerLevel();
     
         // Initialize Modbus communication baud rate
           slave.begin(9600, SOCKET0);
          
-        //Print hello message
-          USB.println("Modbus communication over RS-232 - Turbidity Sensor ");
-          delay(100);
-          RTC.ON();
-        
+                
          // slave.readHoldingRegisters(0,20);
-           result =  slave.readHoldingRegisters(0,20);
+         //  result =  slave.readHoldingRegisters(0,20);
 }
 
 //================================================================================
@@ -223,7 +197,7 @@
           delay(1000);
     
           // set RTC time
-            error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+         /*   error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
                 
             // check flag
             if( error == 0 )
@@ -239,7 +213,7 @@
             USB.println(RTC.getTime());
             
             delay(5000);
- 
+ */
       // Initialize Modbus communication baud rate
       slave.begin(9600, SOCKET0);
      
@@ -249,7 +223,7 @@
       RTC.ON();
     
      // slave.readHoldingRegisters(0,20);
-       result =  slave.readHoldingRegisters(0,28);
+       result =  slave.readHoldingRegisters(0,20);
 
 
 //================================================================================
@@ -275,31 +249,41 @@
     } 
     else { 
 
+   
     //================================================================================
-    //================================================================================
-    //                       For float point variable Sonda #1
+    //                       Sonda #1 Float Point Variable 
+
+    USB.println("\n Sonda #1");
+    // Register 0 1
+    USB.println("\n Battery"); 
+    USB.print(F("\t")); 
+    foo.i[0] = slave.getResponseBuffer(0); 
+    foo.i[1] = slave.getResponseBuffer(1); 
+    USB.println(foo.f);
+    battery = foo.f;
+    Utils.float2String(battery,battery2srt,3);
+    //USB.println(battery2srt);
     
         // Register 2 3
-    USB.println("\n Sonda #1");
     USB.println("\n Temp"); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(2); // Part 2 - address inside getResponseBuffer it is the register address.
-    foo.i[1] = slave.getResponseBuffer(3); // Part 3 - address inside getResponseBuffer it is the register address.
+    foo.i[0] = slave.getResponseBuffer(2); 
+    foo.i[1] = slave.getResponseBuffer(3); 
     // USB.println(foo.f);
     temp = foo.f;
     USB.println(temp);
     Utils.float2String(temp,temp2string,3);
     //USB.println(temp2string);
 
-    // Register 0 1
-    USB.println("\n Battery"); 
+      // Register 4 5
+    USB.println("\n Sp Cond"); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(0); // Part 1 - address inside getResponseBuffer it is the register address.
-    foo.i[1] = slave.getResponseBuffer(1); // Part 2 - address inside getResponseBuffer it is the register address.
-    USB.println(foo.f);
-    battery = foo.f;
-    Utils.float2String(battery,battery2srt,3);
-    //USB.println(battery2srt);
+    foo.i[0] = slave.getResponseBuffer(4);
+    foo.i[1] = slave.getResponseBuffer(5);
+    //USB.println(foo.f);
+    Sp_Cond = foo.f;
+    Utils.float2String(Sp_Cond,Sp_Cond2str,3);
+    USB.println(Sp_Cond2str);
     
     // Register 6 7
     USB.println("\n pH"); 
@@ -308,25 +292,15 @@
     foo.i[1] = slave.getResponseBuffer(7);
     USB.println(foo.f);
     pH = foo.f;
-    USB.println("\n Print PH Number");
     Utils.float2String(pH,number2,3);
     //USB.println(number2); 
     
-    // Register 6 7
-    USB.println("\n ORP"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(8);
-    foo.i[1] = slave.getResponseBuffer(9);
-    USB.println(foo.f);
-    orp = foo.f;
-    Utils.float2String(orp,number3,3);
-    //USB.println(number3);
-   
+ 
     // Register 8 9
     USB.println("\n Turbidity "); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(10);
-    foo.i[1] = slave.getResponseBuffer(11);
+    foo.i[0] = slave.getResponseBuffer(8);
+    foo.i[1] = slave.getResponseBuffer(9);
     USB.println(foo.f);
     turb = foo.f;
     Utils.float2String(turb,number4,3);
@@ -335,161 +309,125 @@
     // Register 10 11
     USB.println("\n OD"); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(12);
-    foo.i[1] = slave.getResponseBuffer(13);
+    foo.i[0] = slave.getResponseBuffer(10);
+    foo.i[1] = slave.getResponseBuffer(11);
     USB.println(foo.f);
     od = foo.f;
     Utils.float2String(od,number5,3);
     //USB.println(number5);
     
-    // Register 12 13
-    USB.println("\n Bat_Sonda"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(14);
-    foo.i[1] = slave.getResponseBuffer(15);
-    //USB.println(foo.f);
-    bat_sonda = foo.f;
-    Utils.float2String(bat_sonda,bat_sonda2str,3);
-    USB.println(bat_sonda2str);
-
-     
-    // Register 14 15
-    USB.println("\n Alim Sonda"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(16);
-    foo.i[1] = slave.getResponseBuffer(17);
-    //USB.println(foo.f);
-    alim_sonda = foo.f;
-    Utils.float2String(alim_sonda,alim_sonda2str,3);
-    USB.println(alim_sonda2str);
-    
+       
     // Register 16 17
     USB.println("\n Wipper mA"); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(18);
-    foo.i[1] = slave.getResponseBuffer(19);
+    foo.i[0] = slave.getResponseBuffer(12);
+    foo.i[1] = slave.getResponseBuffer(13);
     //USB.println(foo.f);
     wipper = foo.f;
     Utils.float2String(wipper,wipper2str,3);
     USB.println(wipper2str);
     USB.println("Passed wiper");
-    }
+    
     USB.println("\n====================================== \n"); 
     USB.print("\n");
     delay(1000);
 
-    //==================================================================================
-    //  For float point variable Sonda #2
-    //==================================================================================
+    
 
- // Register 2 3
-  USB.println("\n Sonda #2");
-    USB.println("\n Temp"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(2); // Part 2 - address inside getResponseBuffer it is the register address.
-    foo.i[1] = slave.getResponseBuffer(3); // Part 3 - address inside getResponseBuffer it is the register address.
-    // USB.println(foo.f);
-    temp = foo.f;
-    USB.println(temp);
-    Utils.float2String(temp,temp3string,3);
-    //USB.println(temp2string);
-
+ //================================================================================
+    //                       Sonda #2 Float Point Variable 
+    /*
+    USB.println("\n Sonda #2");
     // Register 0 1
     USB.println("\n Battery"); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(0); // Part 1 - address inside getResponseBuffer it is the register address.
-    foo.i[1] = slave.getResponseBuffer(1); // Part 2 - address inside getResponseBuffer it is the register address.
+    foo.i[0] = slave.getResponseBuffer(14); 
+    foo.i[1] = slave.getResponseBuffer(15); 
     USB.println(foo.f);
-    battery = foo.f;
-    Utils.float2String(battery,battery3srt,3);
+    battery2 = foo.f;
+    Utils.float2String(battery2,battery22srt,3);
     //USB.println(battery2srt);
+    */
+    
+    // Register 2 3
+    USB.println("\n Temp"); 
+    USB.print(F("\t")); 
+    foo.i[0] = slave.getResponseBuffer(16); 
+    foo.i[1] = slave.getResponseBuffer(17); 
+    // USB.println(foo.f);
+    temp2 = foo.f;
+    USB.println(temp);
+    Utils.float2String(temp2,temp22string,3);
+    //USB.println(temp2string);
+
+      // Register 4 5
+    USB.println("\n Sp Cond"); 
+    USB.print(F("\t")); 
+    foo.i[0] = slave.getResponseBuffer(18);
+    foo.i[1] = slave.getResponseBuffer(19);
+    //USB.println(foo.f);
+    Sp_Cond2 = foo.f;
+    Utils.float2String(Sp_Cond2,Sp_Cond22str,3);
+    USB.println(Sp_Cond22str);
     
     // Register 6 7
     USB.println("\n pH"); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(6);
-    foo.i[1] = slave.getResponseBuffer(7);
+    foo.i[0] = slave.getResponseBuffer(20);
+    foo.i[1] = slave.getResponseBuffer(21);
     USB.println(foo.f);
-    pH = foo.f;
-    USB.println("\n Print PH Number");
-    Utils.float2String(pH,number2.5,3);
+    pH2 = foo.f;
+    Utils.float2String(pH2,number22,3);
     //USB.println(number2); 
     
-    // Register 6 7
-    USB.println("\n ORP"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(8);
-    foo.i[1] = slave.getResponseBuffer(9);
-    USB.println(foo.f);
-    orp = foo.f;
-    Utils.float2String(orp,number3.5,3);
-    //USB.println(number3);
-   
+ 
     // Register 8 9
     USB.println("\n Turbidity "); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(10);
-    foo.i[1] = slave.getResponseBuffer(11);
+    foo.i[0] = slave.getResponseBuffer(22);
+    foo.i[1] = slave.getResponseBuffer(23);
     USB.println(foo.f);
-    turb = foo.f;
-    Utils.float2String(turb,number4.5,3);
+    turb2 = foo.f;
+    Utils.float2String(turb2,number44,3);
     //USB.println(number4);
     
     // Register 10 11
     USB.println("\n OD"); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(12);
-    foo.i[1] = slave.getResponseBuffer(13);
+    foo.i[0] = slave.getResponseBuffer(24);
+    foo.i[1] = slave.getResponseBuffer(25);
     USB.println(foo.f);
-    od = foo.f;
-    Utils.float2String(od,number5.5,3);
+    od2 = foo.f;
+    Utils.float2String(od2,number55,3);
     //USB.println(number5);
     
-    // Register 12 13
-    USB.println("\n Bat_Sonda"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(14);
-    foo.i[1] = slave.getResponseBuffer(15);
-    //USB.println(foo.f);
-    bat_sonda = foo.f;
-    Utils.float2String(bat_sonda,bat_sonda3str,3);
-    USB.println(bat_sonda2str);
-
-     
-    // Register 14 15
-    USB.println("\n Alim Sonda"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(16);
-    foo.i[1] = slave.getResponseBuffer(17);
-    //USB.println(foo.f);
-    alim_sonda = foo.f;
-    Utils.float2String(alim_sonda,alim_sonda3str,3);
-    USB.println(alim_sonda2str);
-    
+       
     // Register 16 17
     USB.println("\n Wipper mA"); 
     USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(18);
-    foo.i[1] = slave.getResponseBuffer(19);
-    //USB.println(foo.f);
-    wipper = foo.f;
-    Utils.float2String(wipper,wipper3str,3);
-    USB.println(wipper2str);
+    foo.i[0] = slave.getResponseBuffer(26);
+    foo.i[1] = slave.getResponseBuffer(27);
+    USB.println(foo.f);
+    wipper2 = foo.f;
+    Utils.float2String(wipper2,wipper22str,3);
+    //USB.println(wipper22str);
     USB.println("Passed wiper");
     }
     USB.println("\n====================================== \n"); 
     USB.print("\n");
     delay(1000);
 
- 
     //Clear the response buffer. 
     slave.clearResponseBuffer();
     delay(500);
 
 
+
+
  
     //=======================================
     // 1. Create ASCII frame (First Frame)
+    // Sonda #1
 
     //  frame.createFrame(MAX_FRAME); 
     //or ASCII
@@ -550,8 +488,77 @@
         Utils.blinkRedLED();
       }
       delay(2000);
+
+
   
+    //======================================= Sonda #2
+
+
+//=======================================
+    // 1. Create ASCII frame (First Frame)
+    // Sonda #2
+
+    //  frame.createFrame(MAX_FRAME); 
+    //or ASCII
+      frame.createFrame(ASCII);  
+  
+    // add frame fields
+      frame.addSensor(SENSOR_TCA, temp);
+    // frame.addSensor(SENSOR_STR, battery2srt);
+      frame.addSensor(SENSOR_PH, number2);
+      frame.addSensor(SENSOR_ORP, number3);
+      frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
+      frame.showFrame();
+      
+      
+      // Send packet
+       error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+      // check TX flag
+       if( error == 0 )
+      {
+        USB.println(F("send ok"));
+       // blink green LED    
+        //Utils.blinkGreenLED();
+      }
+         else 
+      {
+        USB.println(F("send error"));
+       // blink red LED
+        //Utils.blinkRedLED();
+      }
+         delay(2000);
+
     //=======================================
+    // Create ASCII frame (Second Frame)
+    //  frame.createFrame(MAX_FRAME); 
+    //or ASCII
+      frame.createFrame(ASCII);  
+      frame.addSensor(SENSOR_TURB, number4);
+      frame.addSensor(SENSOR_DO, number5);
+      frame.addSensor(SENSOR_WV, wipper);  
+      frame.addSensor(SENSOR_BAT, battery); 
+      frame.showFrame();
+
+    // Send packet
+
+      // send XBee packet
+      error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+      // check TX flag
+      if( error == 0 )
+      {
+        USB.println(F("send ok"));
+       // blink green LED    
+        Utils.blinkGreenLED();
+      }
+      else 
+      {
+        USB.println(F("send error"));
+       // blink red LED
+        Utils.blinkRedLED();
+      }
+      delay(2000);
+
+
 
     USB.println(F("\n++++++++++++++ 40 Sec Time Off-Set ++++++++++++++++"));
       RTC.setAlarm1("00:00:00:40", RTC_OFFSET, RTC_ALM1_MODE4);
