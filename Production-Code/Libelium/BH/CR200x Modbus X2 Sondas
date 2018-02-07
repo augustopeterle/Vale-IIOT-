@@ -64,8 +64,7 @@ EndTable
 'Main Program
 BeginProg
     ModBusSlave (2,9600,1,MBReg,MBCoil,0,0)
-'Main Program
-BeginProg
+
                 'Main Scan
                 Scan(10,Sec)
                                'Default CR200 Series Datalogger Battery Voltage measurement 'BattV'
