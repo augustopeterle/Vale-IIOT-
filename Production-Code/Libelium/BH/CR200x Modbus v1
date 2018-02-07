@@ -60,7 +60,7 @@ BeginProg
         'Reset all Generic SDI-12 Sensor measurements if NaN is returned to SDI12(1)
         If SDI12(1)=NaN Then
             For N=1 To 9
-            SDI12(N)=NaN
+            SDI12(N)=00
         Next
     
         EndIf
