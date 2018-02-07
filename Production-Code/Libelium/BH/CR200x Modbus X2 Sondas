@@ -76,7 +76,7 @@ BeginProg
                                'Reset all Generic SDI-12 Sensor measurements if NaN is returned to SDI12(1)
                                If SDI12(1)=NaN Then
                                                For N=1 To 5
-                                                               SDI12(N)=NaN
+                                                               SDI12(N)=00
                                                Next
                                EndIf
                                'Generic SDI-12 Sensor measurements 'Temp1', 'SpCond1', 'pH1', 
@@ -85,7 +85,7 @@ BeginProg
                                'Reset all Generic SDI-12 Sensor measurements if NaN is returned to SDI12_2(1)
                                If SDI12_2(1)=NaN Then
                                                For N_2=1 To 5
-                                                               SDI12_2(N_2)=NaN
+                                                               SDI12_2(N_2)=00
                                                Next
     EndIf
     MBReg(1) = BattV 'reg 1&2 = latest batt_volt measurement
