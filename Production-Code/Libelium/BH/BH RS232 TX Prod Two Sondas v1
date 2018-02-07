@@ -31,6 +31,8 @@
 //                      Set Variables
 //================================================================================
 
+char sonda0[]="PMAI-03";
+char sonda1[]="BF-04AS";
 
 
         
@@ -145,7 +147,7 @@
          xbeeDM.getNodeIdentifier();
     
         // store Waspmote identifier in EEPROM memory
-          frame.setID(WASPMOTE_ID);
+        //  frame.setID(WASPMOTE_ID);
           
     //Area #7 Set Network Retries for Mesh Network
           xbeeDM.setMeshNetworkRetries(0x07);  
@@ -181,7 +183,7 @@
     void loop()
     {
  
-        xbeeDM.ON(SOCKET1);  
+          xbeeDM.ON(SOCKET1);  
           delay(200);
 
           // Show the remaining battery level
@@ -197,7 +199,7 @@
           delay(1000);
     
           // set RTC time
-         /*   error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+            error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
                 
             // check flag
             if( error == 0 )
@@ -213,353 +215,348 @@
             USB.println(RTC.getTime());
             
             delay(5000);
- */
-      // Initialize Modbus communication baud rate
-      slave.begin(9600, SOCKET0);
-     
-      //Print hello message
-      USB.println("Modbus communication over RS-232 - Turbidity Sensor MG");
-      delay(100);
-      RTC.ON();
-    
-     // slave.readHoldingRegisters(0,20);
-       result =  slave.readHoldingRegisters(0,20);
+ 
+          // Initialize Modbus communication baud rate
+          slave.begin(9600, SOCKET0);
+         
+          //Print hello message
+          USB.println("Modbus communication over RS-232 - Turbidity Sensor MG");
+          delay(100);
+          RTC.ON();
+        
+         // slave.readHoldingRegisters(0,20);
+           result =  slave.readHoldingRegisters(0,20);
 
 
 //================================================================================
 //                       For float point variable 
 
-    // For float point variable
-   
-       union
-      {
-      unsigned int i[2];
-      float f;
-      } foo;
-    
-     
-    result =  slave.readHoldingRegisters(0,20);
-    delay(200);
-
-    if (result != 0) {
-     //If no response from the slave, print an error message. 
-     USB.print("Communication error. Couldn't read from slave: ");
-     USB.println(result);
-      delay(200);
-    } 
-    else { 
+          // For float point variable
+         
+             union
+            {
+            unsigned int i[2];
+            float f;
+            } foo;
+          
+           
+          result =  slave.readHoldingRegisters(0,20);
+          delay(200);
+      
+          if (result != 0) {
+           //If no response from the slave, print an error message. 
+           USB.print("Communication error. Couldn't read from slave: ");
+           USB.println(result);
+            delay(200);
+          } 
+          else { 
 
    
     //================================================================================
     //                       Sonda #1 Float Point Variable 
 
-    USB.println("\n Sonda #1");
-    // Register 0 1
-    USB.println("\n Battery"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(0); 
-    foo.i[1] = slave.getResponseBuffer(1); 
-    USB.println(foo.f);
-    battery = foo.f;
-    Utils.float2String(battery,battery2srt,3);
-    //USB.println(battery2srt);
-    
-        // Register 2 3
-    USB.println("\n Temp"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(2); 
-    foo.i[1] = slave.getResponseBuffer(3); 
-    // USB.println(foo.f);
-    temp = foo.f;
-    USB.println(temp);
-    Utils.float2String(temp,temp2string,3);
-    //USB.println(temp2string);
-
-      // Register 4 5
-    USB.println("\n Sp Cond"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(4);
-    foo.i[1] = slave.getResponseBuffer(5);
-    //USB.println(foo.f);
-    Sp_Cond = foo.f;
-    Utils.float2String(Sp_Cond,Sp_Cond2str,3);
-    USB.println(Sp_Cond2str);
-    
-    // Register 6 7
-    USB.println("\n pH"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(6);
-    foo.i[1] = slave.getResponseBuffer(7);
-    USB.println(foo.f);
-    pH = foo.f;
-    Utils.float2String(pH,number2,3);
-    //USB.println(number2); 
-    
- 
-    // Register 8 9
-    USB.println("\n Turbidity "); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(8);
-    foo.i[1] = slave.getResponseBuffer(9);
-    USB.println(foo.f);
-    turb = foo.f;
-    Utils.float2String(turb,number4,3);
-    //USB.println(number4);
-    
-    // Register 10 11
-    USB.println("\n OD"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(10);
-    foo.i[1] = slave.getResponseBuffer(11);
-    USB.println(foo.f);
-    od = foo.f;
-    Utils.float2String(od,number5,3);
-    //USB.println(number5);
-    
-       
-    // Register 16 17
-    USB.println("\n Wipper mA"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(12);
-    foo.i[1] = slave.getResponseBuffer(13);
-    //USB.println(foo.f);
-    wipper = foo.f;
-    Utils.float2String(wipper,wipper2str,3);
-    USB.println(wipper2str);
-    USB.println("Passed wiper");
-    
-    USB.println("\n====================================== \n"); 
-    USB.print("\n");
-    delay(1000);
+            USB.println("\n Sonda #1");
+            // Register 0 1
+            USB.println("\n Battery"); 
+            USB.print(F("\t")); 
+            foo.i[0] = slave.getResponseBuffer(0); 
+            foo.i[1] = slave.getResponseBuffer(1); 
+            USB.println(foo.f);
+            battery = foo.f;
+            Utils.float2String(battery,battery2srt,3);
+            //USB.println(battery2srt);
+            
+                // Register 2 3
+            USB.println("\n Temp"); 
+            USB.print(F("\t")); 
+            foo.i[0] = slave.getResponseBuffer(2); 
+            foo.i[1] = slave.getResponseBuffer(3); 
+            // USB.println(foo.f);
+            temp = foo.f;
+            USB.println(temp);
+            Utils.float2String(temp,temp2string,3);
+            //USB.println(temp2string);
+        
+              // Register 4 5
+            USB.println("\n Sp Cond"); 
+            USB.print(F("\t")); 
+            foo.i[0] = slave.getResponseBuffer(4);
+            foo.i[1] = slave.getResponseBuffer(5);
+            //USB.println(foo.f);
+            Sp_Cond = foo.f;
+            Utils.float2String(Sp_Cond,Sp_Cond2str,3);
+            USB.println(Sp_Cond2str);
+            
+            // Register 6 7
+            USB.println("\n pH"); 
+            USB.print(F("\t")); 
+            foo.i[0] = slave.getResponseBuffer(6);
+            foo.i[1] = slave.getResponseBuffer(7);
+            USB.println(foo.f);
+            pH = foo.f;
+            Utils.float2String(pH,number2,3);
+            //USB.println(number2); 
+            
+         
+            // Register 8 9
+            USB.println("\n Turbidity "); 
+            USB.print(F("\t")); 
+            foo.i[0] = slave.getResponseBuffer(8);
+            foo.i[1] = slave.getResponseBuffer(9);
+            USB.println(foo.f);
+            turb = foo.f;
+            Utils.float2String(turb,number4,3);
+            //USB.println(number4);
+            
+            // Register 10 11
+            USB.println("\n OD"); 
+            USB.print(F("\t")); 
+            foo.i[0] = slave.getResponseBuffer(10);
+            foo.i[1] = slave.getResponseBuffer(11);
+            USB.println(foo.f);
+            od = foo.f;
+            Utils.float2String(od,number5,3);
+            //USB.println(number5);
+            
+               
+            // Register 16 17
+            USB.println("\n Wipper mA"); 
+            USB.print(F("\t")); 
+            foo.i[0] = slave.getResponseBuffer(12);
+            foo.i[1] = slave.getResponseBuffer(13);
+            //USB.println(foo.f);
+            wipper = foo.f;
+            Utils.float2String(wipper,wipper2str,3);
+            USB.println(wipper2str);
+            USB.println("Passed wiper");
+            
+            USB.println("\n====================================== \n"); 
+            USB.print("\n");
+            delay(1000);
 
     
 
  //================================================================================
     //                       Sonda #2 Float Point Variable 
-    /*
-    USB.println("\n Sonda #2");
-    // Register 0 1
-    USB.println("\n Battery"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(14); 
-    foo.i[1] = slave.getResponseBuffer(15); 
-    USB.println(foo.f);
-    battery2 = foo.f;
-    Utils.float2String(battery2,battery22srt,3);
-    //USB.println(battery2srt);
-    */
-    
-    // Register 2 3
-    USB.println("\n Temp"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(16); 
-    foo.i[1] = slave.getResponseBuffer(17); 
-    // USB.println(foo.f);
-    temp2 = foo.f;
-    USB.println(temp);
-    Utils.float2String(temp2,temp22string,3);
-    //USB.println(temp2string);
+              /*
+              USB.println("\n Sonda #2");
+              // Register 0 1
+              USB.println("\n Battery"); 
+              USB.print(F("\t")); 
+              foo.i[0] = slave.getResponseBuffer(14); 
+              foo.i[1] = slave.getResponseBuffer(15); 
+              USB.println(foo.f);
+              battery2 = foo.f;
+              Utils.float2String(battery2,battery22srt,3);
+              //USB.println(battery2srt);
+              */
+              
+              // Register 2 3
+              USB.println("\n Temp"); 
+              USB.print(F("\t")); 
+              foo.i[0] = slave.getResponseBuffer(16); 
+              foo.i[1] = slave.getResponseBuffer(17); 
+              // USB.println(foo.f);
+              temp2 = foo.f;
+              USB.println(temp2);
+              Utils.float2String(temp2,temp22string,3);
+              //USB.println(temp2string);
+          
+                // Register 4 5
+              USB.println("\n Sp Cond"); 
+              USB.print(F("\t")); 
+              foo.i[0] = slave.getResponseBuffer(18);
+              foo.i[1] = slave.getResponseBuffer(19);
+              //USB.println(foo.f);
+              Sp_Cond2 = foo.f;
+              Utils.float2String(Sp_Cond2,Sp_Cond22str,3);
+              USB.println(Sp_Cond22str);
+              
+              // Register 6 7
+              USB.println("\n pH"); 
+              USB.print(F("\t")); 
+              foo.i[0] = slave.getResponseBuffer(20);
+              foo.i[1] = slave.getResponseBuffer(21);
+              USB.println(foo.f);
+              pH2 = foo.f;
+              Utils.float2String(pH2,number22,3);
+              //USB.println(number2); 
+              
+           
+              // Register 8 9
+              USB.println("\n Turbidity "); 
+              USB.print(F("\t")); 
+              foo.i[0] = slave.getResponseBuffer(22);
+              foo.i[1] = slave.getResponseBuffer(23);
+              USB.println(foo.f);
+              turb2 = foo.f;
+              Utils.float2String(turb2,number44,3);
+              //USB.println(number4);
+              
+              // Register 10 11
+              USB.println("\n OD"); 
+              USB.print(F("\t")); 
+              foo.i[0] = slave.getResponseBuffer(24);
+              foo.i[1] = slave.getResponseBuffer(25);
+              USB.println(foo.f);
+              od2 = foo.f;
+              Utils.float2String(od2,number55,3);
+              //USB.println(number5);
+              
+                 
+              // Register 16 17
+              USB.println("\n Wipper mA"); 
+              USB.print(F("\t")); 
+              foo.i[0] = slave.getResponseBuffer(26);
+              foo.i[1] = slave.getResponseBuffer(27);
+              USB.println(foo.f);
+              wipper2 = foo.f;
+              Utils.float2String(wipper2,wipper22str,3);
+              //USB.println(wipper22str);
+              USB.println("Passed wiper");
+              }
+              USB.println("\n====================================== \n"); 
+              USB.print("\n");
+              delay(1000);
+          
+              //Clear the response buffer. 
+              slave.clearResponseBuffer();
+              delay(500);
+          
 
-      // Register 4 5
-    USB.println("\n Sp Cond"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(18);
-    foo.i[1] = slave.getResponseBuffer(19);
-    //USB.println(foo.f);
-    Sp_Cond2 = foo.f;
-    Utils.float2String(Sp_Cond2,Sp_Cond22str,3);
-    USB.println(Sp_Cond22str);
-    
-    // Register 6 7
-    USB.println("\n pH"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(20);
-    foo.i[1] = slave.getResponseBuffer(21);
-    USB.println(foo.f);
-    pH2 = foo.f;
-    Utils.float2String(pH2,number22,3);
-    //USB.println(number2); 
-    
  
-    // Register 8 9
-    USB.println("\n Turbidity "); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(22);
-    foo.i[1] = slave.getResponseBuffer(23);
-    USB.println(foo.f);
-    turb2 = foo.f;
-    Utils.float2String(turb2,number44,3);
-    //USB.println(number4);
-    
-    // Register 10 11
-    USB.println("\n OD"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(24);
-    foo.i[1] = slave.getResponseBuffer(25);
-    USB.println(foo.f);
-    od2 = foo.f;
-    Utils.float2String(od2,number55,3);
-    //USB.println(number5);
-    
+            //=======================================
+            // 1. Create ASCII frame (First Frame)
+            // Sonda #1
+          
+            //  frame.createFrame(MAX_FRAME);
+            //or ASCII
+          
+           
+            frame.createFrame(ASCII, sonda0);
+            // add frame fields
+            frame.addSensor(SENSOR_STR, battery2srt);
+            frame.addSensor(SENSOR_TCA, temp);
+            frame.addSensor(SENSOR_WATER_COND, Sp_Cond2str);    
+            frame.addSensor(SENSOR_PH, number2);
+            frame.showFrame();
+          
+            // Send packet
+            error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+            // check TX flag
+            if ( error == 0 )
+            {
+              USB.println(F("send ok"));
+              // blink green LED
+              //Utils.blinkGreenLED();
+            }
+            else
+            {
+              USB.println(F("send error"));
+              // blink red LED
+              //Utils.blinkRedLED();
+            }
+          
+            delay(2000);
+          
+            //=======================================
+            // Create ASCII frame (Second Frame)
+            //  frame.createFrame(MAX_FRAME);
+            //or ASCII
+            frame.createFrame(ASCII, sonda0);
+            frame.addSensor(SENSOR_TURB, number4);
+            frame.addSensor(SENSOR_DO, number5);
+            frame.addSensor(SENSOR_WV, wipper);
+            frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
+            frame.showFrame();
+          
+            // Send packet
+          
+            // send XBee packet
+            error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+            // check TX flag
+            if ( error == 0 )
+            {
+              USB.println(F("send ok"));
+              // blink green LED
+              Utils.blinkGreenLED();
+            }
+            else
+            {
+              USB.println(F("send error"));
+              // blink red LED
+              Utils.blinkRedLED();
+            }
+            delay(2000);
+          
+            //======================================= Sonda #2
+          
+          
+          
+            //= == == == == == == == == == == == == == == == == == == ==
+          
+               // 1. Create ASCII frame (First Frame)
+               // Sonda #2
+          
+               
+            //  frame.createFrame(MAX_FRAME);
+            //or ASCII
+           
+            frame.createFrame(ASCII, sonda1);
+            // add frame fields
+            frame.addSensor(SENSOR_TCA, temp2);
+            frame.addSensor(SENSOR_WATER_COND, Sp_Cond22str);    
+            frame.addSensor(SENSOR_PH, number22);
+            frame.showFrame();
+          
+            // Send packet
+            error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+            // check TX flag
+            if ( error == 0 )
+            {
+              USB.println(F("send ok"));
+              // blink green LED
+              //Utils.blinkGreenLED();
+            }
+            else
+            {
+              USB.println(F("send error"));
+              // blink red LED
+              //Utils.blinkRedLED();
+            }
+          
+            delay(2000);
+          
+            //=======================================
+            // Create ASCII frame (Second Frame)
+            //  frame.createFrame(MAX_FRAME);
+            //or ASCII
+            frame.createFrame(ASCII, sonda1);
+            frame.addSensor(SENSOR_TURB, number44);
+            frame.addSensor(SENSOR_DO, number55);
+            frame.addSensor(SENSOR_WV, wipper2);
+            frame.showFrame();
+          
+            // Send packet
+          
+            // send XBee packet
+            error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+            // check TX flag
+            if ( error == 0 )
+            {
+              USB.println(F("send ok"));
+              // blink green LED
+              Utils.blinkGreenLED();
+            }
+            else
+            {
+              USB.println(F("send error"));
+              // blink red LED
+              Utils.blinkRedLED();
+            }
+           delay(2000);
+          
        
-    // Register 16 17
-    USB.println("\n Wipper mA"); 
-    USB.print(F("\t")); 
-    foo.i[0] = slave.getResponseBuffer(26);
-    foo.i[1] = slave.getResponseBuffer(27);
-    USB.println(foo.f);
-    wipper2 = foo.f;
-    Utils.float2String(wipper2,wipper22str,3);
-    //USB.println(wipper22str);
-    USB.println("Passed wiper");
-    }
-    USB.println("\n====================================== \n"); 
-    USB.print("\n");
-    delay(1000);
-
-    //Clear the response buffer. 
-    slave.clearResponseBuffer();
-    delay(500);
-
-
-
-
- 
-    //=======================================
-    // 1. Create ASCII frame (First Frame)
-    // Sonda #1
-
-    //  frame.createFrame(MAX_FRAME); 
-    //or ASCII
-      frame.createFrame(ASCII);  
-  
-    // add frame fields
-      frame.addSensor(SENSOR_TCA, temp);
-    // frame.addSensor(SENSOR_STR, battery2srt);
-      frame.addSensor(SENSOR_PH, number2);
-      frame.addSensor(SENSOR_ORP, number3);
-      frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
-      frame.showFrame();
-      
-      
-      // Send packet
-       error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
-      // check TX flag
-       if( error == 0 )
-      {
-        USB.println(F("send ok"));
-       // blink green LED    
-        //Utils.blinkGreenLED();
-      }
-         else 
-      {
-        USB.println(F("send error"));
-       // blink red LED
-        //Utils.blinkRedLED();
-      }
-         delay(2000);
-
-    //=======================================
-    // Create ASCII frame (Second Frame)
-    //  frame.createFrame(MAX_FRAME); 
-    //or ASCII
-      frame.createFrame(ASCII);  
-      frame.addSensor(SENSOR_TURB, number4);
-      frame.addSensor(SENSOR_DO, number5);
-      frame.addSensor(SENSOR_WV, wipper);  
-      frame.addSensor(SENSOR_BAT, battery); 
-      frame.showFrame();
-
-    // Send packet
-
-      // send XBee packet
-      error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
-      // check TX flag
-      if( error == 0 )
-      {
-        USB.println(F("send ok"));
-       // blink green LED    
-        Utils.blinkGreenLED();
-      }
-      else 
-      {
-        USB.println(F("send error"));
-       // blink red LED
-        Utils.blinkRedLED();
-      }
-      delay(2000);
-
-
-  
-    //======================================= Sonda #2
-
-
-//=======================================
-    // 1. Create ASCII frame (First Frame)
-    // Sonda #2
-
-    //  frame.createFrame(MAX_FRAME); 
-    //or ASCII
-      frame.createFrame(ASCII);  
-  
-    // add frame fields
-      frame.addSensor(SENSOR_TCA, temp);
-    // frame.addSensor(SENSOR_STR, battery2srt);
-      frame.addSensor(SENSOR_PH, number2);
-      frame.addSensor(SENSOR_ORP, number3);
-      frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); 
-      frame.showFrame();
-      
-      
-      // Send packet
-       error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
-      // check TX flag
-       if( error == 0 )
-      {
-        USB.println(F("send ok"));
-       // blink green LED    
-        //Utils.blinkGreenLED();
-      }
-         else 
-      {
-        USB.println(F("send error"));
-       // blink red LED
-        //Utils.blinkRedLED();
-      }
-         delay(2000);
-
-    //=======================================
-    // Create ASCII frame (Second Frame)
-    //  frame.createFrame(MAX_FRAME); 
-    //or ASCII
-      frame.createFrame(ASCII);  
-      frame.addSensor(SENSOR_TURB, number4);
-      frame.addSensor(SENSOR_DO, number5);
-      frame.addSensor(SENSOR_WV, wipper);  
-      frame.addSensor(SENSOR_BAT, battery); 
-      frame.showFrame();
-
-    // Send packet
-
-      // send XBee packet
-      error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
-      // check TX flag
-      if( error == 0 )
-      {
-        USB.println(F("send ok"));
-       // blink green LED    
-        Utils.blinkGreenLED();
-      }
-      else 
-      {
-        USB.println(F("send error"));
-       // blink red LED
-        Utils.blinkRedLED();
-      }
-      delay(2000);
-
-
-
     USB.println(F("\n++++++++++++++ 40 Sec Time Off-Set ++++++++++++++++"));
       RTC.setAlarm1("00:00:00:40", RTC_OFFSET, RTC_ALM1_MODE4);
       //RTC.setAlarm1("00:00:00:59",RTC_ABSOLUTE,RTC_ALM1_MODE5);
