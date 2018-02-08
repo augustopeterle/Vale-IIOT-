@@ -132,7 +132,7 @@ char sonda1[]="BF-04AS";
 //================================================================================
 //                      Setup Loop
 //================================================================================
-      void setup()
+void setup()
 {
          //Power on the USB for viewing data in the serial monitor. 
           USB.ON();
@@ -170,10 +170,7 @@ char sonda1[]="BF-04AS";
     
         // Initialize Modbus communication baud rate
           slave.begin(9600, SOCKET0);
-         
-                
-         // slave.readHoldingRegisters(0,20);
-         //  result =  slave.readHoldingRegisters(0,20);
+        //  result =  slave.readHoldingRegisters(0,28);
 }
 
 //================================================================================
@@ -224,8 +221,8 @@ char sonda1[]="BF-04AS";
           delay(100);
           RTC.ON();
         
-         // slave.readHoldingRegisters(0,20);
-           result =  slave.readHoldingRegisters(0,20);
+         // slave.readHoldingRegisters(0,28);
+           result =  slave.readHoldingRegisters(0,28);
 
 
 //================================================================================
@@ -240,7 +237,7 @@ char sonda1[]="BF-04AS";
             } foo;
           
            
-          result =  slave.readHoldingRegisters(0,20);
+          result =  slave.readHoldingRegisters(0,28);
           delay(200);
       
           if (result != 0) {
@@ -557,7 +554,7 @@ char sonda1[]="BF-04AS";
            delay(2000);
           
        
-    USB.println(F("\n++++++++++++++ 40 Sec Time Off-Set ++++++++++++++++"));
+      USB.println(F("\n++++++++++++++ 40 Sec Time Off-Set ++++++++++++++++"));
       RTC.setAlarm1("00:00:00:40", RTC_OFFSET, RTC_ALM1_MODE4);
       //RTC.setAlarm1("00:00:00:59",RTC_ABSOLUTE,RTC_ALM1_MODE5);
   
