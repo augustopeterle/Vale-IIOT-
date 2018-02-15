@@ -37,17 +37,17 @@ char sonda1[]="BF-04AS";
 
         
         //Area #1 Set Pan ID
-                uint8_t  panID[2] = {0x12,0x34}; 
+                uint8_t  panID[2] = {0x22,0x22}; 
         
         //Area #2 Set MAC ID 
              // Define BROADCAST MAC address
              //  char RX_ADDRESS[] = "000000000000FFFF";
         //or 
             //char RX_ADDRESS[] = "0013A20040A5A041";
-                char RX_ADDRESS[] = "0013A200408DE1A8";
+                char RX_ADDRESS[] = "0013A200408DE1AF";
         
         //Area #3 Set Waspmote ID
-               char WASPMOTE_ID[] = "Lab-02";
+               char WASPMOTE_ID[] = "PMAI-03";
             
         // Area #4 Set Channel
                 uint8_t  channel = 0x00;
