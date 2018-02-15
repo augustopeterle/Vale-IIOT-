@@ -434,7 +434,7 @@ void setup()
             // add frame fields
             frame.addSensor(SENSOR_STR, battery2srt);
             frame.addSensor(SENSOR_TCA, temp);
-            frame.addSensor(SENSOR_WATER_COND, Sp_Cond2str);    
+            frame.addSensor(SENSOR_COND, Sp_Cond2str);    
             frame.addSensor(SENSOR_PH, number2);
             frame.showFrame();
           
