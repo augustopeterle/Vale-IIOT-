@@ -1,0 +1,465 @@
+/* ***********************************************
+ * Código para leitura dos sensores presentes no 
+ * equipamento AquaTroll 6000
+ * 
+ * Data 06/03/18
+ * 
+ * Alex Calegari Fracaroli C0479831@vale.com 
+ * Tom Massicotte Tom.massicotte@vale.com
+ * 
+ * Necessário substituir as bibliotecas padrões
+ * "ModBusMaster485.h" e "ModBusMaster.c" com
+ * fornecidas com esse código fonte
+ *************************************************/
+
+//Changes
+// Area #1.0 Set Pan ID
+// Area #2.0 Set MAC ID
+// Area #3.0 Set Waspmote ID
+// Area #4.0 Set Channel
+// Area #7.0 Set Network Retries
+// Area #8.0 Set Radio Power Output
+// Area #9.0 Sync Time to Gateway
+// Area #10.0 Sync Time to Gateway
+
+
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+#include <Wasp485.h>
+#include <ModbusMaster485.h>
+
+//================================================================================
+//                      Set Variables
+//================================================================================
+
+//Area #1 Set Pan ID
+//uint8_t  panID[2] = {0x22, 0x22}; //MG
+uint8_t  panID[2] = {0x12, 0x34}; // Vitória
+
+
+//Area #2 Set MAC ID
+// Define BROADCAST MAC address
+// char RX_ADDRESS[] = "000000000000FFFF";
+//or
+//char RX_ADDRESS[] = "0013A20040A5A041";
+//char RX_ADDRESS[] = "0013A200408DE1AF";
+char RX_ADDRESS[] = "0013A200408DE1A8"; //Vitória
+
+
+//Area #3 Set Waspmote ID
+char WASPMOTE_ID[] = "AquaTroll600";
+
+// Area #4 Set Channel
+uint8_t  channel = 0x00;
+
+/*
+    0x00 – Channel 0 -- 902 – 904,16 GHz
+    0x01 – Channel 1 --  904,16 – 906,32 GHz
+    0x02 – Channel 2 -- 906,32 – 908,48 GHz
+    0x03 – Channel 3 -- 908,48 – 910,64 GHz
+    0x04 – Channel 4 -- 910,64 – 912,80 GHz
+    0x05 – Channel 5 -- 912,80 – 914,96 GHz
+    0x06 – Channel 6 -- 914,96 – 917,12 GHz
+    0x07 – Channel 7 -- 917,12 – 919,28 GHz
+    0x08 – Channel 8 -- 919,28 – 921,44 GHz
+    0x09 – Channel 9 -- 921,44 – 923,6 GHz
+    0x0A – Channel 10 -- 923,6 – 925,76 GHz
+    0x0B – Channel 11 -- 925,76 – 928 GHz
+*/
+
+// define variable
+uint8_t error;
+float battery = 0;
+float battery_min = 0;
+float inc = 0;
+float temp = 0;
+float pH;
+float orp = 0;
+float turb = 0.0;
+float od = 0;
+
+
+// Instantiate ModbusMaster object as slave ID 1
+ModbusMaster485 node(1);
+// Define one address for reading, extracted from the datasheet
+#define address 1
+
+
+// Float Sensor Data
+// Water Temp
+char temp2string[10] = "nd";
+
+//Solar Battery Level
+char battery2srt[10] = "nd";
+
+// Ph Value
+char phString[10];
+
+// ORP Vale
+char orpString[10];
+
+// Trubidity
+char turbString[10];
+
+// OD Sensor
+char odString[10];
+char odPercentString[10] = "nd";
+
+//Betery voltage inside the Sensor
+char bat_sonda2str[10] = "nd";
+
+int result;
+bool scanSensor = false; // AVALIAR
+
+//================================================================================
+//                      Setup Loop
+//================================================================================
+void setup()
+{
+  //Power on the USB for viewing data in the serial monitor.
+  USB.ON();
+  // init XBee
+  xbeeDM.ON(SOCKET1);
+
+  //painID
+  xbeeDM.setPAN(panID);
+
+  // Set Radio Identifier
+  xbeeDM.setNodeIdentifier(WASPMOTE_ID);
+  xbeeDM.getNodeIdentifier();
+
+  // store Waspmote identifier in EEPROM memory
+  frame.setID(WASPMOTE_ID);
+
+  //Area #7 Set Network Retries for Mesh Network
+  xbeeDM.setMeshNetworkRetries(0x07);
+  xbeeDM.getMeshNetworkRetries();
+
+  //Area #8 Set Radio Power Output
+
+  /*
+    Parameter   XBee-PRO
+    0            10dBm
+    1            12dBm
+    2            14dBm
+    3            16dBm
+    4            18dBm
+  */
+
+  xbeeDM.setPowerLevel(4);
+//  xbeeDM.getPowerLevel();
+
+  // Initialize Modbus communication baud rate
+  node.begin(9600);
+
+  USB.println("Modbus communication over RS-485 - Water Quality");
+  delay(100);
+//  RTC.ON();
+  
+  // set RTC time
+ 
+  error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+   // check flag
+  if ( error == 0 )
+  {
+    USB.print(F("SET RTC ok. "));
+  }
+  else
+  {
+    USB.print(F("SET RTC error. "));
+  }
+
+  USB.print(F("RTC Time:"));
+  USB.println(RTC.getTime());
+  delay(1000);
+
+}
+
+void loop()
+{
+  union
+  {
+    unsigned int i[2];
+    float f;
+  } foo;
+  
+  xbeeDM.ON(SOCKET1);
+  delay(200);
+
+  // Show the remaining battery level
+  USB.print(F("Battery Level: "));
+  USB.print(PWR.getBatteryLevel(), DEC);
+  USB.print(F(" %"));
+  USB.print(F("\n"));
+
+ // delay(1000);
+
+
+ // RTC.ON();
+    uint8_t counter = 0;
+
+  result = node.readHoldingRegisters(9300, 2);
+
+
+  while (!scanSensor) {
+    //If no response from the slave, print an error message.
+    result = node.readHoldingRegisters(9300, 2);
+    scanSensor = (result == 0);
+    counter++;
+    if(counter>3)  USB.println(" Communication Error -  Verifique o cabeamento ");
+    }
+
+  //================================================================================
+  //                       For float point variable
+
+  delay(100);
+  USB.println("");
+ 
+  if (scanSensor)
+  {
+  //  USB.println(" TESTE2 ");
+    result = node.readHoldingRegisters(5450, 2);
+    if (result == 0)
+    {
+      USB.print("Temperatura (Celsius): ");
+      foo.i[0] = node.getResponseBuffer(1);
+      foo.i[1] = node.getResponseBuffer(0);
+      USB.println(foo.f);
+      temp = foo.f;
+ //     USB.println(temp);
+      Utils.float2String(temp, temp2string, 3);
+    }
+    else
+    {
+//      result = node.readHoldingRegisters(9300, 2);
+//      delay (100);
+//      result = node.readHoldingRegisters(5450, 2);
+//      USB.print("Temperatura (Celsius): ");
+//      foo.i[0] = node.getResponseBuffer(1);
+//      foo.i[1] = node.getResponseBuffer(0);
+//      USB.println(foo.f);
+//      temp = foo.f;
+//      Utils.float2String(temp, temp2string, 3);
+      
+      USB.println("Communication error Temp:");
+      USB.println(result);
+    }
+    delay(500);
+
+    result = node.readHoldingRegisters(5562, 2);
+    if (result == 0)
+    {
+      USB.print("PH (pH): ");
+      //USB.println(node.getResponseBuffer(0));
+      foo.i[0] = node.getResponseBuffer(1);
+      foo.i[1] = node.getResponseBuffer(0);
+      USB.println(foo.f);
+      pH = foo.f;
+   //   USB.println("\n Print PH Number");
+      Utils.float2String(pH, phString, 3);
+    }
+    else
+    {
+      USB.println("Communication error PH:");
+      USB.println(result);
+    }
+    delay(500);
+
+    result = node.readHoldingRegisters(5576, 2);
+    if (result == 0)
+    {
+      USB.print("ORP (mV): ");
+      //USB.println(node.getResponseBuffer(0));
+      foo.i[0] = node.getResponseBuffer(1);
+      foo.i[1] = node.getResponseBuffer(0);
+      USB.println(foo.f);
+      orp = foo.f;
+      Utils.float2String(orp, orpString, 2);
+    }
+    else
+    {
+      USB.println("Communication error ORP:");
+      USB.println(result);
+    }
+    delay(500);
+
+    result = node.readHoldingRegisters(5618, 2);
+    if (result == 0)
+    {
+      USB.print("Turbidity (NTU): ");
+      //USB.println(node.getResponseBuffer(0));
+      foo.i[0] = node.getResponseBuffer(1);
+      foo.i[1] = node.getResponseBuffer(0);
+      USB.println(foo.f);
+      turb = foo.f;
+      Utils.float2String(turb, turbString, 3);
+    }
+    else
+    {
+      USB.println("Communication error Turb:");
+      USB.println(result);
+    }
+    delay(500);
+
+    result = node.readHoldingRegisters(5583, 2);
+    if (result == 0)
+    {
+      USB.print("DO (mg/L): ");
+      //USB.println(node.getResponseBuffer(0));
+      foo.i[0] = node.getResponseBuffer(1);
+      foo.i[1] = node.getResponseBuffer(0);
+      USB.println(foo.f);
+      od = foo.f;
+      Utils.float2String(od, odString, 3);
+    }
+    else
+    {
+      USB.println("Communication error DO:");
+      USB.println(result);
+    }
+    delay(500);
+
+    result = node.readHoldingRegisters(5590, 2);
+    if (result == 0)
+    {
+      USB.print("DO (%): ");
+      //USB.println(node.getResponseBuffer(0));
+      foo.i[0] = node.getResponseBuffer(1);
+      foo.i[1] = node.getResponseBuffer(0);
+      USB.println(foo.f);
+      Utils.float2String(foo.f, odPercentString, 3);
+    }
+    else
+    {
+      USB.print("Communication error DO %: ");
+      USB.println(result);
+    }
+    delay(500);
+
+    //  result = node.readHoldingRegisters(5671, 1);
+    result = node.readHoldingRegisters(5667, 2);
+
+    if (result == 0)
+    {
+      USB.print("Battery (V): ");
+      //USB.println(node.getResponseBuffer(0));
+      foo.i[0] = node.getResponseBuffer(1);
+      foo.i[1] = node.getResponseBuffer(0);
+      USB.println(foo.f);
+      //USB.println(foo.i[1]);
+      Utils.float2String(foo.f, battery2srt, 3);
+    }
+    else
+    {
+      USB.print("Communication error Battery:");
+      USB.println(result);
+    }
+
+    delay(500);
+
+    result = node.readHoldingRegisters(5555, 2);
+    if (result == 0)
+    {
+      USB.print("Pressure (mmHg): ");
+      //USB.println(node.getResponseBuffer(0));
+      foo.i[0] = node.getResponseBuffer(1);
+      foo.i[1] = node.getResponseBuffer(0);
+      USB.println(foo.f);
+    }
+    else
+    {
+      USB.print("Communication error Battery:");
+      USB.println(result);
+    }
+
+    delay(500);
+
+  }
+
+
+  USB.println("\n====================================== \n");
+
+  //Clear the response buffer.
+  //  slave.clearResponseBuffer();
+  delay(500);
+
+
+  //=======================================
+  // 1. Create ASCII frame (First Frame)
+
+  //  frame.createFrame(MAX_FRAME);
+  //or ASCII
+  frame.createFrame(ASCII);
+
+  // add frame fields
+  frame.addSensor(SENSOR_TCA, temp);
+ // frame.addSensor(SENSOR_STR, battery2srt);
+  frame.addSensor(SENSOR_PH, phString);
+  frame.addSensor(SENSOR_ORP, orpString);
+ // frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
+ // frame.addSensor(SENSOR_TURB, turbString);
+  //frame.addSensor(SENSOR_DO, odString);
+ // frame.addSensor(SENSOR_BAT, battery);
+  frame.showFrame();
+
+  // Send packet
+  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+  // check TX flag
+  if ( error == 0 )
+  {
+    USB.println(F("send ok"));
+    // blink green LED
+    //Utils.blinkGreenLED();
+  }
+  else
+  {
+    USB.println(F("send error"));
+    // blink red LED
+    //Utils.blinkRedLED();
+     error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+  }
+  delay(1000);
+
+
+  //=======================================
+  // Create ASCII frame (Second Frame)
+  //  frame.createFrame(MAX_FRAME);
+  //or ASCII
+  frame.createFrame(ASCII);
+  frame.addSensor(SENSOR_TURB, turb);
+  //frame.addSensor(SENSOR_TURB, turbString);
+  frame.addSensor(SENSOR_BAT, battery2srt);
+  frame.addSensor(SENSOR_DO, odString);
+  frame.showFrame();
+
+  // Send packet
+
+  // send XBee packet
+  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+  // check TX flag
+  if ( error == 0 )
+  {
+    USB.println(F("send ok"));
+    // blink green LED
+    Utils.blinkGreenLED();
+  }
+  else
+  {
+    USB.println(F("send error"));
+    // blink red LED
+    Utils.blinkRedLED();
+    error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+  }
+  delay(1000);
+
+
+  //=======================================
+
+//  USB.println(F("\n++++++++++++++ 40 Sec Time Off-Set ++++++++++++++++"));
+  USB.println(F("\n++++++++++++++ End Line ++++++++++++++++"));
+
+  //RTC.setAlarm1("00:00:00:40", RTC_OFFSET, RTC_ALM1_MODE4);
+  //RTC.setAlarm1("00:00:00:59",RTC_ABSOLUTE,RTC_ALM1_MODE5);
+
+}
+
