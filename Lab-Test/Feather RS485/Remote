@@ -1,1 +1,32 @@
-Alex
+int enablePin = 2;
+
+String inputString="";
+boolean stringComplete = false;
+
+void setup(){
+
+  Serial.begin(9600);
+
+  pinMode(enablePin, OUTPUT);
+  delay(10);
+  digitalWrite (enablePin, LOW);
+  for (int i=0;i<12;i++){
+    pinMode(i, OUTPUT);
+  }
+}
+
+void loop()
+{
+  if(stringComplete){
+    if(inputString.charAt(0)=='A'){
+      for(int i =1; i<5; i++){
+        if(inputString.charAt (i) =='l')
+          digitalWrite(7+i,HIGH);
+        else
+          digitalWrite(7+i, LOW);
+      }
+    }
+    inputString ="";
+    stringComplete=false;
+  }
+}
