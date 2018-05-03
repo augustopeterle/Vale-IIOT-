@@ -6,7 +6,7 @@
 // Tom Massicotte Tom.massicotte@vale.com
 
 //Pre Prod Test Code (Tom)
-//May 27 2018 Major code change due to x900HP Frequency code change
+//Test DEC 6th 2017
 
 //Code Check List for install 
 // Area #1.0 Set Pan ID 
@@ -53,7 +53,7 @@
       //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       // Define the Waspmote ID
       //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      char WASPMOTE_ID[] = "RTest 1.5-MG";
+      char WASPMOTE_ID[] = "RTest_1.5-MG";
 
  
 
@@ -62,7 +62,7 @@
                     // Define the Frequency Channel Mask
                     //////////////////////////////////////////////////////////////////
                     // This is a bitmap to enable frequency channels:
-                    //    Bit 0 – 902.400 MHZ
+                    //    Bit 0 – 902.400 MHZ //  Mask 00 00 00 01 FF F7 F0 01
                     //    Bit 1 – 902.800 MHZ
                     //      ...
                     //    Bit 31 – 914.800 MHZ
@@ -79,8 +79,9 @@
                     // uses a hard-coded bit mask for validating channels. 
                     //////////////////////////////////////////////////////////////////
                     uint8_t channelMask[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+                     //uint8_t channelMask[8] = { 0x00, 0x00, 0x00, 0x01, 0xFF, 0xF7, 0xF0, 0x01};
                     //=============================================================================
-
+                       
 
                 // Define Preamble ID: from 0x00 to 0x07
                   uint8_t preambleID = 0x00;
@@ -462,7 +463,8 @@
         // Set Router Bettery packet Send Time
         USB.println(F("Wait 30min to send Batery Frame"));
         USB.println(F("Router Awake"));
-        delay(1800000);
+        delay (5000);
+        //delay(1800000);
 
        
 }
