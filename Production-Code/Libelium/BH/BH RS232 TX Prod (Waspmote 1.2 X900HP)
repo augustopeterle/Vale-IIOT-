@@ -27,10 +27,7 @@
   //================================================================================
 
   //Area #1 Set Pan ID
-  uint8_t panID[2] = {
-    0x7F,
-    0xFF
-  };
+  uint8_t panID[2] = {0x7F,0xFF};
 
 //Area #2 Set MAC ID 
 // Define BROADCAST MAC address
@@ -161,11 +158,14 @@ void setup() {
   xbeeDM.setChannel(channel);
 
   // check at commmand execution flag
-  if (xbeeDM.error_AT == 0) {
+  if (xbeeDM.error_AT == 0) 
+  {
     USB.print(F("1. Channel set OK to: 0x"));
     USB.printHex(xbeeDM.channel);
     USB.println();
-  } else {
+  } 
+  else 
+  {
     USB.println(F("1. Error calling 'setChannel()'"));
   }
 
@@ -174,12 +174,15 @@ void setup() {
   xbeeDM.setPAN(panID);
 
   // check the AT commmand execution flag
-  if (xbeeDM.error_AT == 0) {
+  if (xbeeDM.error_AT == 0) 
+  {
     USB.print(F("2. PAN ID set OK to: 0x"));
     USB.printHex(xbeeDM.PAN_ID[0]);
     USB.printHex(xbeeDM.PAN_ID[1]);
     USB.println();
-  } else {
+  } 
+  else 
+  {
     USB.println(F("2. Error calling 'setPAN()'"));
   }
 
@@ -187,10 +190,13 @@ void setup() {
   xbeeDM.setEncryptionMode(encryptionMode);
 
   // check the AT commmand execution flag
-  if (xbeeDM.error_AT == 0) {
+  if (xbeeDM.error_AT == 0) 
+  {
     USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
     USB.println(xbeeDM.encryptMode, DEC);
-  } else {
+  } 
+  else 
+  {
     USB.println(F("3. Error calling 'setEncryptionMode()'"));
   }
 
@@ -198,9 +204,12 @@ void setup() {
   xbeeDM.setLinkKey(encryptionKey);
 
   // check the AT commmand execution flag
-  if (xbeeDM.error_AT == 0) {
+  if (xbeeDM.error_AT == 0) 
+  {
     USB.println(F("4. AES encryption key set OK"));
-  } else {
+  } 
+  else 
+  {
     USB.println(F("4. Error calling 'setLinkKey()'"));
   }
 
@@ -208,9 +217,12 @@ void setup() {
   xbeeDM.writeValues();
 
   // check the AT commmand execution flag
-  if (xbeeDM.error_AT == 0) {
+  if (xbeeDM.error_AT == 0) 
+  {
     USB.println(F("5. Changes stored OK"));
-  } else {
+  } 
+  else 
+  {
     USB.println(F("5. Error calling 'writeValues()'"));
   }
 
@@ -232,9 +244,12 @@ void setup() {
   error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
 
   // check flag
-  if (error == 0) {
+  if (error == 0) 
+  {
     USB.print(F("SET RTC ok. "));
-  } else {
+  } 
+  else 
+  {
     USB.print(F("SET RTC error. "));
   }
 
@@ -248,7 +263,8 @@ void setup() {
 //                              Run Loop   
 //================================================================================
 
-void loop() {
+void loop() 
+{
 
   xbeeDM.ON(SOCKET1);
   delay(200);
@@ -281,7 +297,8 @@ void loop() {
 
   // For float point variable
 
-  union {
+  union 
+  {
     unsigned int i[2];
     float f;
   }
@@ -290,12 +307,15 @@ void loop() {
   result = slave.readHoldingRegisters(0, 20);
   delay(200);
 
-  if (result != 0) {
+  if (result != 0) 
+  {
     //If no response from the slave, print an error message. 
     USB.print("Communication error. Couldn't read from slave: ");
     USB.println(result);
     delay(200);
-  } else {
+  } 
+  else
+  {
 
     //================================================================================
     //                       For float point variable 
@@ -419,15 +439,16 @@ void loop() {
   // Send packet
   error = xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length);
   // check TX flag
-  if (error == 0) {
+  if (error == 0) 
+  {
     USB.println(F("send ok"));
     // blink green LED    
     //Utils.blinkGreenLED();
-  } else {
-
+  } 
+  else 
+  {
     counter = 1;
     USB.println(F("Start LOOP 1 to 3 "));
-
     while (counter < 3) // You can change the retries here 
     {
 
@@ -437,10 +458,13 @@ void loop() {
       error = xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length);
       // check TX flag
 
-      if (error == 0) {
+      if (error == 0)
+      {
         USB.println(F("Send Ok"));
         break; //If the radio recives a TX flag of 0 this will break out of the loop
-      } else {
+      } 
+      else 
+      {
         USB.println(F("Faled Again"));
         counter++;
         USB.println(counter);
@@ -466,27 +490,31 @@ void loop() {
   // send XBee packet
   error = xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length);
   // check TX flag
-  if (error == 0) {
+  if (error == 0) 
+  {
     USB.println(F("send ok"));
     // blink green LED    
     Utils.blinkGreenLED();
-  } else {
+  } 
+  else
+  {
     counter = 1;
     USB.println(F("Start LOOP 1 to 3 "));
 
     while (counter < 10) // You can change the retries here 
     {
-
       USB.println(F("Send Packet Again"));
       delay(5000); // 5 sec Delay for the loop to try again !0000 = 10 seconds
-
       error = xbeeDM.send(RX_ADDRESS, frame.buffer, frame.length);
       // check TX flag
 
-      if (error == 0) {
+      if (error == 0)
+      {
         USB.println(F("Send Ok"));
         break; //If the radio recives a TX flag of 0 this will break out of the loop
-      } else {
+      } 
+      else 
+      {
         USB.println(F("Faled Again"));
         counter++;
         USB.println(counter);
