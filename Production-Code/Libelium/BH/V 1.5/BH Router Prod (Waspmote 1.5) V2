@@ -16,6 +16,8 @@
 // Area #2.0 Set MAC ID
 // Area #3.0 Set Waspmote ID
 // Area #4.0 Set Channel
+// Area #5.0 Set Encryption On/Off
+// Area #6.0 Set Encryption Key
 // Area #7.0 Set Network Retries
 // Area #8.0 Set Radio Power Output
 // Area #9.0 Sync Time to Gateway
@@ -54,16 +56,7 @@ char WASPMOTE_ID[] = "TomTestBH";
 // to activate them, keeping wireless operation within regulations. The radio
 // uses a hard-coded bit mask for validating channels. 
 //////////////////////////////////////////////////////////////////
-uint8_t channelMask[8] = {
-  0xFF,
-  0xFF,
-  0xFF,
-  0xFF,
-  0x00,
-  0x00,
-  0x0F,
-  0xFF
-};
+uint8_t channelMask[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x0F, 0xFF};
 //uint8_t channelMask[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
 
 //=============================================================================
@@ -179,7 +172,8 @@ void setup() {
   xbee900HP.getAvailableFreq();
 
   // check at commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0) 
+  {
     USB.print(F("1. Available Frequency bitmap is: 0x"));
     USB.printHex(xbee900HP._availableFreq[0]);
     USB.printHex(xbee900HP._availableFreq[1]);
@@ -190,7 +184,9 @@ void setup() {
     USB.printHex(xbee900HP._availableFreq[6]);
     USB.printHex(xbee900HP._availableFreq[7]);
     USB.println();
-  } else {
+  } 
+  else 
+  {
     USB.println(F("1. Error calling 'getAvailableFreq()'"));
   }
 
@@ -199,7 +195,8 @@ void setup() {
   xbee900HP.setChannelMask(channelMask);
 
   // check at commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0) 
+  {
     USB.print(F("2. Channel Mask bitmap is set to: 0x"));
     USB.printHex(xbee900HP._channelMask[0]);
     USB.printHex(xbee900HP._channelMask[1]);
@@ -210,7 +207,9 @@ void setup() {
     USB.printHex(xbee900HP._channelMask[6]);
     USB.printHex(xbee900HP._channelMask[7]);
     USB.println();
-  } else {
+  } 
+  else 
+  {
     USB.println(F("2. Error calling 'setChannelMask()'"));
   }
 
@@ -219,10 +218,13 @@ void setup() {
   xbee900HP.getMinFreqCount();
 
   // check at commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0) 
+  {
     USB.print(F("3. Minimum Frequency Count:"));
     USB.println(xbee900HP._minFreqCount, DEC);
-  } else {
+  } 
+  else 
+  {
     USB.println(F("3. Error calling 'getMinFreqCount()'"));
   }
 
@@ -231,12 +233,15 @@ void setup() {
   xbee900HP.setPAN(panID);
 
   // check the AT commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0) 
+  {
     USB.print(F("4. PAN ID set OK to: 0x"));
     USB.printHex(xbee900HP.PAN_ID[0]);
     USB.printHex(xbee900HP.PAN_ID[1]);
     USB.println();
-  } else {
+  } 
+  else 
+  {
     USB.println(F("4. Error calling 'setPAN()'"));
   }
 
@@ -245,10 +250,13 @@ void setup() {
   xbee900HP.setPreambleID(preambleID);
 
   // check at commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0) 
+  {
     USB.print(F("5. Preamble set to:"));
     USB.println(xbee900HP._preambleID, DEC);
-  } else {
+  } 
+  else 
+  {
     USB.println(F("5. Error calling 'setPreambleID()'"));
   }
 
@@ -256,10 +264,13 @@ void setup() {
   xbee900HP.setEncryptionMode(encryptionMode);
 
   // check the AT commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0) 
+  {
     USB.print(F("6. AES encryption configured (1:enabled; 0:disabled):"));
     USB.println(xbee900HP.encryptMode, DEC);
-  } else {
+  } 
+  else 
+  {
     USB.println(F("6. Error calling 'setEncryptionMode()'"));
   }
 
@@ -268,9 +279,12 @@ void setup() {
   xbee900HP.setLinkKey(encryptionKey);
 
   // check the AT commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0) 
+  {
     USB.println(F("7. AES encryption key set OK"));
-  } else {
+  } 
+  else 
+  {
     USB.println(F("7. Error calling 'setLinkKey()'"));
   }
 
@@ -279,9 +293,12 @@ void setup() {
   xbee900HP.writeValues();
 
   // check the AT commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0) 
+  {
     USB.println(F("8. Changes stored OK"));
-  } else {
+  } 
+  else
+  {
     USB.println(F("8. Error calling 'writeValues()'"));
   }
 
@@ -303,7 +320,8 @@ void setup() {
 //                              Run Loop
 //================================================================================
 
-void loop() {
+void loop() 
+{
 
   xbee900HP.ON(SOCKET1);
   delay(200);
@@ -336,7 +354,8 @@ void loop() {
 
   // For float point variable
 
-  union {
+  union 
+  {
     unsigned int i[2];
     float f;
   }
@@ -345,12 +364,15 @@ void loop() {
   result = slave.readHoldingRegisters(0, 20);
   delay(200);
 
-  if (result != 0) {
+  if (result != 0) 
+  {
     //If no response from the slave, print an error message.
     USB.print("Communication error. Couldn't read from slave: ");
     USB.println(result);
     delay(200);
-  } else {
+  } 
+  else 
+  {
 
     //================================================================================
     //                       For float point variable
@@ -477,10 +499,11 @@ void loop() {
   USB.println(F("SEND FRAME"));
   error = xbee900HP.send(RX_ADDRESS, frame.buffer, frame.length);
   // check TX flag
-  if (error == 0) {
+  if (error == 0) 
+  {
     USB.println(F("Send Ok"));
-
-  } else //This else starts a loop to resend the last dat recived fromt the sensor
+  } 
+  else //This else starts a loop to resend the last dat recived fromt the sensor
   {
     counter = 1;
     USB.println(F("Start LOOP 1 to 3 "));
@@ -494,10 +517,13 @@ void loop() {
       error = xbee900HP.send(RX_ADDRESS, frame.buffer, frame.length);
       // check TX flag
 
-      if (error == 0) {
+      if (error == 0) 
+      {
         USB.println(F("Send Ok"));
         break; //If the radio recives a TX flag of 0 this will break out of the loop
-      } else {
+      } 
+      else
+      {
         USB.println(F("Faled Again"));
         counter++;
         USB.println(counter);
@@ -530,7 +556,8 @@ void loop() {
     USB.println(F("send ok"));
     // blink green LED
     Utils.blinkGreenLED();
-  } else //This else starts a loop to resend the last dat recived fromt the sensor
+  } 
+  else //This else starts a loop to resend the last dat recived fromt the sensor
   {
     counter = 1;
     USB.println(F("Start LOOP 1 to 3 "));
@@ -544,10 +571,13 @@ void loop() {
       error = xbee900HP.send(RX_ADDRESS, frame.buffer, frame.length);
       // check TX flag
 
-      if (error == 0) {
+      if (error == 0) 
+      {
         USB.println(F("Send Ok"));
         break; //If the radio recives a TX flag of 0 this will break out of the loop
-      } else {
+      } 
+      else 
+      {
         USB.println(F("Faled Again"));
         counter++;
         USB.println(counter);
