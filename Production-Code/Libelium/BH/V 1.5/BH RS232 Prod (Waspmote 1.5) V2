@@ -1,4 +1,4 @@
-BH RS232 Prod (Waspmote 1.5) V2
+//BH RS232 Prod (Waspmote 1.5) V2
 
 //Test DEC 6th
 //Send every min DEC 6th
@@ -334,7 +334,7 @@ void loop()
   USB.print(PWR.getBatteryVolts());
   USB.println(F(" V"));
 
-  delay(1000);
+  delay(500);
 
   // Initialize Modbus communication baud rate
   slave.begin(9600, SOCKET0);
@@ -470,12 +470,13 @@ void loop()
   }
   USB.println("\n====================================== \n");
   USB.print("\n");
-  delay(1000);
+  delay(500);
 
   //Clear the response buffer.
   slave.clearResponseBuffer();
   delay(500);
 
+  USB.println(F("First Frame Test "));
   //=======================================
   // 1. Create ASCII frame (First Frame)
 
@@ -531,7 +532,7 @@ void loop()
   }
 
   USB.println(F("Second Frame Test "));
-  delay(2000);
+  
   //======================================================================
 
   //=======================================
