@@ -1,3 +1,5 @@
+//BH RS232 TX Prod (Waspmote 1.2 X900HP)
+
 //Test DEC 6th
 //Send every min DEC 6th
 // Coded created by Alex and Tom Nov 13 2017
@@ -259,7 +261,7 @@ void setup() {
   USB.print(F("RTC Time:"));
   USB.println(RTC.getTime());
 
-  delay(5000);
+  delay(500);
 }
 
 //================================================================================
@@ -282,7 +284,7 @@ void loop()
   USB.print(PWR.getBatteryVolts());
   USB.println(F(" V"));
 
-  delay(1000);
+  delay(500);
 
   // Initialize Modbus communication baud rate
   slave.begin(9600, SOCKET0);
@@ -423,7 +425,7 @@ void loop()
   //Clear the response buffer. 
   slave.clearResponseBuffer();
   delay(500);
-
+  USB.println(F("Send Frist Frame"));
   //=======================================
   // 1. Create ASCII frame (First Frame)
 
@@ -433,7 +435,6 @@ void loop()
 
   // add frame fields
   frame.addSensor(SENSOR_TCA, temp);
-  // frame.addSensor(SENSOR_STR, battery2srt);
   frame.addSensor(SENSOR_PH, number2);
   frame.addSensor(SENSOR_ORP, number3);
   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
@@ -445,8 +446,7 @@ void loop()
   if (error == 0) 
   {
     USB.println(F("send ok"));
-    // blink green LED    
-    //Utils.blinkGreenLED();
+    
   } 
   else 
   {
@@ -475,8 +475,8 @@ void loop()
     }
 
   }
-  delay(2000);
-
+ 
+  USB.println(F("Send Second Frame"));
   //=======================================
   // Create ASCII frame (Second Frame)
   //  frame.createFrame(MAX_FRAME); 
@@ -504,7 +504,7 @@ void loop()
     counter = 1;
     USB.println(F("Start LOOP 1 to 3 "));
 
-    while (counter < 10) // You can change the retries here 
+    while (counter < 3) // You can change the retries here 
     {
       USB.println(F("Send Packet Again"));
       delay(5000); // 5 sec Delay for the loop to try again !0000 = 10 seconds
@@ -524,7 +524,6 @@ void loop()
       }
     }
   }
-  delay(1000);
 
   //=======================================
 
