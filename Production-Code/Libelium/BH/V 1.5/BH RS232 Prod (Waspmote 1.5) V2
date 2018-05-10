@@ -26,11 +26,11 @@
 
 //last code we made
 
-#include < WaspXBee900HP.h > 
-#include < Wasp232.h > 
-#include < ModbusMaster232.h > 
-#include < WaspXBeeDM.h > 
-#include < WaspFrame.h >
+#include <WaspXBee900HP.h>
+#include <Wasp232.h> 
+#include <ModbusMaster232.h> 
+#include <WaspXBeeDM.h> 
+#include <WaspFrame.h>
 
   //================================================================================
   //                      Set Variables
@@ -44,81 +44,81 @@ uint8_t panID[2] = {0x7F,0xFF};
 //char RX_ADDRESS[] = "000000000000FFFF";
 //or
 //char RX_ADDRESS[] = "0013A20040A5A041";
-	char RX_ADDRESS[] = "0013A2004104876A";
+  char RX_ADDRESS[] = "0013A2004104876A";
 
 //Area #3 Set Waspmote ID
-	char WASPMOTE_ID[] = "TomTestBH";
+  char WASPMOTE_ID[] = "TomTestBH";
 
 //  Bitfield per region:
 //    US/Canada  0xFFFFFFFFFFFFFFFF (Channels 0-63)
 //    Australia  0xFFFFFFFE00000000 (Channels 33-63)
 //    Brazil     0xFFFFFFFE00000FFF (Channels 0-11,33-63)
 //////////////////////////////////////////////////////////////////
-	uint8_t channelMask[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x0F, 0xFF};
+  uint8_t channelMask[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x0F, 0xFF};
 //uint8_t channelMask[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
 
 // Define Preamble ID: from 0x00 to 0x07
-	uint8_t preambleID = 0x00;
+  uint8_t preambleID = 0x00;
 
 // Area #5 Set Encryption On/Off
 // Define the Encryption mode: 1 (enabled) or 0 (disabled)
-	uint8_t encryptionMode = 1;
+  uint8_t encryptionMode = 1;
 
 // Area #6 Set Encrypton Key
 // Define the AES 16-byte Encryption Key
-	char encryptionKey[] = "M6j3b456IIOTKey!";
+  char encryptionKey[] = "M6j3b456IIOTKey!";
 
-	int countFramesWhlie = 0;
+  int countFramesWhlie = 0;
 
 //Loop For Xbee Transmission
-	int counter = 0;
+  int counter = 0;
 
 // define variable
-	uint8_t error;
-	float battery = 0;
-	float battery_min = 0;
-	float inc = 0;
-	float temp = 0;
-	float pH;
-	float orp = 0;
-	float turb = 0;
-	float od = 0;
-	float bat_sonda = 0;
-	float alim_sonda = 0;
-	float wipper = 0;
+  uint8_t error;
+  float battery = 0;
+  float battery_min = 0;
+  float inc = 0;
+  float temp = 0;
+  float pH;
+  float orp = 0;
+  float turb = 0;
+  float od = 0;
+  float bat_sonda = 0;
+  float alim_sonda = 0;
+  float wipper = 0;
 
 // Instantiate ModbusMaster object as slave ID 1
-	ModbusMaster232 slave(1);
+  ModbusMaster232 slave(1);
 
 // Float Sensor Data
 // Water Temp
-	char temp2string[20] = "nd";
+  char temp2string[20] = "nd";
 
 //Solar Battery Level
-	char battery2srt[20] = "nd";
+  char battery2srt[20] = "nd";
 
 // Ph Value
-	char number2[20];
+  char number2[20];
 
 // ORP Vale
-	char number3[20];
+  char number3[20];
 
 // Trubidity
-	char number4[20];
+  char number4[20];
 
 // OD Sensor
-	char number5[20];
+  char number5[20];
 
 //Betery voltage inside the Sensor
-	char bat_sonda2str[20] = "nd";
+  char bat_sonda2str[20] = "nd";
 
 //Voltage recived by sensor
-	char alim_sonda2str[20] = "nd";
+  char alim_sonda2str[20] = "nd";
 
 // Wiper amp used
-	char wipper2str[20] = "nd";
+  char wipper2str[20] = "nd";
 
-	int result;
+  int result;
 
 //================================================================================
 //                      Setup Loop
@@ -214,12 +214,12 @@ void setup() {
   xbee900HP.getMinFreqCount();
 
   // check at commmand execution flag
-	if (xbee900HP.error_AT == 0) 
+  if (xbee900HP.error_AT == 0) 
   {
     USB.print(F("3. Minimum Frequency Count:"));
     USB.println(xbee900HP._minFreqCount, DEC);
   } 
-	else 
+  else 
   {
     USB.println(F("3. Error calling 'getMinFreqCount()'"));
   }
@@ -229,87 +229,87 @@ void setup() {
   xbee900HP.setPAN(panID);
 
   // check the AT commmand execution flag
-	if (xbee900HP.error_AT == 0) 
+  if (xbee900HP.error_AT == 0) 
   {
     USB.print(F("4. PAN ID set OK to: 0x"));
     USB.printHex(xbee900HP.PAN_ID[0]);
     USB.printHex(xbee900HP.PAN_ID[1]);
     USB.println();
   } 
-	else 
+  else 
   {
     USB.println(F("4. Error calling 'setPAN()'"));
   }
 
   // 5. Set Preamble ID
 
-	xbee900HP.setPreambleID(preambleID);
+  xbee900HP.setPreambleID(preambleID);
 
   // check at commmand execution flag
-	if (xbee900HP.error_AT == 0) 
+  if (xbee900HP.error_AT == 0) 
   {
     USB.print(F("5. Preamble set to:"));
     USB.println(xbee900HP._preambleID, DEC);
   } 
   else 
   {
-	USB.println(F("5. Error calling 'setPreambleID()'"));
+  USB.println(F("5. Error calling 'setPreambleID()'"));
   }
 
   // 6. set encryption mode (1:enable; 0:disable)
-	xbee900HP.setEncryptionMode(encryptionMode);
+  xbee900HP.setEncryptionMode(encryptionMode);
 
   // check the AT commmand execution flag
-	if (xbee900HP.error_AT == 0) 
+  if (xbee900HP.error_AT == 0) 
   {
     USB.print(F("6. AES encryption configured (1:enabled; 0:disabled):"));
     USB.println(xbee900HP.encryptMode, DEC);
   } 
-	else 
+  else 
   {
     USB.println(F("6. Error calling 'setEncryptionMode()'"));
   }
 
   // 7. set the encryption key
 
-	xbee900HP.setLinkKey(encryptionKey);
+  xbee900HP.setLinkKey(encryptionKey);
 
   // check the AT commmand execution flag
-	if (xbee900HP.error_AT == 0) 
+  if (xbee900HP.error_AT == 0) 
   {
     USB.println(F("7. AES encryption key set OK"));
   } 
-	else 
+  else 
   {
     USB.println(F("7. Error calling 'setLinkKey()'"));
   }
 
   //8. write values to XBee module memory
 
-	xbee900HP.writeValues();
+  xbee900HP.writeValues();
 
   // check the AT commmand execution flag
-	if (xbee900HP.error_AT == 0) 
+  if (xbee900HP.error_AT == 0) 
   {
     USB.println(F("8. Changes stored OK"));
   } 
-	else
+  else
   {
     USB.println(F("8. Error calling 'writeValues()'"));
   }
 
-	USB.println(F("-------------------------------"));
+  USB.println(F("-------------------------------"));
 
   // Initialize Modbus communication baud rate
-	slave.begin(9600, SOCKET0);
+  slave.begin(9600, SOCKET0);
 
   //Print hello message
-	USB.println("Modbus communication over RS-232 - Turbidity Sensor ");
-	delay(100);
-	RTC.ON();
+  USB.println("Modbus communication over RS-232 - Turbidity Sensor ");
+  delay(100);
+  RTC.ON();
 
   // slave.readHoldingRegisters(0,20);
-	result = slave.readHoldingRegisters(0, 20);
+  result = slave.readHoldingRegisters(0, 20);
 }
 
 //================================================================================
@@ -335,7 +335,7 @@ void loop()
   delay(1000);
 
   // Initialize Modbus communication baud rate
-	slave.begin(9600, SOCKET0);
+  slave.begin(9600, SOCKET0);
 
   //Print hello message
   USB.println("loop");
@@ -343,7 +343,7 @@ void loop()
   RTC.ON();
 
   // slave.readHoldingRegisters(0,20);
-	result = slave.readHoldingRegisters(0, 20);
+  result = slave.readHoldingRegisters(0, 20);
 
   //================================================================================
   //                       For float point variable
@@ -553,10 +553,10 @@ void loop()
   {
     USB.println(F("send ok"));
     
-	// blink green LED
+  // blink green LED
     Utils.blinkGreenLED();
   } 
-	else //This else starts a loop to resend the last dat recived fromt the sensor
+  else //This else starts a loop to resend the last dat recived fromt the sensor
   {
     counter = 1;
     USB.println(F("Start LOOP 1 to 3 "));
@@ -589,4 +589,3 @@ void loop()
   delay(50000);
 
 }
-
