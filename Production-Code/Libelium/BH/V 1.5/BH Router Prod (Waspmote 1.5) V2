@@ -26,7 +26,11 @@
 
 //last code we made
 
-#include < WaspXBee900HP.h > #include < Wasp232.h > #include < ModbusMaster232.h > #include < WaspXBeeDM.h > #include < WaspFrame.h >
+#include < WaspXBee900HP.h > 
+#include < Wasp232.h > 
+#include < ModbusMaster232.h > 
+#include < WaspXBeeDM.h > 
+#include < WaspFrame.h >
 
   //================================================================================
   //                      Set Variables
