@@ -48,7 +48,7 @@ uint8_t channel = 0x00;
 
 /* 
     0x00 – Channel 0 -- 902 – 904,16 GHz
-    0x01 – Channel 1 --  904,16 – 906,32 GHz
+    0x01 – Channel 1 --  904,16 – 906,32 GHz 
     0x02 – Channel 2 -- 906,32 – 908,48 GHz
     0x03 – Channel 3 -- 908,48 – 910,64 GHz
     0x04 – Channel 4 -- 910,64 – 912,80 GHz
