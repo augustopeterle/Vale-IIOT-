@@ -10,6 +10,7 @@
 //Tom Edited 05-8th add X900HP radio Items
 //Add Encryption
 //Xbee Data Resend and encryption is working
+//Re-test Software loaring and sending data (Tom)March 10th
 
 //Changes
 // Area #1.0 Set Pan ID
@@ -32,10 +33,7 @@
   //================================================================================
 
   //Area #1 Set Pan ID
-  uint8_t panID[2] = {
-    0x7F,
-    0xFF
-  };
+  uint8_t panID[2] = {0x7F,0xFF};
 
 //Area #2 Set MAC ID
 // Define BROADCAST MAC address
