@@ -1,3 +1,5 @@
+//BH Router Prod (Waspmote 1.5
+
 
 //Test DEC 6th 2017
 //Always awake send Bettery info every 30min
@@ -7,6 +9,9 @@
 
 //Pre Prod Test Code (Tom)
 //Test DEC 6th 2017
+
+//Labe testing Mrch 10th
+// Test 1.5 Waspmote and X900HP
 
 //Code Check List for install 
 // Area #1.0 Set Pan ID 
@@ -53,7 +58,7 @@
       //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       // Define the Waspmote ID
       //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      char WASPMOTE_ID[] = "RTest_1.5-MG";
+      char WASPMOTE_ID[] = "Room R1_1.5-MG";
 
  
 
@@ -88,11 +93,11 @@
 
 // Area #5 Set Encryption On/Off
     // Define the Encryption mode: 1 (enabled) or 0 (disabled)
-    uint8_t encryptionMode = 0;
+    uint8_t encryptionMode = 1;
 
 // Area #6 Set Encrypton Key
     // Define the AES 16-byte Encryption Key
-    char  encryptionKey[] = "WaspmoteIIOTKey!";
+    char  encryptionKey[] = "M6j3b456IIOTKey!";
 
     int countFramesWhlie = 0;
      
@@ -463,8 +468,8 @@
         // Set Router Bettery packet Send Time
         USB.println(F("Wait 30min to send Batery Frame"));
         USB.println(F("Router Awake"));
-        delay (5000);
-        //delay(1800000);
+        //delay (5000);
+        delay(1800000);
 
        
 }
