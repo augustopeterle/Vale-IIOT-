@@ -36,8 +36,8 @@
   //                      Set Variables
   //================================================================================
 
-  //Area #1 Set Pan ID
-  uint8_t panID[2] = {0x7F,0xFF};
+//Area #1 Set Pan ID
+uint8_t panID[2] = {0x7F,0xFF};
 
 //Area #2 Set MAC ID
 // Define BROADCAST MAC address
@@ -53,15 +53,9 @@ char WASPMOTE_ID[] = "TomTestBH";
 //    US/Canada  0xFFFFFFFFFFFFFFFF (Channels 0-63)
 //    Australia  0xFFFFFFFE00000000 (Channels 33-63)
 //    Brazil     0xFFFFFFFE00000FFF (Channels 0-11,33-63)
-// 
-// Even if you try to enable forbidden channels via sw, the radio will refuse
-// to activate them, keeping wireless operation within regulations. The radio
-// uses a hard-coded bit mask for validating channels. 
 //////////////////////////////////////////////////////////////////
 uint8_t channelMask[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x0F, 0xFF};
 //uint8_t channelMask[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
-
-//=============================================================================
 
 // Define Preamble ID: from 0x00 to 0x07
 uint8_t preambleID = 0x00;
@@ -290,7 +284,7 @@ void setup() {
     USB.println(F("7. Error calling 'setLinkKey()'"));
   }
 
-  // 8. write values to XBee module memory
+  //8. write values to XBee module memory
 
   xbee900HP.writeValues();
 
