@@ -338,7 +338,7 @@ void loop()
   slave.begin(9600, SOCKET0);
 
   //Print hello message
-  USB.println("loop");
+  USB.println("Get RS232 Modbus Data");
   delay(100);
   RTC.ON();
 
