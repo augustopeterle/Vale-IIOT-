@@ -123,19 +123,19 @@
       //                   Radio Settings  
       //================================================================================
       // init XBee 
-      xbeeDM.ON();   
+      xbee900HP.ON();   
 
       // Set Waspmote Radio ID Waspmote Name(Radio Name in XCTU Program)
-      xbeeDM.setNodeIdentifier(WASPMOTE_ID);
-      xbeeDM.getNodeIdentifier();
+      xbee900HP.setNodeIdentifier(WASPMOTE_ID);
+      xbee900HP.getNodeIdentifier();
       
       // store Waspmote identifier in EEPROM memory
       frame.setID( WASPMOTE_ID );
       
 //================================================================================
 //Area #7 Set Network Retries for Mesh Network
-      xbeeDM.setMeshNetworkRetries(0x07);  
-      xbeeDM.getMeshNetworkRetries();  
+      xbee900HP.setMeshNetworkRetries(0x07);  
+      xbee900HP.getMeshNetworkRetries();  
 
 //================================================================================
 //Area #8 Set Radio Power Output
@@ -149,8 +149,8 @@
       4            18dBm
       */
     
-      xbeeDM.setPowerLevel(4);
-      xbeeDM.getPowerLevel();
+      xbee900HP.setPowerLevel(4);
+      xbee900HP.getPowerLevel();
 
 //===============================================================================   
         //  Set channel 
@@ -345,7 +345,7 @@
         while(errorSinc<2)
         {
               // set RTC time
-              error = xbeeDM.setRTCfromMeshlium(RX_ADDRESS);
+              error = xbee900HP.setRTCfromMeshlium(RX_ADDRESS);
               // check flag
             
               if ( error == 0 )
@@ -376,7 +376,7 @@
     void loop()
  {
 
-    xbeeDM.ON();
+    xbee900HP.ON();
     RTC.ON();
     
           // Print Time
@@ -398,26 +398,26 @@
           /////////////////////////////////////
           // Get channel 
           /////////////////////////////////////
-          xbeeDM.getChannel();
+          xbee900HP.getChannel();
           USB.print(F("channel: "));
-          USB.printHex(xbeeDM.channel);
+          USB.printHex(xbee900HP.channel);
           USB.println();
         
           /////////////////////////////////////
           // 2. get PAN ID
           /////////////////////////////////////
-          xbeeDM.getPAN();
+          xbee900HP.getPAN();
           USB.print(F("panid: "));
-          USB.printHex(xbeeDM.PAN_ID[0]); 
-          USB.printHex(xbeeDM.PAN_ID[1]); 
+          USB.printHex(xbee900HP.PAN_ID[0]); 
+          USB.printHex(xbee900HP.PAN_ID[1]); 
           USB.println(); 
           
           /////////////////////////////////////
           // 3. get Encryption mode (1:enable; 0:disable)
           /////////////////////////////////////
-          xbeeDM.getEncryptionMode();
+          xbee900HP.getEncryptionMode();
           USB.print(F("encryption mode: "));
-          USB.printHex(xbeeDM.encryptMode);
+          USB.printHex(xbee900HP.encryptMode);
           USB.println(); 
           
           USB.println(F("------------------------------")); 
@@ -450,7 +450,7 @@
   
           //===============================================================================================
           // Send packet
-          error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
+          error = xbee900HP.send( RX_ADDRESS, frame.buffer, frame.length );   
     
           // check TX flag
           if( error == 0 )
