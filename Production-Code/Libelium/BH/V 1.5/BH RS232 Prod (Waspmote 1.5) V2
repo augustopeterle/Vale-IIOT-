@@ -26,7 +26,6 @@
 // Area #9.0 Sync Time to Gateway
 // Area #10.0 Sync Time to Gateway
 
-//last code we made
 
 #include <WaspXBee900HP.h>
 #include <Wasp232.h> 
