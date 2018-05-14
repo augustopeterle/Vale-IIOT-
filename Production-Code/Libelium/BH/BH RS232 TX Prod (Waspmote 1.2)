@@ -37,7 +37,7 @@
         //Area #1 Set Pan ID
                 uint8_t  panID[2] = {0x22,0x22}; 
         
-        //Area #2 Set MAC ID 
+        //Area #2 Set MAC ID
              // Define BROADCAST MAC address
              //  char RX_ADDRESS[] = "000000000000FFFF";
         //or 
