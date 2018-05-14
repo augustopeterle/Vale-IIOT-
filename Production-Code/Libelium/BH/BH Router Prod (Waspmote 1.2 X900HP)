@@ -97,7 +97,7 @@
 
 // Area #5 Set Encryption On/Off
     // Define the Encryption mode: 1 (enabled) or 0 (disabled)
-    uint8_t encryptionMode = 1;
+    uint8_t encryptionMode = 0;
 
 // Area #6 Set Encrypton Key
     // Define the AES 16-byte Encryption Key
