@@ -34,10 +34,7 @@
 
   //Area #1 Set Pan ID
   // PAN (Personal Area Network) Identifier
-  uint8_t panID[2] = {
-    0x7F,
-    0xFF
-  };
+  uint8_t panID[2] = {0x7F,0xFF};
 
 //Area #2 Set MAC ID 
 // Destination MAC address
@@ -81,16 +78,7 @@ char WASPMOTE_ID[] = "RTest_1.5-MG";
 // uses a hard-coded bit mask for validating channels. 
 //////////////////////////////////////////////////////////////////
 //uint8_t channelMask[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-uint8_t channelMask[8] = {
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x0F
-};
+uint8_t channelMask[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0F};
 
 //=============================================================================
 
@@ -235,7 +223,9 @@ void setup() {
   if (xbee900HP.error_AT == 0) {
     USB.print(F("3. Minimum Frequency Count:"));
     USB.println(xbee900HP._minFreqCount, DEC);
-  } else {
+  }
+  else 
+  {
     USB.println(F("3. Error calling 'getMinFreqCount()'"));
   }
   //////////////////////////////////////////////
@@ -249,7 +239,9 @@ void setup() {
     USB.printHex(xbee900HP.PAN_ID[0]);
     USB.printHex(xbee900HP.PAN_ID[1]);
     USB.println();
-  } else {
+  } 
+  else 
+  {
     USB.println(F("4. Error calling 'setPAN()'"));
   }
 
@@ -262,7 +254,9 @@ void setup() {
   if (xbee900HP.error_AT == 0) {
     USB.print(F("5. Preamble set to:"));
     USB.println(xbee900HP._preambleID, DEC);
-  } else {
+  } 
+  else 
+  {
     USB.println(F("5. Error calling 'setPreambleID()'"));
   }
 
@@ -275,7 +269,9 @@ void setup() {
   if (xbee900HP.error_AT == 0) {
     USB.print(F("6. AES encryption configured (1:enabled; 0:disabled):"));
     USB.println(xbee900HP.encryptMode, DEC);
-  } else {
+  } 
+  else 
+  {
     USB.println(F("6. Error calling 'setEncryptionMode()'"));
   }
 
@@ -287,7 +283,9 @@ void setup() {
   // check the AT commmand execution flag
   if (xbee900HP.error_AT == 0) {
     USB.println(F("7. AES encryption key set OK"));
-  } else {
+  } 
+  else 
+  {
     USB.println(F("7. Error calling 'setLinkKey()'"));
   }
 
@@ -299,7 +297,9 @@ void setup() {
   // check the AT commmand execution flag
   if (xbee900HP.error_AT == 0) {
     USB.println(F("8. Changes stored OK"));
-  } else {
+  } 
+  else 
+  {
     USB.println(F("8. Error calling 'writeValues()'"));
   }
 
@@ -318,7 +318,9 @@ void setup() {
     if (error == 0) {
       USB.println(F("SET RTC ok. "));
       errorSinc = 11;
-    } else {
+    } 
+    else 
+    {
       USB.println(F("SET RTC error. "));
       errorSinc++;
     }
@@ -419,7 +421,9 @@ void loop() {
   if (error == 0) {
     USB.println(F("send ok"));
 
-  } else {
+  } 
+  else 
+  {
     USB.println(F("send error"));
 
   }
