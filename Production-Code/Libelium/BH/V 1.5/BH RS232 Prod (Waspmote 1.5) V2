@@ -14,7 +14,7 @@
 //Xbee Data Resend and encryption is working
 //Re-test Software loaring and sending data (Tom)March 10th
 
-//Changes
+//Areas To ochange
 // Area #1.0 Set Pan ID
 // Area #2.0 Set MAC ID
 // Area #3.0 Set Waspmote ID
@@ -43,13 +43,12 @@ uint8_t panID[2] = {0x7F,0xFF};
 //Area #2 Set MAC ID
 // Define BROADCAST MAC address
 //char RX_ADDRESS[] = "000000000000FFFF";
-//or
-//char RX_ADDRESS[] = "0013A20040A5A041";
+//or direct connect
   char RX_ADDRESS[] = "0013A2004104876A";
 
 //Area #3 Set Waspmote ID
-  char WASPMOTE_ID[] = "TomTestBH";
-
+  char WASPMOTE_ID[] = "Node Name";
+// Area #4.0 Set Channel
 //  Bitfield per region:
 //    US/Canada  0xFFFFFFFFFFFFFFFF (Channels 0-63)
 //    Australia  0xFFFFFFFE00000000 (Channels 33-63)
@@ -142,7 +141,6 @@ void setup() {
   xbee900HP.getMeshNetworkRetries();
 
   //Area #8 Set Radio Power Output
-
   /*
     Parameter   XBee-PRO
     0            10dBm
@@ -164,7 +162,7 @@ void setup() {
 
   USB.println(F("-------------------------------"));
 
-  // 1. Query available frequency channels
+  //Query available frequency channels
 
   xbee900HP.getAvailableFreq();
 
@@ -187,7 +185,7 @@ void setup() {
     USB.println(F("1. Error calling 'getAvailableFreq()'"));
   }
 
-  // 2. Set Channel Mask for frequency bands
+  //Set Channel Mask for frequency bands
 
   xbee900HP.setChannelMask(channelMask);
 
@@ -210,7 +208,7 @@ void setup() {
     USB.println(F("2. Error calling 'setChannelMask()'"));
   }
 
-  // 3. Get Minimum Frequency Count
+  //Get Minimum Frequency Count
 
   xbee900HP.getMinFreqCount();
 
@@ -225,7 +223,7 @@ void setup() {
     USB.println(F("3. Error calling 'getMinFreqCount()'"));
   }
 
-  // 4. set PANID
+  //Set PANID
 
   xbee900HP.setPAN(panID);
 
@@ -242,7 +240,7 @@ void setup() {
     USB.println(F("4. Error calling 'setPAN()'"));
   }
 
-  // 5. Set Preamble ID
+  //Set Preamble ID
 
   xbee900HP.setPreambleID(preambleID);
 
@@ -257,7 +255,7 @@ void setup() {
   USB.println(F("5. Error calling 'setPreambleID()'"));
   }
 
-  // 6. set encryption mode (1:enable; 0:disable)
+  //Set encryption mode (1:enable; 0:disable)
   xbee900HP.setEncryptionMode(encryptionMode);
 
   // check the AT commmand execution flag
@@ -271,7 +269,7 @@ void setup() {
     USB.println(F("6. Error calling 'setEncryptionMode()'"));
   }
 
-  // 7. set the encryption key
+  // Set the encryption key
 
   xbee900HP.setLinkKey(encryptionKey);
 
