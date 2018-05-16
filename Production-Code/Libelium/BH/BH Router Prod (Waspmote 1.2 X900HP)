@@ -35,7 +35,7 @@
   //================================================================================
 
   //Area #1 Set Pan ID
-  // PAN (Personal Area Network) Identifier
+  // PAN (Personal Area Network) Identifier 
   uint8_t panID[2] = {0x7F,0xFF};
 
 //Area #2 Set MAC ID 
