@@ -1,5 +1,6 @@
 //BH Router Prod (Waspmote 1.2 X900HP)
 
+
 //Test DEC 6th 2017
 //Always awake send Bettery info every 30min
 // Coded created by Alex and Tom Nov 13 2017
@@ -13,33 +14,36 @@
 //Test April 18th 2018
 //Test May   5th 2018 Code works with X900HP Radio on Waspmote 1.2 and 1.5
 
-//Code Check List for install 
-// Area #1.0 Set Pan ID 
-// Area #2.0 Set MAC ID 
-// Area #3.0 Set Waspmote ID 
-// Area #4.0 Set Channel 
-// Area #5.0 Set Encryption On/Off 
-// Area #6.0 Set Encrypton Key 
-// Area #7.0 Set Network Retries 
-// Area #8.0 Set Radio Power Output 
+
+
+//Code Check List for install
+// Area #1.0 Set Pan ID
+// Area #2.0 Set MAC ID
+// Area #3.0 Set Waspmote ID
+// Area #4.0 Set Channel
+// Area #5.0 Set Encryption On/Off
+// Area #6.0 Set Encrypton Key
+// Area #7.0 Set Network Retries
+// Area #8.0 Set Radio Power Output
 // Area #9.0 Sync Time to Gateway
 // Area #10.0 Set Router Bettery packet Send Time
 
+#include <WaspXBee900HP.h>
+#include <WaspFrame.h>
 
-#include < WaspXBee900HP.h > 
-#include < Waspxbee900HP.h > 
-#include < WaspFrame.h >
 
-  //================================================================================
-  //                      Set Variables
-  //================================================================================
 
-  //Area #1 Set Pan ID
-  // PAN (Personal Area Network) Identifier 
-  uint8_t panID[2] = {0x7F,0xFF};
+//================================================================================
+//                      Set Variables
+//================================================================================
 
-//Area #2 Set MAC ID 
-// Destination MAC address 
+//Area #1 Set Pan ID
+// PAN (Personal Area Network) Identifier
+uint8_t  panID[2] = {0x7F, 0xFF};
+
+
+//Area #2 Set MAC ID
+// Destination MAC address
 //////////////////////////////////////////
 char RX_ADDRESS[] = "0013A2004104876A";
 
@@ -56,7 +60,9 @@ char RX_ADDRESS[] = "0013A2004104876A";
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Define the Waspmote ID
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-char WASPMOTE_ID[] = "R3";
+char WASPMOTE_ID[] = "R1";
+
+
 
 // =========================== Set Channel Mask =================================
 
@@ -74,15 +80,16 @@ char WASPMOTE_ID[] = "R3";
 //    US/Canada  0xFFFFFFFFFFFFFFFF (Channels 0-63)
 //    Australia  0xFFFFFFFE00000000 (Channels 33-63)
 //    Brazil     0xFFFFFFFE00000FFF (Channels 0-11,33-63)
-// 
+//
 // Even if you try to enable forbidden channels via sw, the radio will refuse
 // to activate them, keeping wireless operation within regulations. The radio
-// uses a hard-coded bit mask for validating channels. 
+// uses a hard-coded bit mask for validating channels.
 //////////////////////////////////////////////////////////////////
 uint8_t channelMask[8] = { 0xFF, 0xFF, 0xFF, 0xFE, 0x00, 0x00, 0x0F, 0xFF};
-//uint8_t channelMask[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x0F};
+//uint8_t channelMask[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
 
 //=============================================================================
+
 
 // Define Preamble ID: from 0x00 to 0x07
 uint8_t preambleID = 0x00;
@@ -93,9 +100,9 @@ uint8_t encryptionMode = 1;
 
 // Area #6 Set Encrypton Key
 // Define the AES 16-byte Encryption Key
-char encryptionKey[] = "M6j3b456IIOTKey!";
+char  encryptionKey[] = "M6j3b456IIOTKey!";
 
-int countFramesWhlie = 1;
+int countFramesWhlie = 0;
 
 // define variable
 uint8_t error;
@@ -105,7 +112,8 @@ uint8_t error;
 //                      Setup Loop
 //================================================================================
 
-void setup() {
+void setup()
+{
   // open USB port
   USB.ON();
 
@@ -114,9 +122,9 @@ void setup() {
   USB.println(F("-------------------------------"));
 
   //================================================================================
-  //                   Radio Settings  
+  //                   Radio Settings
   //================================================================================
-  // init XBee 
+  // init XBee
   xbee900HP.ON();
 
   // Set Waspmote Radio ID Waspmote Name(Radio Name in XCTU Program)
@@ -124,7 +132,7 @@ void setup() {
   xbee900HP.getNodeIdentifier();
 
   // store Waspmote identifier in EEPROM memory
-  frame.setID(WASPMOTE_ID);
+  frame.setID( WASPMOTE_ID );
 
   //================================================================================
   //Area #7 Set Network Retries for Mesh Network
@@ -135,42 +143,42 @@ void setup() {
   //Area #8 Set Radio Power Output
 
   /*
-  Parameter   XBee-PRO
-  0            10dBm
-  1            12dBm
-  2            14dBm
-  3            16dBm 
-  4            18dBm
+    Parameter   XBee-PRO
+    0            10dBm
+    1            12dBm
+    2            14dBm
+    3            16dBm
+    4            18dBm
   */
 
   xbee900HP.setPowerLevel(4);
   xbee900HP.getPowerLevel();
 
-  //===============================================================================   
-  //  Set channel 
+  //===============================================================================
+  //  Set channel
 
   USB.println(F("-------------------------------"));
   USB.println(F("Configure XBee900 HP"));
   USB.println(F("-------------------------------"));
 
   USB.print(F("XBee900HP uses a bitmap to enable frequency channels:\n"\
-    "Bit  0: 902.400 MHz\n"\
-    "Bit  1: 902.800 MHz\n"\
-    "Bit  2: 903.200 MHz\n"\
-    "Bit  3: 903.600 MHz\n"\
-    "Bit  4: 904.000 MHz\n"\
-    "Bit  5: 904.400 MHz\n"\
-    "Bit  6: 904.800 MHz\n"\
-    "Bit  7: 905.200 MHz\n"\
-    "Bit  8: 905.600 MHz\n"\
-    "Bit  9: 906.000 MHz\n"\
-    "Bit 10: 906.400 MHz\n"\
-    "Bit 11: 906.800 MHz\n"\
-    "Bit 12: 907.200 MHz\n"\
-    "...\n"\
-    "Bit 31: 914.800 MHz\n"\
-    "...\n"\
-    "Bit 63: 927.600 MHz\n"));
+              "Bit  0: 902.400 MHz\n"\
+              "Bit  1: 902.800 MHz\n" \
+              "Bit  2: 903.200 MHz\n" \
+              "Bit  3: 903.600 MHz\n" \
+              "Bit  4: 904.000 MHz\n" \
+              "Bit  5: 904.400 MHz\n" \
+              "Bit  6: 904.800 MHz\n" \
+              "Bit  7: 905.200 MHz\n" \
+              "Bit  8: 905.600 MHz\n" \
+              "Bit  9: 906.000 MHz\n" \
+              "Bit 10: 906.400 MHz\n" \
+              "Bit 11: 906.800 MHz\n" \
+              "Bit 12: 907.200 MHz\n" \
+              "...\n"\
+              "Bit 31: 914.800 MHz\n" \
+              "...\n" \
+              "Bit 63: 927.600 MHz\n"));
 
   USB.println(F("-------------------------------"));
 
@@ -180,45 +188,50 @@ void setup() {
   xbee900HP.getAvailableFreq();
 
   // check at commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0)
+  {
     USB.print(F("1. Available Frequency bitmap is: 0x"));
-    USB.printHex(xbee900HP._availableFreq[0]);
-    USB.printHex(xbee900HP._availableFreq[1]);
-    USB.printHex(xbee900HP._availableFreq[2]);
-    USB.printHex(xbee900HP._availableFreq[3]);
-    USB.printHex(xbee900HP._availableFreq[4]);
-    USB.printHex(xbee900HP._availableFreq[5]);
-    USB.printHex(xbee900HP._availableFreq[6]);
-    USB.printHex(xbee900HP._availableFreq[7]);
+    USB.printHex( xbee900HP._availableFreq[0] );
+    USB.printHex( xbee900HP._availableFreq[1] );
+    USB.printHex( xbee900HP._availableFreq[2] );
+    USB.printHex( xbee900HP._availableFreq[3] );
+    USB.printHex( xbee900HP._availableFreq[4] );
+    USB.printHex( xbee900HP._availableFreq[5] );
+    USB.printHex( xbee900HP._availableFreq[6] );
+    USB.printHex( xbee900HP._availableFreq[7] );
     USB.println();
-  } 
-  else 
+  }
+  else
   {
     USB.println(F("1. Error calling 'getAvailableFreq()'"));
   }
 
+
   //////////////////////////////////////////////
   // 2. Set Channel Mask for frequency bands
   //////////////////////////////////////////////
-  xbee900HP.setChannelMask(channelMask);
+  xbee900HP.setChannelMask( channelMask );
 
   // check at commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0)
+  {
     USB.print(F("2. Channel Mask bitmap is set to: 0x"));
-    USB.printHex(xbee900HP._channelMask[0]);
-    USB.printHex(xbee900HP._channelMask[1]);
-    USB.printHex(xbee900HP._channelMask[2]);
-    USB.printHex(xbee900HP._channelMask[3]);
-    USB.printHex(xbee900HP._channelMask[4]);
-    USB.printHex(xbee900HP._channelMask[5]);
-    USB.printHex(xbee900HP._channelMask[6]);
-    USB.printHex(xbee900HP._channelMask[7]);
+    USB.printHex( xbee900HP._channelMask[0] );
+    USB.printHex( xbee900HP._channelMask[1] );
+    USB.printHex( xbee900HP._channelMask[2] );
+    USB.printHex( xbee900HP._channelMask[3] );
+    USB.printHex( xbee900HP._channelMask[4] );
+    USB.printHex( xbee900HP._channelMask[5] );
+    USB.printHex( xbee900HP._channelMask[6] );
+    USB.printHex( xbee900HP._channelMask[7] );
     USB.println();
-  } 
-  else 
+  }
+  else
   {
     USB.println(F("2. Error calling 'setChannelMask()'"));
   }
+
+
 
   //////////////////////////////////////////////
   // 3. Get Minimum Frequency Count
@@ -226,74 +239,84 @@ void setup() {
   xbee900HP.getMinFreqCount();
 
   // check at commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0)
+  {
     USB.print(F("3. Minimum Frequency Count:"));
     USB.println(xbee900HP._minFreqCount, DEC);
-  } 
-  else 
+  }
+  else
   {
     USB.println(F("3. Error calling 'getMinFreqCount()'"));
   }
   //////////////////////////////////////////////
   // 4. set PANID
   //////////////////////////////////////////////
-  xbee900HP.setPAN(panID);
+  xbee900HP.setPAN( panID );
 
   // check the AT commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0)
+  {
     USB.print(F("4. PAN ID set OK to: 0x"));
-    USB.printHex(xbee900HP.PAN_ID[0]);
-    USB.printHex(xbee900HP.PAN_ID[1]);
+    USB.printHex( xbee900HP.PAN_ID[0] );
+    USB.printHex( xbee900HP.PAN_ID[1] );
     USB.println();
-  } 
-  else 
+  }
+  else
   {
     USB.println(F("4. Error calling 'setPAN()'"));
   }
 
+
   //////////////////////////////////////////////
   // 5. Set Preamble ID
   //////////////////////////////////////////////
-  xbee900HP.setPreambleID(preambleID);
+  xbee900HP.setPreambleID( preambleID );
 
   // check at commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0)
+  {
     USB.print(F("5. Preamble set to:"));
     USB.println(xbee900HP._preambleID, DEC);
-  } 
-  else 
+  }
+  else
   {
     USB.println(F("5. Error calling 'setPreambleID()'"));
   }
 
+
   /////////////////////////////////////
   // 6. set encryption mode (1:enable; 0:disable)
   /////////////////////////////////////
-  xbee900HP.setEncryptionMode(encryptionMode);
+  xbee900HP.setEncryptionMode( encryptionMode );
 
   // check the AT commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0)
+  {
     USB.print(F("6. AES encryption configured (1:enabled; 0:disabled):"));
-    USB.println(xbee900HP.encryptMode, DEC);
-  } 
-  else 
+    USB.println( xbee900HP.encryptMode, DEC );
+  }
+  else
   {
     USB.println(F("6. Error calling 'setEncryptionMode()'"));
   }
 
+
+
   /////////////////////////////////////
   // 7. set the encryption key
   /////////////////////////////////////
-  xbee900HP.setLinkKey(encryptionKey);
+  xbee900HP.setLinkKey( encryptionKey );
 
   // check the AT commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0)
+  {
     USB.println(F("7. AES encryption key set OK"));
-  } 
-  else 
+  }
+  else
   {
     USB.println(F("7. Error calling 'setLinkKey()'"));
   }
+
 
   /////////////////////////////////////
   // 8. write values to XBee module memory
@@ -301,31 +324,38 @@ void setup() {
   xbee900HP.writeValues();
 
   // check the AT commmand execution flag
-  if (xbee900HP.error_AT == 0) {
+  if (xbee900HP.error_AT == 0)
+  {
     USB.println(F("8. Changes stored OK"));
-  } 
-  else 
+  }
+  else
   {
     USB.println(F("8. Error calling 'writeValues()'"));
   }
 
   USB.println(F("-------------------------------"));
 
+
+
+
+
   // Area #9  ================================================================================
-  // Sync Time to Gateway     
+  // Sync Time to Gateway
 
   int errorSinc = 0;
   //Set Number for Newtwork sync time retrys here
-  while (errorSinc < 2) {
+  while (errorSinc < 2)
+  {
     // set RTC time
     error = xbee900HP.setRTCfromMeshlium(RX_ADDRESS);
     // check flag
 
-    if (error == 0) {
+    if ( error == 0 )
+    {
       USB.println(F("SET RTC ok. "));
       errorSinc = 11;
-    } 
-    else 
+    }
+    else
     {
       USB.println(F("SET RTC error. "));
       errorSinc++;
@@ -342,10 +372,11 @@ void setup() {
 }
 
 //================================================================================
-//                              Run Loop   
+//                              Run Loop
 //================================================================================
 
-void loop() {
+void loop()
+{
 
   xbee900HP.ON();
   RTC.ON();
@@ -367,7 +398,7 @@ void loop() {
   delay(1000);
 
   /////////////////////////////////////
-  // Get channel 
+  // Get channel
   /////////////////////////////////////
   xbee900HP.getChannel();
   USB.print(F("channel: "));
@@ -398,7 +429,7 @@ void loop() {
   //===============================================================================================
   // Create Binnary frame
 
-  //frame.createFrame(MAX_FRAME);  
+  //frame.createFrame(MAX_FRAME);
   // USB.println(frame.getFrameSize(),DEC);
 
   //  OR
@@ -407,12 +438,12 @@ void loop() {
   frame.createFrame(ASCII);
 
   /*
-         // add frame fields
-         //frame.addSensor(SENSOR_STR, "new_sensor_frame");
-        
-          frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
-          frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
-          */
+    // add frame fields
+    //frame.addSensor(SENSOR_STR, "new_sensor_frame");
+
+    frame.addSensor(SENSOR_DATE, RTC.date, RTC.month, RTC.year);
+    frame.addSensor(SENSOR_TIME, RTC.hour, RTC.minute, RTC.second);
+  */
   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
 
   USB.println(F("-------------------------------"));
@@ -421,13 +452,16 @@ void loop() {
 
   //===============================================================================================
   // Send packet
-  error = xbee900HP.send(RX_ADDRESS, frame.buffer, frame.length);
+  error = xbee900HP.send( RX_ADDRESS, frame.buffer, frame.length );
 
   // check TX flag
-  if (error == 0) {
+  if ( error == 0 )
+  {
     USB.println(F("send ok"));
 
-  } else {
+  }
+  else
+  {
     USB.println(F("send error"));
 
   }
@@ -437,7 +471,10 @@ void loop() {
   // Set Router Bettery packet Send Time
   USB.println(F("Wait 30min to send Batery Frame"));
   USB.println(F("Router Awake"));
-  delay(5000);
+  delay (5000);
   //delay(1800000);
 
+
 }
+
+
