@@ -457,6 +457,20 @@ void loop()
   // Read the audio sensor
   audio = SensorCities.readValue(SENS_CITIES_AUDIO);
 
+  USB.println(F("-------------------------------"));
+
+  USB.print("\n Temperature:");
+  USB.print(temperature);
+  USB.print("\n Humidity:");
+  USB.print(humidity);
+  USB.print("\n LDR:");
+  USB.print(analogLDRvoltage);
+  USB.print("\n Audio:");
+  USB.print(audio);
+  USB.println(F("-------------------------------"));
+
+
+ //USB.printf("millis: %lu\n",millis()); 
 /*
   USB.println(F("-------------------------------"));
   USB.println(F("temperature:"));
@@ -469,7 +483,7 @@ void loop()
   SB.println(SENS_CITIES_AUDIO());
   USB.println(F("-------------------------------"));
 */
-  USB.println("Temperature:");
+  USB.print("Temperature:");
   USB.print(temperature);
 
   ///////////////////////////////////////////
@@ -515,7 +529,8 @@ void loop()
   frame.addSensor(SENSOR_MCP, audio);
   
   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
-
+  frame.showFrame();
+  
   USB.println(F("-------------------------------"));
   USB.println(F("Send Packet"));
   USB.println(F("-------------------------------"));
