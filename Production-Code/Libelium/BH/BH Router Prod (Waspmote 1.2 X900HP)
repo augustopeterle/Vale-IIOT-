@@ -472,7 +472,7 @@ void loop()
   USB.println(F("Wait 30min to send Batery Frame"));
   USB.println(F("Router Awake"));
   delay (5000);
-  //delay(1800000);
+  delay(1800000);
 
 
 }
