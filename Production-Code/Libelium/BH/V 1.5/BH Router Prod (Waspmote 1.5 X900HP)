@@ -471,8 +471,8 @@ void loop()
   // Set Router Bettery packet Send Time
   USB.println(F("Wait 30min to send Batery Frame"));
   USB.println(F("Router Awake"));
-  delay (5000);
-  //delay(1800000);
+  //delay (5000);
+  delay(1800000);
 
 
 }
