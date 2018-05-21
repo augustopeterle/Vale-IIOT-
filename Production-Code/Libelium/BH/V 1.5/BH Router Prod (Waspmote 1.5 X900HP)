@@ -125,7 +125,7 @@ void setup()
   //                   Radio Settings
   //================================================================================
   // init XBee
-  xbee900HP.ON();
+  xbee900HP.ON(SOCKET1);
 
   // Set Waspmote Radio ID Waspmote Name(Radio Name in XCTU Program)
   xbee900HP.setNodeIdentifier(WASPMOTE_ID);
@@ -378,7 +378,7 @@ void setup()
 void loop()
 {
 
-  xbee900HP.ON();
+  xbee900HP.ON(SOCKET1);
   RTC.ON();
 
   // Print Time
