@@ -149,7 +149,7 @@ void setup() {
 
  // init XBee
 //  xbeeDM.ON();
-  xbee900HP.ON();
+  xbee900HP.ON(SOCKET1);
 
   delay(100);
 
@@ -357,8 +357,8 @@ void loop() {
 
     RTC.ON();
     SD.ON();
-//    xbeeDM.ON();
-    xbee900HP.ON();
+//    xbeeDM.ON(SOCKET1);
+    xbee900HP.ON(SOCKET1);
     
     W232.ON(SOCKET1);
     W232.baudRateConfig(9600);
