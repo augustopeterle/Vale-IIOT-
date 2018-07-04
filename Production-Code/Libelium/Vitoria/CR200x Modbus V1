@@ -1,0 +1,93 @@
+'CR200/CR200X Series
+'Created by Short Cut (3.2)
+'Declare Variables and Units
+Dim N
+Public BattV
+Public SDI12(10)
+Public Chuva_Total
+
+
+Alias SDI12(1)=Temp
+Alias SDI12(2)=Cond
+Alias SDI12(3)=pH
+Alias SDI12(4)=ORP
+Alias SDI12(5)=Turbidez
+Alias SDI12(6)=OD
+Alias SDI12(7)=TSS
+Alias SDI12(8)=Bat_Sonda
+Alias SDI12(9)=Alim_Sonda
+Alias SDI12(10)=Wipper
+ 
+Public MBReg(10) 'array of modbus inputs / registers 
+Public MBCoil(10) 'array of modbus coils 
+ 
+Units BattV=Volts
+Units Temp=C
+Units Cond=us/cm
+Units pH=pH
+Units ORP=mV
+Units Turbidez=NTU
+Units TSS=mg/L
+Units OD=mg/L
+Units Bat_Sonda=V
+Units Alim_Sonda=V
+Units Wipper=mA
+'Define Data Tables
+DataTable(Tabela1,True,-1)
+               DataInterval(0,2,Min)
+               Sample(1,Temp)
+               Sample(1,Cond)
+               Sample(1,pH)
+               Sample(1,ORP)
+               Sample(1,Turbidez)
+               Sample(1,TSS)
+               Sample(1,OD)
+               Sample(1,Bat_Sonda)
+               Sample(1,Alim_Sonda)
+               Sample(1,Wipper)
+               Totalize(1,Chuva_Total,False)
+EndTable
+DataTable(Tabela2,True,-1)
+               DataInterval(0,60,Min)
+               Minimum(1,BattV,False,False)
+               Sample(1,Turbidez)
+EndTable
+'Main Program
+BeginProg
+    ModBusSlave (2,9600,1,MBReg,MBCoil,0,0)
+ 
+    'Main Scan
+    Scan(10,Sec)
+ 
+        'Default CR200 Series Datalogger Battery Voltage measurement 'BattV'
+         Battery(BattV)
+        'Generic SDI-12 Sensor measurements 'Temp', 'Cond', 'pH', 
+        'ORP', 'Turbidez', 'OD', 'Bat_Sonda', 'Alim_Sonda', and 'Wipper'
+        SDI12Recorder(SDI12(),"0M!",1,0)
+        'Reset all Generic SDI-12 Sensor measurements if NaN is returned to SDI12(1)
+        If SDI12(1)=NaN Then
+            For N=1 To 10
+            SDI12(N)=00
+        Next
+    
+        EndIf
+        
+    MBReg(1) = BattV 'reg 1&2 = latest batt_volt measurement
+    MBReg(2) = SDI12(1) 'reg 3&4 = minimum batt_volt from table
+    MBReg(3) = SDI12(2) 'reg 4&5 = counter
+    MBReg(4) = SDI12(3)
+    MBReg(5) = SDI12(4)
+    MBReg(6) = SDI12(5)
+    MBReg(7) = SDI12(6)
+    MBReg(8) = SDI12(7)
+    MBReg(9) = SDI12(8)
+    MBReg(10) = SDI12(9)
+    MBReg(11) = SDI12(10)
+    
+ 
+'Call Data Tables and Store Data
+  CallTable Tabela1
+  CallTable Tabela2
+  NextScan
+EndProg
+ 
