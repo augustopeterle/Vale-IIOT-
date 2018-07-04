@@ -71,6 +71,7 @@ BeginProg
         Next
     
         EndIf
+        PulseCount(Chuva_Total,P_SW,2,0,0.2,0)
         
     MBReg(1) = BattV 'reg 1&2 = latest batt_volt measurement
     MBReg(2) = SDI12(1) 'reg 3&4 = minimum batt_volt from table
