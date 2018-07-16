@@ -1,0 +1,598 @@
+/* ATENÇÃO!!! WASPMOTE v15
+ * 
+ * CÓDIGO PARA ENVIO DOS DADOS ARMAZENADOS NO DATALOGGER CAMPBELL 
+ * OS DADOS ENVIADOS SÃO ENVIADOS EM DOIS PACOTES A CADA MINUTO. 
+ * 
+ * DADOS LIDOS:
+ * TEMPERATURA DA ÁGUA, BATERIA DA SONDA, PH, ORP, TURBIDEZ, OD E TENSÃO NO WIPPER.
+ * 
+ * CASO O DATALOGGER ESTIVER DESLIGADO OU NÃO EXISTA CONEXÃO ENTRE O DISPOSITIVO
+ * E O WASPMOTE OS PACOTES SERÃO ENVIADOS COM VALOR ZERO, IDICANDO QUE HÁ ALGUM
+ * PROBLEMA DE CONEXÃO.
+ * 
+ * Importante: Verificar resgistradores no codigo do dataloger campbell.
+ */
+
+//BH RS232 Prod (Waspmote 1.5) V3
+
+// Coded created by Alex and Tom Nov 13 2017
+// Alex Calegari Fracaroli C0479831@vale.com
+// Tom Massicotte Tom.massicotte@vale.com
+
+//Tom Edited 05-8th add X900HP radio Items
+//Add Encryption
+//Xbee Data Resend and encryption is working
+//Re-test Software loaring and sending data (Tom)March 10th
+//Test de conexao inserido no codigo 16 07 18
+
+//Areas To ochange
+// Area #1.0 Set Pan ID
+// Area #2.0 Set MAC ID
+// Area #3.0 Set Waspmote ID
+// Area #4.0 Set Channel
+// Area #5.0 Set Encryption On/Off
+// Area #6.0 Set Encryption Key
+// Area #7.0 Set Network Retries
+// Area #8.0 Set Radio Power Output
+// Area #9.0 Sync Time to Gateway
+// Area #10.0 Sync Time to Gateway
+
+
+#include <WaspXBee900HP.h>
+#include <Wasp232.h>
+#include <ModbusMaster232.h>
+#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+
+//================================================================================
+//                      Set Variables
+//================================================================================
+
+//Area #1 Set Pan ID
+uint8_t panID[2] = {0x7F, 0xFF};
+
+//Area #2 Set MAC ID
+// Define BROADCAST MAC address
+//char RX_ADDRESS[] = "000000000000FFFF";
+//or direct connect
+char RX_ADDRESS[] = "0013A2004104876A"; //Mesh
+//char RX_ADDRESS[] = "0013A200416463E2"; //Gateway CPD
+
+
+//Area #3 Set Waspmote ID
+char WASPMOTE_ID[] = "Node Name";
+// Area #4.0 Set Channel
+//  Bitfield per region:
+//    US/Canada  0xFFFFFFFFFFFFFFFF (Channels 0-63)
+//    Australia  0xFFFFFFFE00000000 (Channels 33-63)
+//    Brazil     0xFFFFFFFE00000FFF (Channels 0-11,33-63)
+//////////////////////////////////////////////////////////////////
+uint8_t channelMask[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x0F, 0xFF};
+//uint8_t channelMask[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
+
+// Define Preamble ID: from 0x00 to 0x07
+uint8_t preambleID = 0x00;
+
+// Area #5 Set Encryption On/Off
+// Define the Encryption mode: 1 (enabled) or 0 (disabled)
+uint8_t encryptionMode = 1;
+
+// Area #6 Set Encrypton Key
+// Define the AES 16-byte Encryption Key
+char encryptionKey[] = "M6j3b456IIOTKey!";
+
+int countFramesWhlie = 0;
+
+//Loop For Xbee Transmission
+int counter = 0;
+
+// define variable
+uint8_t error;
+float battery = 0;
+float battery_min = 0;
+float inc = 0;
+float temp = 0;
+float pH;
+float orp = 0;
+float turb = 0;
+float od = 0;
+float bat_sonda = 0;
+float alim_sonda = 0;
+float wipper = 0;
+
+// Instantiate ModbusMaster object as slave ID 1
+ModbusMaster232 slave(1);
+
+// Float Sensor Data
+// Water Temp
+char temp2string[10] = "nd";
+
+//Solar Battery Level
+char battery2srt[10] = "nd";
+
+// Ph Value
+char phString[10] = "nd" ;
+
+// ORP Vale
+char orpString[10] = "nd";
+
+// Trubidity
+char turbString[10] = "nd";
+
+// OD Sensor
+char odString[10] = "nd";
+
+//Betery voltage inside the Sensor
+char bat_sonda2str[10] = "nd";
+
+//Voltage recived by sensor
+char alim_sonda2str[10] = "nd";
+
+// Wiper amp used
+char wipper2str[10] = "nd";
+
+int result;
+
+//================================================================================
+//                      Setup Loop
+//================================================================================
+void setup() {
+  //Power on the USB for viewing data in the serial monitor.
+  USB.ON();
+  // init XBee
+  xbee900HP.ON(SOCKET1);
+
+  // Set Radio Identifier
+  xbee900HP.setNodeIdentifier(WASPMOTE_ID);
+  xbee900HP.getNodeIdentifier();
+
+  // store Waspmote identifier in EEPROM memory
+  frame.setID(WASPMOTE_ID);
+
+  //Area #7 Set Network Retries for Mesh Network
+  xbee900HP.setMeshNetworkRetries(0x07);
+  xbee900HP.getMeshNetworkRetries();
+
+  //Area #8 Set Radio Power Output
+  /*
+    Parameter   XBee-PRO
+    0            10dBm
+    1            12dBm
+    2            14dBm
+    3            16dBm
+    4            18dBm
+  */
+
+  xbee900HP.setPowerLevel(4);
+  xbee900HP.getPowerLevel();
+
+  //===============================================================================
+  //  Set channel
+
+  USB.println(F("------------------------------ -"));
+  USB.println(F("Configure XBee900 HP"));
+  USB.println(F("------------------------------ -"));
+
+  USB.println(F("------------------------------ -"));
+
+  //Query available frequency channels
+
+  xbee900HP.getAvailableFreq();
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("1. Available Frequency bitmap is: 0x"));
+    USB.printHex(xbee900HP._availableFreq[0]);
+    USB.printHex(xbee900HP._availableFreq[1]);
+    USB.printHex(xbee900HP._availableFreq[2]);
+    USB.printHex(xbee900HP._availableFreq[3]);
+    USB.printHex(xbee900HP._availableFreq[4]);
+    USB.printHex(xbee900HP._availableFreq[5]);
+    USB.printHex(xbee900HP._availableFreq[6]);
+    USB.printHex(xbee900HP._availableFreq[7]);
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("1. Error calling 'getAvailableFreq()'"));
+  }
+
+  //Set Channel Mask for frequency bands
+
+  xbee900HP.setChannelMask(channelMask);
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("2. Channel Mask bitmap is set to: 0x"));
+    USB.printHex(xbee900HP._channelMask[0]);
+    USB.printHex(xbee900HP._channelMask[1]);
+    USB.printHex(xbee900HP._channelMask[2]);
+    USB.printHex(xbee900HP._channelMask[3]);
+    USB.printHex(xbee900HP._channelMask[4]);
+    USB.printHex(xbee900HP._channelMask[5]);
+    USB.printHex(xbee900HP._channelMask[6]);
+    USB.printHex(xbee900HP._channelMask[7]);
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("2. Error calling 'setChannelMask()'"));
+  }
+
+  //Get Minimum Frequency Count
+
+  xbee900HP.getMinFreqCount();
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("3. Minimum Frequency Count: "));
+    USB.println(xbee900HP._minFreqCount, DEC);
+  }
+  else
+  {
+    USB.println(F("3. Error calling 'getMinFreqCount()'"));
+  }
+
+  //Set PANID
+
+  xbee900HP.setPAN(panID);
+
+  // check the AT commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("4. PAN ID set OK to: 0x"));
+    USB.printHex(xbee900HP.PAN_ID[0]);
+    USB.printHex(xbee900HP.PAN_ID[1]);
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("4. Error calling 'setPAN()'"));
+  }
+
+  //Set Preamble ID
+
+  xbee900HP.setPreambleID(preambleID);
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("5. Preamble set to: "));
+    USB.println(xbee900HP._preambleID, DEC);
+  }
+  else
+  {
+    USB.println(F("5. Error calling 'setPreambleID()'"));
+  }
+
+  //Set encryption mode (1:enable; 0:disable)
+  xbee900HP.setEncryptionMode(encryptionMode);
+
+  // check the AT commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("6. AES encryption configured (1: enabled; 0: disabled): "));
+    USB.println(xbee900HP.encryptMode, DEC);
+  }
+  else
+  {
+    USB.println(F("6. Error calling 'setEncryptionMode()'"));
+  }
+
+  // Set the encryption key
+
+  xbee900HP.setLinkKey(encryptionKey);
+
+  // check the AT commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.println(F("7. AES encryption key set OK"));
+  }
+  else
+  {
+    USB.println(F("7. Error calling 'setLinkKey()'"));
+  }
+
+  //8. write values to XBee module memory
+
+  xbee900HP.writeValues();
+
+  // check the AT commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.println(F("8. Changes stored OK"));
+  }
+  else
+  {
+    USB.println(F("8. Error calling 'writeValues()'"));
+  }
+
+  USB.println(F("------------------------------ -"));
+
+  // Initialize Modbus communication baud rate
+  slave.begin(9600, SOCKET0);
+
+  //Print hello message
+  USB.println("Modbus communication over RS - 232 - Turbidity Sensor ");
+  delay(100);
+  RTC.ON();
+
+  // slave.readHoldingRegisters(0,20);
+  result = slave.readHoldingRegisters(0, 20);
+}
+
+//================================================================================
+//                              Run Loop
+//================================================================================
+
+void loop()
+{
+
+  xbee900HP.ON(SOCKET1);
+  delay(200);
+
+  // Show the remaining battery level
+  USB.print(F("Battery Level: "));
+  USB.print(PWR.getBatteryLevel(), DEC);
+  USB.print(F(" % "));
+
+  // Show the battery Volts
+  USB.print(F(" | Battery (Volts): "));
+  USB.print(PWR.getBatteryVolts());
+  USB.println(F(" V"));
+
+  delay(500);
+
+  // Initialize Modbus communication baud rate
+  slave.begin(9600, SOCKET0);
+
+  //Print hello message
+  USB.println("Get RS232 Modbus Data");
+  delay(100);
+  RTC.ON();
+
+  // slave.readHoldingRegisters(0,20);
+  result = slave.readHoldingRegisters(0, 20);
+
+  //================================================================================
+  //                       For float point variable
+
+  // For float point variable
+  union
+  {
+    unsigned int i[2];
+    float f;
+  }
+  foo;
+
+  result = slave.readHoldingRegisters(0, 20);
+  delay(200);
+
+  if (result != 0)
+  {
+    //If no response from the slave, print an error message.
+    USB.print("Communication error. Couldn't read from slave: ");
+    USB.println(result);
+    delay(200);
+
+    battery = 0;
+    battery_min = 0;
+    temp = 0;
+    pH = 0;
+    orp = 0;
+    turb = 0;
+    od = 0;
+    bat_sonda = 0;
+    alim_sonda = 0;
+    wipper = 0;
+  }
+
+  //================================================================================
+  //                       For float point variable
+
+  // Register 2 3
+  USB.println("\n Temp");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(2); // Part 2 - address inside getResponseBuffer it is the register address.
+  foo.i[1] = slave.getResponseBuffer(3); // Part 3 - address inside getResponseBuffer it is the register address.
+  temp = foo.f;
+  USB.println(temp);
+  Utils.float2String(temp, temp2string, 3);
+
+  // Register 0 1
+  USB.println("\n Battery");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(0); // Part 1 - address inside getResponseBuffer it is the register address.
+  foo.i[1] = slave.getResponseBuffer(1); // Part 2 - address inside getResponseBuffer it is the register address.
+  USB.println(foo.f);
+  battery = foo.f;
+  Utils.float2String(battery, battery2srt, 3);
+
+  // Register 6 7
+  USB.println("\n pH");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(6);
+  foo.i[1] = slave.getResponseBuffer(7);
+  USB.println(foo.f);
+  pH = foo.f;
+  Utils.float2String(pH, phString, 2);
+
+  // Register 6 7
+  USB.println("\n ORP");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(8);
+  foo.i[1] = slave.getResponseBuffer(9);
+  USB.println(foo.f);
+  orp = foo.f;
+  Utils.float2String(orp, orpString, 2);
+
+  // Register 8 9
+  USB.println("\n Turbidity ");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(10);
+  foo.i[1] = slave.getResponseBuffer(11);
+  USB.println(foo.f);
+  turb = foo.f;
+  Utils.float2String(turb, turbString, 2);
+
+  // Register 10 11
+  USB.println("\n OD");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(12);
+  foo.i[1] = slave.getResponseBuffer(13);
+  USB.println(foo.f);
+  od = foo.f;
+  Utils.float2String(od, odString, 2);
+
+  // Register 12 13
+  USB.println("\n Bat_Sonda");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(14);
+  foo.i[1] = slave.getResponseBuffer(15);
+  //USB.println(foo.f);
+  bat_sonda = foo.f;
+  Utils.float2String(bat_sonda, bat_sonda2str, 3);
+  USB.println(bat_sonda2str);
+
+  // Register 14 15
+  USB.println("\n Alim Sonda");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(16);
+  foo.i[1] = slave.getResponseBuffer(17);
+  //USB.println(foo.f);
+  alim_sonda = foo.f;
+  Utils.float2String(alim_sonda, alim_sonda2str, 3);
+  USB.println(alim_sonda2str);
+
+  // Register 16 17
+  USB.println("\n Wipper mA");
+  USB.print(F("\t"));
+  foo.i[0] = slave.getResponseBuffer(18);
+  foo.i[1] = slave.getResponseBuffer(19);
+  //USB.println(foo.f);
+  wipper = foo.f;
+  Utils.float2String(wipper, wipper2str, 3);
+  USB.println(wipper2str);
+  USB.println("Passed wiper");
+  //  } //End else codigo old v2
+  USB.println("\n====================================== \n");
+  USB.print("\n");
+  delay(500);
+
+  //Clear the response buffer.
+  slave.clearResponseBuffer();
+  delay(500);
+
+  USB.println(F("First Frame Test "));
+  //=======================================
+  // 1. Create ASCII frame (First Frame)
+
+  //  frame.createFrame(MAX_FRAME);
+  //or ASCII
+  frame.createFrame(ASCII);
+
+  // add frame fields
+  frame.addSensor(SENSOR_WATER_WT, temp);
+  // frame.addSensor(SENSOR_STR, battery2srt);
+  frame.addSensor(SENSOR_WATER_PH, phString);
+  frame.addSensor(SENSOR_WATER_ORP, orpString);
+  // frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
+  frame.showFrame();
+
+  // ========Loop Radio if send error recived===========
+
+  // Send packet
+  USB.println(F("SEND FRAME"));
+  error = xbee900HP.send(RX_ADDRESS, frame.buffer, frame.length);
+  // check TX flag
+  if (error == 0)
+  {
+    USB.println(F("send ok"));
+  }
+  else //This else starts a loop to resend the last dat recived fromt the sensor
+  {
+    counter = 1;
+    USB.println(F("Start LOOP 1 to 3 "));
+    while (counter < 3) // You can change the retries here
+    {
+      USB.println(F("Send Packet Again"));
+      delay(5000); // 5 sec Delay for the loop to try again 10000 = 10 seconds
+
+      error = xbee900HP.send(RX_ADDRESS, frame.buffer, frame.length);
+      // check TX flag
+      if (error == 0)
+      {
+        USB.println(F("Send Ok"));
+        counter=4; //If the radio recives a TX flag of 0 this will break out of the loop
+      }
+      else
+      {
+        USB.println(F("Faled Again"));
+        counter++;
+        USB.println(counter);
+      }
+    }
+  }
+
+  USB.println(F("Second Frame Test "));
+
+  //======================================================================
+
+  //=======================================
+  // Create ASCII frame (Second Frame)
+  //  frame.createFrame(MAX_FRAME);
+  //or ASCII
+
+  frame.createFrame(ASCII);
+
+  frame.addSensor(SENSOR_WATER_TURB, turbString);
+  frame.addSensor(SENSOR_WATER_DO, odString);
+  frame.addSensor(SENSOR_AGR_WV, wipper);
+  frame.addSensor(SENSOR_BAT, battery);
+  frame.showFrame();
+
+  // send XBee packet
+  error = xbee900HP.send(RX_ADDRESS, frame.buffer, frame.length);
+
+  // check TX flag
+  if (error == 0)
+  {
+    USB.println(F("send ok"));
+
+    // blink green LED
+    Utils.blinkGreenLED();
+  }
+  else //This else starts a loop to resend the last dat recived fromt the sensor
+  {
+    counter = 1;
+    USB.println(F("Start LOOP 1 to 3 "));
+
+    while (counter < 3) // You can change the retries here
+    {
+
+      USB.println(F("Send Packet Again"));
+      delay(5000); // Delay for the loop to try again 10000 = 10 seconds
+
+      error = xbee900HP.send(RX_ADDRESS, frame.buffer, frame.length);
+      // check TX flag
+
+      if (error == 0)
+      {
+        USB.println(F("Send Ok"));
+        counter=4; //If the radio recives a TX flag of 0 this will break out of the loop
+      }
+      else
+      {
+        USB.println(F("Faled Again"));
+        counter++;
+        USB.println(counter);
+      }
+    }
+  }
+
+  USB.println(F("\n++++++++++++++ 50 Sec Time Off-Set ++++++++++++++++"));
+  delay(50000);
+}
