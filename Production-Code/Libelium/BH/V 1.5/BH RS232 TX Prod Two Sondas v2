@@ -44,7 +44,7 @@ uint8_t  panID[2] = {0x7F, 0xFF};
 //  char RX_ADDRESS[] = "000000000000FFFF";
 //or
 //char RX_ADDRESS[] = "0013A20040A5A041";
-char RX_ADDRESS[] = "0013A200416463E2";
+char RX_ADDRESS[] = "0013A2004104876A";
 
 //Area #3 Set Waspmote ID
 char WASPMOTE_ID[] = "PMAI-03";
