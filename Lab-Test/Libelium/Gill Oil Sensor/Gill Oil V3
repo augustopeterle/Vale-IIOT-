@@ -1,0 +1,597 @@
+//pre prod test Jan 17 2018
+//Tom is working with mother board 1.2 and X900HP radio 
+// Testing data delivery to Azure (See if data spikes are gone
+/*
+    ------ Waspmote Pro Code Example --------
+
+    Explanation: This is the basic Code for Waspmote Pro with Digi Mesh
+
+
+  Change Log
+  //Generall config
+  1.0 Set Pan ID if needed
+  1.1 Set chennel of the Radio
+  1.2 Set Gateway address or use BROADCAST mode. If you set the address the sensor will only send data to that spacific gateway
+  1.3 Set snesor ID must be unique
+  1.4 Turn on Encryption or not
+  1.5 Set Encryption Key
+  1.6 Set Power Lever
+
+*/
+
+
+// Put your libraries here (#include ...)
+
+//===============================================================
+//              Set Variables
+//===============================================================
+#include <WaspXBee900HP.h>
+//#include <WaspXBeeDM.h>
+#include <WaspFrame.h>
+#include <WaspCAN.h>
+
+//1.
+// PAN (Personal Area Network) Identifier
+uint8_t  panID[2] = {0x7F, 0xFF};
+
+//1.1
+// Define the Frequency Channel Mask
+//////////////////////////////////////////////////////////////////
+// This is a bitmap to enable frequency channels:
+//    Bit 0 – 902.400 MHZ //  Mask 00 00 00 01 FF F7 F0 01
+//    Bit 1 – 902.800 MHZ
+//      ...
+//    Bit 31 – 914.800 MHZ
+//      ...
+//    Bit 63 – 927.600 MHZ
+//
+//  Bitfield per region:
+//    US/Canada  0xFFFFFFFFFFFFFFFF (Channels 0-63)
+//    Australia  0xFFFFFFFE00000000 (Channels 33-63)
+//    Brazil     0xFFFFFFFE00000FFF (Channels 0-11,33-63)
+//
+// Even if you try to enable forbidden channels via sw, the radio will refuse
+// to activate them, keeping wireless operation within regulations. The radio
+// uses a hard-coded bit mask for validating channels.
+//////////////////////////////////////////////////////////////////
+uint8_t channelMask[8] = { 0xFF, 0xFF, 0xFF, 0xFE, 0x00, 0x00, 0x0F, 0xFF};
+//uint8_t channelMask[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
+
+//=============================================================================
+
+// Define Preamble ID: from 0x00 to 0x07
+uint8_t preambleID = 0x00;
+
+
+//1.2
+
+//Destination MAC address
+char RX_ADDRESS[] = "0013A200416463E2";
+
+//OR
+
+//Define BROADCAST MAC address
+//char RX_ADDRESS[] = "000000000000FFFF";
+
+//1.3
+//Define the Waspmote ID
+char WASPMOTE_ID[] = "Gill_tom#Lab";
+
+//Define variable
+uint8_t error;
+
+//1.4
+//Define the Encryption mode: 1 (enabled) or 0 (disabled)
+uint8_t encryptionMode = 1;
+
+//Area 1.5 Set Encryption Key
+//Define the AES 16-byte Encryption Key
+char  encryptionKey[] = "M6j3b456IIOTKey!";
+
+//===============================================================
+//                    CanBus Area
+//===============================================================
+
+// CanBus PidID
+#define myPID 0x0000 // <------- Define here your PID
+
+
+float data;  // Stores the concentration level Of Course Particales
+float data1;  // Stores the concentration level Of Fine Particales
+float data2;  // Stores the Oil condition Vale
+//float Data2;  // Stores the Temperature reading
+
+// variable to store RSSI
+int rssi;
+
+
+//===============================================================
+//%%%%%%%%% Setup Loop %%%%%%%%%%%%%%%%%%
+//===============================================================
+
+void setup()
+{
+
+  //Open USB port
+  USB.ON();
+
+  //===============================================================
+  //            Canbus Area
+  //===============================================================
+  // Print initial message
+
+  USB.println("Initializing CAN Bus...");
+
+  // Configuring the BUS at 500 Kbit/s
+  CAN.ON(250);
+  USB.println("CAN Bus initialized at 250 KBits/s");
+  USB.println();
+
+  delay(100);
+
+  //End ===========================================================
+
+
+  //===============================================================
+  //            X900 Config
+  //===============================================================
+  USB.println(F("-------------------------------"));
+  USB.println(F("Configure XBee Digimesh"));
+  USB.println(F("-------------------------------"));
+
+
+  //Store Waspmote identifier in EEPROM memory
+  frame.setID( WASPMOTE_ID );
+
+  //Turn on XBee radio
+  xbee900HP.ON(SOCKET1);
+
+
+  //Set channel
+  USB.println(F("-------------------------------"));
+  USB.println(F("Configure XBee900 HP"));
+  USB.println(F("-------------------------------"));
+
+  USB.print(F("XBee900HP uses a bitmap to enable frequency channels:\n"\
+              "Bit  0: 902.400 MHz\n"\
+              "Bit  1: 902.800 MHz\n" \
+              "Bit  2: 903.200 MHz\n" \
+              "Bit  3: 903.600 MHz\n" \
+              "Bit  4: 904.000 MHz\n" \
+              "Bit  5: 904.400 MHz\n" \
+              "Bit  6: 904.800 MHz\n" \
+              "Bit  7: 905.200 MHz\n" \
+              "Bit  8: 905.600 MHz\n" \
+              "Bit  9: 906.000 MHz\n" \
+              "Bit 10: 906.400 MHz\n" \
+              "Bit 11: 906.800 MHz\n" \
+              "Bit 12: 907.200 MHz\n" \
+              "...\n"\
+              "Bit 31: 914.800 MHz\n" \
+              "...\n" \
+              "Bit 63: 927.600 MHz\n"));
+
+  USB.println(F("-------------------------------"));
+
+  //////////////////////////////////////////////
+  // 1. Query available frequency channels
+  //////////////////////////////////////////////
+  xbee900HP.getAvailableFreq();
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("1. Available Frequency bitmap is: 0x"));
+    USB.printHex( xbee900HP._availableFreq[0] );
+    USB.printHex( xbee900HP._availableFreq[1] );
+    USB.printHex( xbee900HP._availableFreq[2] );
+    USB.printHex( xbee900HP._availableFreq[3] );
+    USB.printHex( xbee900HP._availableFreq[4] );
+    USB.printHex( xbee900HP._availableFreq[5] );
+    USB.printHex( xbee900HP._availableFreq[6] );
+    USB.printHex( xbee900HP._availableFreq[7] );
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("1. Error calling 'getAvailableFreq()'"));
+  }
+
+
+  //////////////////////////////////////////////
+  // 2. Set Channel Mask for frequency bands
+  //////////////////////////////////////////////
+  xbee900HP.setChannelMask( channelMask );
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("2. Channel Mask bitmap is set to: 0x"));
+    USB.printHex( xbee900HP._channelMask[0] );
+    USB.printHex( xbee900HP._channelMask[1] );
+    USB.printHex( xbee900HP._channelMask[2] );
+    USB.printHex( xbee900HP._channelMask[3] );
+    USB.printHex( xbee900HP._channelMask[4] );
+    USB.printHex( xbee900HP._channelMask[5] );
+    USB.printHex( xbee900HP._channelMask[6] );
+    USB.printHex( xbee900HP._channelMask[7] );
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("2. Error calling 'setChannelMask()'"));
+  }
+
+
+
+  //////////////////////////////////////////////
+  // 3. Get Minimum Frequency Count
+  //////////////////////////////////////////////
+  xbee900HP.getMinFreqCount();
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("3. Minimum Frequency Count:"));
+    USB.println(xbee900HP._minFreqCount, DEC);
+  }
+  else
+  {
+    USB.println(F("3. Error calling 'getMinFreqCount()'"));
+  }
+
+  //////////////////////////////////////////////
+  // 5. Set Preamble ID
+  //////////////////////////////////////////////
+  xbee900HP.setPreambleID( preambleID );
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("5. Preamble set to:"));
+    USB.println(xbee900HP._preambleID, DEC);
+  }
+  else
+  {
+    USB.println(F("5. Error calling 'setPreambleID()'"));
+  }
+
+
+  //Mesh Network Retries
+  xbee900HP.setMeshNetworkRetries(0x07);
+  xbee900HP.getMeshNetworkRetries();
+
+  //1.6 Set Power Lever
+  /*
+    Parameter   XBee-PRO
+    0            10dBm
+    1            12dBm
+    2            14dBm
+    3            16dBm
+    4            18dBm
+  */
+
+  xbee900HP.setPowerLevel(4);
+  xbee900HP.getPowerLevel();
+
+  //Set PANID
+  xbee900HP.setPAN( panID );
+
+  //Check the AT commmand execution flag
+  if ( xbee900HP.error_AT == 0 )
+  {
+    USB.print(F("2. PAN ID set OK to: 0x"));
+    USB.printHex( xbee900HP.PAN_ID[0] );
+    USB.printHex( xbee900HP.PAN_ID[1] );
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("2. Error calling 'setPAN()'"));
+  }
+
+  //Set encryption mode (1:enable; 0:disable)
+
+  xbee900HP.setEncryptionMode( encryptionMode );
+
+  //Check the AT commmand execution flag
+  if ( xbee900HP.error_AT == 0 )
+  {
+    USB.print(F("3. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbee900HP.encryptMode, DEC );
+  }
+  else
+  {
+    USB.println(F("3. Error calling 'setEncryptionMode()'"));
+  }
+
+
+  //Set encryption key
+
+  xbee900HP.setLinkKey( encryptionKey );
+
+  // check the AT commmand execution flag
+  if ( xbee900HP.error_AT == 0 )
+  {
+    USB.println(F("4. AES encryption key set OK"));
+  }
+  else
+  {
+    USB.println(F("4. Error calling 'setLinkKey()'"));
+  }
+
+
+  // Write values to XBee module memory
+
+  xbee900HP.writeValues();
+
+  // check the AT commmand execution flag
+  if ( xbee900HP.error_AT == 0 )
+  {
+    USB.println(F("5. Changes stored OK"));
+  }
+  else
+  {
+    USB.println(F("5. Error calling 'writeValues()'"));
+  }
+
+  USB.println(F("-------------------------------"));
+}
+
+//End ===========================================================
+//                   END Setup LOOP
+//End ===========================================================
+
+
+//===============================================================
+//                      Run Loop
+//===============================================================
+
+void loop()
+{
+
+  // Setting time
+  USB.print(F("Time: "));
+  USB.println(RTC.getTime());
+
+  // Show the remaining battery level
+  USB.print(F("Battery Level: "));
+  USB.print(PWR.getBatteryLevel(), DEC);
+  USB.print(F(" %"));
+
+  // Show the battery Volts
+  USB.print(F(" | Battery (Volts): "));
+  USB.print(PWR.getBatteryVolts());
+  USB.println(F(" V"));
+
+  //===============================================================
+  //                    Canbus Area
+  //===============================================================
+
+
+  //CAN.CiARequest(myPID);
+  //===============================================================
+  //            Print CAN Message
+  //===============================================================
+  USB.println("PrintMessage Data Struct");
+  CAN.printMessage(&CAN.messageRx);
+  USB.println("\n");
+
+  // Is the a message available ?
+  if (CAN.messageAvailable() == 1)
+    //===============================================================
+
+  {
+
+    // read received message
+
+    //==============================================================
+    //            Read Dit 0 of the message and float the data
+    //==============================================================
+    // Read and print the first Bit of the message
+    CAN.getMessage(&CAN.messageRx);
+    USB.println("Reading Course Particales ");
+    data = uint16_t(CAN.messageRx.data[0]);
+
+
+    USB.println("--------------------------");
+    USB.print(F("Course Particales: "));
+    USB.println(data);
+    USB.print(F("Course Particals HEX: "));
+    USB.printHex(data);
+    USB.println(F("\n--------------------------"));
+
+
+    USB.println("\n");
+
+
+    //==============================================================
+    //            Read Dit 1 of the message and float the data
+    //==============================================================
+
+    CAN.getMessage(&CAN.messageRx);
+    USB.println("Reading Fine Particales ");
+    data1 = uint16_t(CAN.messageRx.data[1]);
+
+
+    USB.println("--------------------------");
+    USB.print(F("Fine Particals: "));
+    USB.println(data1);
+    USB.print(F("Fine Particals HEX: "));
+    USB.printHex(data1);
+    USB.println(F("\n--------------------------"));
+    USB.println("\n");
+
+    //==============================================================
+    //            Read Dit 2 of the message and float the data
+    //==============================================================
+
+    CAN.getMessage(&CAN.messageRx);
+    USB.println("Oil Condistion ");
+    data2 = uint16_t(CAN.messageRx.data[2]);
+
+
+    USB.println("--------------------------");
+    USB.print(F("Oil Condistion: "));
+    USB.println(data2);
+    USB.print(F("Oil Condistion HEX: "));
+    USB.printHex(data2);
+    USB.println(F("\n--------------------------"));
+    USB.println("\n");
+
+    //==============================================================
+    //            Read Dit 2 of the message and float the data
+    //            Use this area if you enable Temperature
+    //==============================================================
+
+
+
+    //==============================================================
+
+
+    // is it from oil debris sensor? Teste para comparar o ID disponivel na Estrutura
+
+    //    if ((CAN.messageRx.id & 0x67F) == 0x67F) // OK
+    //    if ((CAN.messageRx.id & 0x19FF0064) == 0x19FF0064) //Não funciona. Id aparentemente diferente
+    //    if ((CAN.messageRx.id) == 0x19FF0064)
+
+    if ((CAN.messageRx.id) == 0x67F)
+    {
+      USB.println("Dentro do IF MessageRX");
+
+      CAN.printMessage(&CAN.messageRx);
+
+      delay(200);
+
+      USB.print("ID (printHex): ");
+      USB.printHex(CAN.messageRx.id);
+      USB.println();
+
+      USB.print("ID (printInt): ");
+      USB.println(CAN.messageRx.id);
+      USB.println();
+
+    }
+  }
+
+  USB.print("\n---------------------------------------------------");
+  USB.print("\n\n");
+  delay(2000);
+  // End ==============================================================
+
+  //==============================================================
+  //          Turn on X900 and send frame
+  //==============================================================
+
+  xbee900HP.ON(SOCKET1);
+
+  ////////////Set RTC Time /////////////////////////
+  // Powers RTC up, init I2C bus and read initial values
+  USB.println(F("Set RTC Time"));
+  RTC.ON();
+
+  /*
+    // set RTC time
+      error = xbee900HP.setRTCfromMeshlium(RX_ADDRESS);
+
+      // check flag
+      if( error == 0 )
+      {
+        USB.print(F("SET RTC ok. "));
+      }
+      else
+      {
+        USB.print(F("SET RTC error. "));
+      }
+
+      USB.print(F("RTC Time:"));
+      USB.println(RTC.getTime());
+
+      delay(2000);
+  */
+
+  // Get channel
+  xbee900HP.getChannel();
+  USB.print(F("channel: "));
+  USB.printHex(xbee900HP.channel);
+  USB.println();
+
+  //Area #7 Set Network Retries for Mesh Network
+  xbee900HP.setMeshNetworkRetries(0x07);
+  xbee900HP.getMeshNetworkRetries();
+
+  // Get PAN ID
+  xbee900HP.getPAN();
+  USB.print(F("panid: "));
+  USB.printHex(xbee900HP.PAN_ID[0]);
+  USB.printHex(xbee900HP.PAN_ID[1]);
+  USB.println();
+
+  // 3. get Encryption mode (1:enable; 0:disable)
+  xbee900HP.getEncryptionMode();
+  USB.print(F("encryption mode: "));
+  USB.printHex(xbee900HP.encryptMode);
+  USB.println();
+
+  USB.println(F("-------------------------------"));
+
+  delay(3000);
+
+
+  //==============================================================
+  //          Create Frame and send
+  //==============================================================
+
+  ///////////////////////////////////////////
+  // Create ASCII frame
+  ///////////////////////////////////////////
+
+  // create new frame
+  frame.createFrame(ASCII);
+
+  // add frame fields
+  //frame.addSensor(SENSOR_STR, "new_sensor_frame");
+
+  //
+  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
+  frame.addSensor(SENSOR_SOIL_C, data);
+  frame.addSensor(SENSOR_SOIL_F, data1);
+  frame.addSensor(SENSOR_COND, data2);
+  // Use this line if you enable the temp sensor and not the condition sensor
+  //  frame.addSensor(SENSOR_OPC_TF, data2);
+
+  USB.println(F("-------------------------------"));
+  USB.println(F("Send Packet"));
+  USB.println(F("-------------------------------"));
+
+
+  // 2. Send packet
+  // send XBee packet
+  error = xbee900HP.send( RX_ADDRESS, frame.buffer, frame.length );
+
+  // check TX flag
+  if ( error == 0 )
+  {
+    USB.println(F("send ok"));
+
+    // blink green LED
+    Utils.blinkGreenLED();
+
+  }
+  else
+  {
+    USB.println(F("send error"));
+
+    // blink red LED
+    Utils.blinkRedLED();
+  }
+  //==============================================================
+
+delay(120000);
+
+
+  //END ==============================================================
+}
+
+
+
