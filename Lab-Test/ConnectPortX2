@@ -1,0 +1,26 @@
+#####################################################################
+# This script sends a packet from an x2 gateway to a USB Gateway
+#####################################################################
+
+import sys, os
+import xbee
+from socket import *
+
+# The Format of the tuple is:
+# (address_string, endpoint, profile_id, cluster_id)
+#
+# The values for the endpoint, profile_id, and
+# cluster_id given below are the values used to write
+# to the serial port on an Ember-based XBee module.
+DESTINATION=("00:13:a2:00:41:74:1f:b6!", 0xe8, 0xc105, 0x11)
+
+# Create the socket, datagram mode, proprietary transport:
+sd = socket(AF_XBEE, SOCK_DGRAM, XBS_PROT_TRANSPORT)
+
+# Bind to endpoint 0xe8 (232):
+sd.bind(("", 0xe8, 0, 0))
+
+# Send "Hello, World!" to the destination node, endpoint,
+# using the profile_id and cluster_id specified in
+# DESTINATION:
+sd.sendto("Hello, World!", 0, DESTINATION)
