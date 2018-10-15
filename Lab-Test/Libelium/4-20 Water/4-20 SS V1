@@ -41,6 +41,7 @@
 // ===================================================
 // Entering libraries needed
 #include <WaspXBeeDM.h>
+#include <WaspRTC.h> //--do i need this? Because we are using RTC
 #include <WaspFrame.h>
 #include <WaspXBee900HP.h>
 #include <currentLoop.h> //include this library for using current loop functions 
@@ -149,6 +150,7 @@ void setup()
 {
  // Power on the USB for viewing data in the serial monitor
   USB.ON();
+  RTC.ON();
  
   // Sets the 5V switch ON
   currentLoopBoard.ON(SUPPLY5V);
@@ -172,7 +174,6 @@ void setup()
  // store Waspmote identifier in EEPROM memory
   frame.setID( WASPMOTE_ID );
 
-  RTC.ON();
   
   // Set Waspmote Radio ID Waspmote Name(Radio Name in XCTU Program)
   xbee900HP.setNodeIdentifier(WASPMOTE_ID);
