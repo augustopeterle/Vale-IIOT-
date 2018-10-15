@@ -8,52 +8,69 @@
  * Tom Massicotte
  */
 
-//Changes
-// Area #1.0 Set Pan ID
-// Area #2.0 Set MAC ID
-// Area #3.0 Set Waspmote ID
-// Area #4.0 Set Channel
-// Area #5.0 Set Encryption On/Off
-// Area #6.0 Set Encrypton Key
-// Area #7.0 Set Network Retries
-// Area #8.0 Set Radio Power Output
-// Area #9.0 Sync Time to Gateway
-// Area #10.0 Set Router Wake Time (Every houre 57min)
-// Area #11.0 Set Loop Count for time offset
-// Area #12.0 Router Awake time (10min)
-// Area #13.0 Set Router sleep time in offset loop (10min)
+// Summary
+// 1.0 Include libraries
+// 1.1 Set Pan ID
+// 1.2 Set MAC ID
+// 1.3 Set Waspmote ID
+// 1.4 Set Channel
+// 1.5 Set Encryption On/Off
+// 1.6 Set Encrypton Key
 
-//#include <WaspXBeeDM.h>
+// 2.0 Config
+// 2.1 Radio settings
+// 2.2 Set Network Retries
+// 2.3 Set Radio Power Output
+// 2.4 Sync Time to Gateway
+// 10.0 Set Router Wake Time (Every houre 57min)
+// 11.0 Set Loop Count for time offset
+// 12.0 Router Awake time (10min)
+// 13.0 Set Router sleep time in offset loop (10min)
+
+// Change Log -- Things you need to Change
+
+
+// ====================================================================================================================
+// ====================================================================================================================
+// ======================================= Area #1 Set Global Variables ===============================================
+// ====================================================================================================================
+// ====================================================================================================================
+
+// 1.0
+// =====================================
+// Entering libraries needed
+#include <WaspXBeeDM.h>
 #include <WaspFrame.h>
 #include <WaspXBee900HP.h>
+#include <currentLoop.h> //include this library for using current loop functions 
 
-
-//================================================================================
-//                      Set Variables
-//================================================================================
-
-//Area #1 Set Pan ID
+// 1.1
+// =====================================
+// Set Pan ID
 // PAN (Personal Area Network) Identifier
+
 uint8_t  panID[2] = {0x7F, 0xFF}; // Meshilium MG
+// =====================================
 
-//Area #2 Set MAC ID
-// Destination MAC address
-
+//1.2 
+// Set MAC ID - Destination MAC address
+// =====================================
 //////////////////////////////////////////
 char RX_ADDRESS[] = "0013A2004104876A"; // MG
 //////////////////////////////////////////
+// =====================================
 
-//Area #3 Set Waspmote ID
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// Define the Waspmote ID
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// 1.3 
+// Set Waspmote ID - Define the Waspmote ID
+// =====================================
+
 char WASPMOTE_ID[] = "R1-T-MG";
+//======================================
 
-// Area #4 Set Channel
-
-// =========================== Set Channel Mask =================================
-
+// 1.4 Set radio Channel
 // Define the Frequency Channel Mask
+//======================================
 //////////////////////////////////////////////////////////////////
 // This is a bitmap to enable frequency channels:
 //    Bit 0 – 902.400 MHZ //  Mask 00 00 00 01 FF F7 F0 01
@@ -77,12 +94,18 @@ uint8_t channelMask[8] = { 0xFF, 0xFF, 0xFF, 0xFE, 0x00, 0x00, 0x0F, 0xFF};
 
 // Define Preamble ID: from 0x00 to 0x07
 uint8_t preambleID = 0x00;
+//======================================
 
-// Area #5 Set Encryption On/Off
+// 1.5
+// Set Encryption On/Off
+//======================================
 // Define the Encryption mode: 1 (enabled) or 0 (disabled)
-uint8_t encryptionMode = 1;
+ 
+   uint8_t encryptionMode = 1;
+//======================================
 
-// Area #6 Set Encrypton Key
+//1.6 Set Encrypton Key
+//======================================
 // Define the AES 16-byte Encryption Key
 char  encryptionKey[] = "M6j3b456IIOTKey!";
 
@@ -90,26 +113,33 @@ int countFramesWhlie = 0;
 
 // define variable
 uint8_t error;
-//END Variables =================================================================
+//END Variables
+// ======================================== END ===================================================
 
-//================================================================================
-//                      Setup Loop
-//================================================================================
+
+// ====================================================================================================================
+// =============================================== Area #2 Config =====================================================
+// ====================================================================================================================
+
 
 void setup()
 {
- // open USB port
+ // Power on the USB for viewing data in the serial monitor
   USB.ON();
 
   USB.println(F("-------------------------------"));
   USB.println(F("Configure XBee Digimesh"));
   USB.println(F("-------------------------------"));
 
-  //================================================================================
-  //                   Radio Settings
-  //================================================================================
-  // init XBee
+  //===========================
+  // 2.1  Radio Settings
+  //===========================
+ 
+ // init XBee
   xbee900HP.ON(SOCKET1);
+
+// store Waspmote identifier in EEPROM memory
+  frame.setID( WASPMOTE_ID );
 
   RTC.ON();
   
@@ -117,17 +147,19 @@ void setup()
   xbee900HP.setNodeIdentifier(WASPMOTE_ID);
   xbee900HP.getNodeIdentifier();
 
-  // store Waspmote identifier in EEPROM memory
-  frame.setID( WASPMOTE_ID );
+ 
 
+  // 2.2 
+  // Set Network Retries for Mesh Network
+  // ================================================================================
+     xbee900HP.setMeshNetworkRetries(0x07);
+     xbee900HP.getMeshNetworkRetries();
+  // ================================================================================
+  
+  
+  // 2.3 
+  // Set Radio Power Output
   //================================================================================
-  //Area #7 Set Network Retries for Mesh Network
-  xbee900HP.setMeshNetworkRetries(0x07);
-  xbee900HP.getMeshNetworkRetries();
-
-  //================================================================================
-  //Area #8 Set Radio Power Output
-
   /*
     Parameter   XBee-PRO
     0            10dBm
@@ -136,20 +168,22 @@ void setup()
     3            16dBm
     4            18dBm
   */
-
-  xbee900HP.setPowerLevel(4);
-  xbee900HP.getPowerLevel();
-
+    xbee900HP.setPowerLevel(4);
+    xbee900HP.getPowerLevel();
+ //===============================================================================
+ 
+ // 2.4
+ // Set channel
+ //===============================================================================
+    USB.println(F("-------------------------------"));
+    USB.println(F("Configure XBee900 HP"));
+    USB.println(F("-------------------------------"));
+ //===============================================================================
+ 
+ 
+  
+  // Query available frequency channels
   //===============================================================================
-  //  Set channel
-
-  USB.println(F("-------------------------------"));
-  USB.println(F("Configure XBee900 HP"));
-  USB.println(F("-------------------------------"));
-
-  //////////////////////////////////////////////
-  // 1. Query available frequency channels
-  //////////////////////////////////////////////
   xbee900HP.getAvailableFreq();
 
   // check at commmand execution flag
@@ -170,7 +204,7 @@ void setup()
   {
     USB.println(F("1. Error calling 'getAvailableFreq()'"));
   }
-
+ //===============================================================================
 
   //////////////////////////////////////////////
   // 2. Set Channel Mask for frequency bands
@@ -294,8 +328,9 @@ void setup()
 
   USB.println(F("-------------------------------"));
 
-  // Area #9  ================================================================================
+  // Area #9  
   // Sync Time to Gateway
+  // ================================================================================
 
   int errorSinc = 0;
   //Set Number for Newtwork sync time retrys here
@@ -320,8 +355,15 @@ void setup()
   USB.println(F("RTC Time:"));
   USB.println(RTC.getTime());
   delay(2000);
-  //END Time Sync ===================================================================
+  
+//END Time Sync 
+// ===================================================================
+
 }
+
+// ====================================================================================================================
+// =============================================== Area # Prod Loop ==================================================
+// ====================================================================================================================
 
 void loop()
 {
@@ -388,14 +430,16 @@ void loop()
     delay(1000);
     USB.println();
 
-    //END Time Sync ABSOLUTE MODE ===================================================================
+    // END Time Sync ABSOLUTE MODE 
+    // ===================================================================
 
     //===============================================================================================
     // Start time offset delay (three loops
     //===============================================================================================
     USB.println("+++++++++++++++++++++++++++++  Start Delay loop +++++++++++++++++++++++++++ ");
 
-    //Area #11 =================================================================================
+    //Area #11
+    // =================================================================================
     // Loop Count Set How many loops you want
 
     // Wlile loop to repeat the loop 4 times (Open four windows to allow the sensors to send data
@@ -430,8 +474,9 @@ void loop()
         USB.println(F("send error"));
       }
 
-      //Area #12 =================================================================================
+      // Area #12
       // Router Awake for 5min
+      // =================================================================================
       // 11.0 Set Router Wake Duration
       USB.print(F("Time: "));
       USB.println(RTC.getTime());
@@ -456,11 +501,12 @@ void loop()
       USB.print(F("Time: "));
       USB.println(RTC.getTime());
 
-      // Area #13 =================================================================================
+      // Area #13 
       // Set Offset Time (How long will the Router Sleep
+      // =================================================================================
       //          RTC.setAlarm1("00:00:11:00", RTC_OFFSET, RTC_ALM1_MODE4);
       RTC.setAlarm1("00:00:10:00", RTC_OFFSET, RTC_ALM1_MODE4);
- //     RTC.setAlarm1("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE4);
+ //    RTC.setAlarm1("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE4);
 
       PWR.sleep(ALL_OFF);
       USB.ON();
@@ -476,7 +522,10 @@ void loop()
         intFlag &= ~(RTC_INT); // Clear flag
       }
     } //end while
-    //END Time delay loop ===================================================================
+   
+   // END Time delay loop
+   // ===================================================================
+   
   } // end if
   countFramesWhlie=0;
       // set RTC time
