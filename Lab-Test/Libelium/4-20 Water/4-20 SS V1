@@ -1,11 +1,13 @@
+//   ------ [4-20mA_v1] Suspended Solids Sensor TEST -------- 
 /*
- * Data 16 07 18
- * Codigo para versao 1.5 waspmote
+ * Data 15 10 18
+ * Code for 1.5v waspmote
  * Versao do roteador com sleep.
  * O dispositivo fica acordado por 4 min e dorme por 10min. O ciclo de sono inicia todo comeco de hora (XX:00:00).
  * 
  * Alex Calegari Fracaroli
  * Tom Massicotte
+ * Lud
  */
 
 //%% Summary %%
@@ -17,11 +19,12 @@
 // 1.5 Set Encryption On/Off
 // 1.6 Set Encrypton Key
 
-// 2.0 Config
+// 2.0 Config Basics
 // 2.1 Radio settings
 // 2.2 Set Network Retries
 // 2.3 Set Radio Power Output
 // 2.4 Sync Time to Gateway
+// 3.0 Config Sensor
 // 10.0 Set Router Wake Time (Every houre 57min)
 // 11.0 Set Loop Count for time offset
 // 12.0 Router Awake time (10min)
@@ -31,7 +34,7 @@
 
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Area #1 Set Global Variables   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Area #1 Set Global Variables  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 // 1.0
@@ -41,6 +44,9 @@
 #include <WaspFrame.h>
 #include <WaspXBee900HP.h>
 #include <currentLoop.h> //include this library for using current loop functions 
+
+
+
 // ===================================================
 
 
@@ -132,7 +138,7 @@ int countFramesWhlie = 0;
 
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #2 Config %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #2 Config Basics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* On this part the Xbee is going to collect the information 
@@ -143,13 +149,21 @@ void setup()
 {
  // Power on the USB for viewing data in the serial monitor
   USB.ON();
+ 
+  // Sets the 5V switch ON
+  currentLoopBoard.ON(SUPPLY5V);
+  delay(1000);
+
+  // Sets the 12V switch ON
+  currentLoopBoard.ON(SUPPLY12V); 
+  delay(1000); 
 
   USB.println(F("-------------------------------"));
   USB.println(F("Configure XBee Digimesh"));
   USB.println(F("-------------------------------"));
 
- 
- // 2.1 
+
+ // 2.0 
  // ===================================================
  // Radio Settings
  // init XBee
@@ -163,29 +177,28 @@ void setup()
   // Set Waspmote Radio ID Waspmote Name(Radio Name in XCTU Program)
   xbee900HP.setNodeIdentifier(WASPMOTE_ID);
   xbee900HP.getNodeIdentifier();
-
+ // ===================================================
  
-
-  // 2.2 
-  // ===================================================
+  // 2.1
+  // ==================================================
   // Set Network Retries for Mesh Network
      xbee900HP.setMeshNetworkRetries(0x07);
      xbee900HP.getMeshNetworkRetries();
-  // ===================================================
+  // ==================================================
   
- // 2.3
- //===================================================
+ // 2.2
+ // ===================================================
  // Set channel
     USB.println(F("-------------------------------"));
     USB.println(F("Configure XBee900 HP"));
     USB.println(F("-------------------------------"));
- //===================================================
+ // ===================================================
  
- 
-  
- // Query available frequency channels
- //===================================================
-  xbee900HP.getAvailableFreq();
+   
+ // 2.3
+ // ===================================================
+ //  Query available frequency channels
+     xbee900HP.getAvailableFreq();
 
   // check at commmand execution flag
   if (xbee900HP.error_AT == 0)
@@ -204,7 +217,7 @@ void setup()
   else
   {
     USB.println(F("1. Error calling 'getAvailableFreq()'"));
-  } //===================================================
+  } // ======================================================
 
 // 2.4 
 // ====================================================
@@ -231,8 +244,10 @@ void setup()
   } // ===============================================
   
   
- // 2.5 Get Minimum Frequency Count
+ // 2.5 
  // ===================================================
+ // Get Minimum Frequency Count
+
     xbee900HP.getMinFreqCount();
 
   // check at commmand execution flag
@@ -246,8 +261,10 @@ void setup()
     USB.println(F("3. Error calling 'getMinFreqCount()'"));
   }
   
-  // 2.6 Set PANID
-  //===================================================
+  // 2.6 
+  // ===================================================
+  // Set PANID
+
   xbee900HP.setPAN( panID );
 
   // check the AT commmand execution flag
@@ -264,10 +281,11 @@ void setup()
   }
 
   
- // 5. Set Preamble ID
- // ===================================================  
+ // 2.7 
+ // =================================================== 
+ // Set Preamble ID
 
-  xbee900HP.setPreambleID( preambleID );
+      xbee900HP.setPreambleID( preambleID );
 
   // check at commmand execution flag
   if (xbee900HP.error_AT == 0)
@@ -278,12 +296,14 @@ void setup()
   else
   {
     USB.println(F("5. Error calling 'setPreambleID()'"));
-  }
+  } // =================================================
 
   
- // 6. set encryption mode (1:enable; 0:disable)
- // ===================================================
-  xbee900HP.setEncryptionMode( encryptionMode );
+ // 2.8 
+ // =====================================================================
+ // Set encryption mode (1:enable; 0:disable)
+ 
+     xbee900HP.setEncryptionMode( encryptionMode );
 
   // check the AT commmand execution flag
   if (xbee900HP.error_AT == 0)
@@ -294,12 +314,14 @@ void setup()
   else
   {
     USB.println(F("6. Error calling 'setEncryptionMode()'"));
-  }
+  } // ===================================================================
 
   
-  // 7. set the encryption key
-  //===================================================
-  xbee900HP.setLinkKey( encryptionKey );
+  // 2.9 
+  // ===================================================
+  // Set the encryption key
+
+             xbee900HP.setLinkKey( encryptionKey );
 
   // check the AT commmand execution flag
   if (xbee900HP.error_AT == 0)
@@ -309,10 +331,12 @@ void setup()
   else
   {
     USB.println(F("7. Error calling 'setLinkKey()'"));
-  }
+  } // =================================================
 
-  // 8. write values to XBee module memory
+
+  // 2.9.1 
   // ===================================================
+  // Write values to XBee module memory - SAVE
      
      xbee900HP.writeValues();
 
@@ -327,10 +351,11 @@ void setup()
   }
 
   USB.println(F("-------------------------------"));
+ // =====================================================
 
-  // Area #9  
-  // Sync Time to Gateway
-  // ================================================================================
+  // 2.9.2  
+  // =====================================================================================
+  // Sync Time to Gateway - sometimes the sync does not work for libelium, you have to try 
 
   int errorSinc = 0;
   //Set Number for Newtwork sync time retrys here
@@ -355,14 +380,27 @@ void setup()
   USB.println(F("RTC Time:"));
   USB.println(RTC.getTime());
   delay(2000);
-  
-//END Time Sync 
-// ===================================================================
+  // END Time Sync 
+  // ===================================================================
 
 }
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Area #2 Prod Loop  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Area #3 Config Sensor %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Area #4 Data Config  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Area #5 Encript   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   Area #4 Prod Loop  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void loop()
@@ -385,8 +423,8 @@ void loop()
   USB.println(F(" V"));
 
   delay(1000);
-  //=================================================================================
-  //Area 10 Set Wake Time. What time do you want the router to wake up?
+  // =================================================================================
+  // Area 10 Set Wake Time. What time do you want the router to wake up?
   // Setting alarm 1 in absolute mode using RTC_ALM1_MODE4: (RTC_ALM1_MODE4: Minutes and seconds match )
   // This will wake the router every hout when the RTC clock reads 57:00 min
   // THe current setup will cause the router to wake up everytime the clock hit 57min
@@ -401,7 +439,7 @@ void loop()
     RTC_ALM1_MODE5: Seconds match
     RTC_ALM1_MODE6: Once per second
   */
-  //          RTC.setAlarm1("00:00:30:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
+  // RTC.setAlarm1("00:00:30:00",RTC_ABSOLUTE,RTC_ALM1_MODE4);
 
   RTC.setAlarm1("00:00:00:00", RTC_ABSOLUTE, RTC_ALM1_MODE4);
   //RTC.setAlarm1("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE4);
@@ -460,7 +498,7 @@ void loop()
       USB.println(F("Send Packet"));
       USB.println(F("-------------------------------"));
 
-      //===============================================================================================
+      // ===============================================================================================
       // Send packet
       error = xbee900HP.send( RX_ADDRESS, frame.buffer, frame.length );
 
@@ -539,4 +577,22 @@ void loop()
     {
       USB.println(F("SET RTC error. "));
     }
+}
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #6 Send  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #7 Sleep %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// 7. Go to deepsleep 
+// After X Time, Waspmote wakes up thanks to the RTC Alarm
+PWR.deepSleep("00:00:00:10", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF);
+
+// Wake UP
+  USB.ON();
+  USB.println(F("\n Wake UP! \n"));
+ 
+delay(2500);
 }
