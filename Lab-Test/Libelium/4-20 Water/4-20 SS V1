@@ -1,13 +1,12 @@
-//   ------ [4-20mA_v1] Suspended Solids Sensor TEST -------- 
-/*
+//   ------ [4-20mA_v1] Suspended Solids System TEST -------- 
+/* 
  * Data 15 10 18
  * Code for 1.5v waspmote
- * Versao do roteador com sleep.
- * O dispositivo fica acordado por 4 min e dorme por 10min. O ciclo de sono inicia todo comeco de hora (XX:00:00).
  * 
- * Alex Calegari Fracaroli
- * Tom Massicotte
- * Lud
+ * By  Alex Fracaroli.
+ *  Tom Massicotte.
+ *  Ludmilla Bassini
+ *  Read 4-20mA signal 
  */
 
 //%% Summary %%
@@ -20,15 +19,7 @@
 // 1.6 Set Encrypton Key
 
 // 2.0 Config Basics
-// 2.1 Radio settings
-// 2.2 Set Network Retries
-// 2.3 Set Radio Power Output
-// 2.4 Sync Time to Gateway
-// 3.0 Config Sensor
-// 10.0 Set Router Wake Time (Every houre 57min)
-// 11.0 Set Loop Count for time offset
-// 12.0 Router Awake time (10min)
-// 13.0 Set Router sleep time in offset loop (10min)
+
 
 // %% Change Log %% -- Things you need to Change
 
@@ -39,86 +30,65 @@
 
 // 1.0
 // ===================================================
-// Entering libraries needed
-#include <WaspRTC.h> //--do i need this? Because we are using RTC
+//Include libraries
+#include <currentLoop.h> // Included this library for using current loop functions
 #include <WaspFrame.h>
+#include <WaspXBeeDM.h>
 #include <WaspXBee900HP.h>
-#include <currentLoop.h> //include this library for using current loop functions 
 // ===================================================
-
 
 // 1.1
 // ===================================================
 // Set Pan ID - PAN (Personal Area Network) Identifier
-
-   uint8_t  panID[2] = {0x7F, 0xFF}; // Meshilium MG
+   uint8_t  panID[2] = {0x7F, 0xFF}; 
 // ===================================================
 
 // 1.2 
 // ===================================================
-// Set MAC ID - Destination MAC address
-   char RX_ADDRESS[] = "0013A2004104876A"; // Lab-CPD
+// **************** Gateway Address ******************
+   //char RX_ADDRESS[] = "0013A2004104876A"; // CPD MAC ID
+    char RX_ADDRESS[] = "0013A200418473D8"; // Lab
 // ===================================================
 
 // 1.3 
 // ===================================================
 // Set Waspmote ID - Define the Waspmote ID
-
-     char WASPMOTE_ID[] = "Lud-test";
+   char WASPMOTE_ID[] = "Solid_Sensor";
 // ===================================================
 
-// 1.4 Set radio Channel
-// =========================================================================
-// Define the Frequency Channel Mask
+// define variable
+uint8_t error;
+char solid4_20[6];
+char solidmgl[6];
+char temp4_20[4];
+char tempc[4];
+//int countFrames = 0;
 
-// This is a bitmap to enable frequency channels:
-//    Bit 0 – 902.400 MHZ //  Mask 00 00 00 01 FF F7 F0 01
-//    Bit 1 – 902.800 MHZ
-//      ...
-//    Bit 31 – 914.800 MHZ
-//      ...
-//    Bit 63 – 927.600 MHZ
-//
-//  Bitfield per region:
-//    US/Canada  0xFFFFFFFFFFFFFFFF (Channels 0-63)
-//    Australia  0xFFFFFFFE00000000 (Channels 33-63)
-//    Brazil     0xFFFFFFFE00000FFF (Channels 0-11,33-63)
-//
-// Even if you try to enable forbidden channels via sw, the radio will refuse
-// to activate them, keeping wireless operation within regulations. The radio
-// uses a hard-coded bit mask for validating channels.
 // ===========================================================================
 //set channel mask - by TOM
   uint8_t channelMask[8] = { 0xFF, 0xFF, 0xFF, 0xFE, 0x00, 0x00, 0x0F, 0xFF};
-//uint8_t channelMask[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
+// ===========================================================================
 
+// ===================================================
 // Define Preamble ID: from 0x00 to 0x07
    uint8_t preambleID = 0x00;
-
+// ===================================================
 
 // 1.5
 // ===================================================
 // Set Encryption On/Off
 // Define the Encryption mode: 1 (enabled) or 0 (disabled)
- 
-   uint8_t encryptionMode = 1;
+    uint8_t encryptionMode = 1;
 // ===================================================
 
 // 1.6 
 // ===================================================
 // Set Encrypton Key
 // Define the AES 16-byte Encryption Key
-char  encryptionKey[] = "M6j3b456IIOTKey!";
-
-int countFramesWhlie = 0;
-
-// define variable
-   uint8_t error;
-// ===================================================   
-
-// END Variables
+   char encryptionKey[] = "M6j3b456IIOTKey!";
 // ===================================================
 
+// END Variables
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #2 Config Basics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -132,27 +102,22 @@ void setup()  //Preparation - meaning the function is called only once when your
 {
  // Power on the USB for viewing data in the serial monitor
   USB.ON();
-  RTC.ON();
+  USB.println(F("      Suspended Solid System \n"));
+  USB.println(F("*********************************"));  
  
-  // Sets the 5V switch ON
-  // currentLoopBoard.ON(SUPPLY5V);
-  // delay(1000);
+ // Sets the 5V switch ON
+ // currentLoopBoard.ON(SUPPLY5V);
+ // delay(1000);
 
-  // Sets the 12V switch ON
-  // currentLoopBoard.ON(SUPPLY12V); 
-  // delay(1000); 
-
-
-  USB.println(F("-------------------------------"));
-  USB.println(F("Configure XBee Digimesh"));
-  USB.println(F("-------------------------------"));
-
-
- // 2.0 
+ // Sets the 12V switch ON
+ // currentLoopBoard.ON(SUPPLY12V); 
+ // delay(1000); 
+ 
  // ===================================================
- // Radio Settings
- // init XBee
-  xbee900HP.ON(); //leave like this it will use socket 0
+ // Radio Settings -  init XBee
+  xbee900HP.ON(SOCKET_1); //if you leave like (), it will use socket 0
+ //init XBee DigiMesh -> SOCKET_1 because i´m using the shield
+ //xbeeDM.ON(SOCKET_1); 
    
 // 2.0.1 
 // ===================================================
@@ -165,34 +130,40 @@ void setup()  //Preparation - meaning the function is called only once when your
     3            16dBm
     4            18dBm
  */
-    xbee900HP.setPowerLevel(4);
-    xbee900HP.getPowerLevel();
-// ===================================================
+    //xbee900HP.setPowerLevel(4);
+   // xbee900HP.getPowerLevel();
+ // ===================================================
 
- // store Waspmote identifier in EEPROM memory
-  frame.setID( WASPMOTE_ID );
 
-  
+  // store Waspmote identifier in EEPROM memory
+    frame.setID( WASPMOTE_ID );
+
+  // ==================================================
   // Set Waspmote Radio ID Waspmote Name(Radio Name in XCTU Program)
-  xbee900HP.setNodeIdentifier(WASPMOTE_ID);
-  xbee900HP.getNodeIdentifier();
-
+     xbee900HP.setNodeIdentifier(WASPMOTE_ID);
+     xbee900HP.getNodeIdentifier();
+  // ==================================================
  
-  // 2.1
+  // 2
   // ==================================================
   // Set Network Retries for Mesh Network
      xbee900HP.setMeshNetworkRetries(0x07);
      xbee900HP.getMeshNetworkRetries();
   // ==================================================
   
- // 2.2
+ // 2
  // ===================================================
- // Set channel
-    USB.println(F("-------------------------------"));
-    USB.println(F("Configure XBee900 HP"));
-    USB.println(F("-------------------------------"));
+ // Set PreambleID
+ //  xbeeDM.setPreambleID(preambleID);
  // ===================================================
- 
+
+ // ===================================================
+ // 3. write values to XBee module memory
+    xbeeDM.writeValues();
+// ===================================================
+
+  delay(1000);
+ } 
    
  // 2.3
  // ===================================================
