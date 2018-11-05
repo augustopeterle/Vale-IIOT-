@@ -1,182 +1,412 @@
-//   ------ [4-20mA_v1] Q-Blast 48-88 Suspended Solid System TEST -------- 
-/* 
- * Data 15 10 18
- * Code for 1.5v waspmote
- * 
- * By  Alex Fracaroli.
- * Tom Massicotte.
- * Ludmilla Bassini
- * Read 4-20mA signal 
+/*  ------ [4-20mA_v1] Q-Blast 48-88 Suspended Solid System TEST --------  
+  
+By  Alex Fracaroli.
+    Tom Massicotte.
+    Ludmilla Bassini
+
+  Date 10/2018
+  Read 4-20mA signal
 */
+
+//Code Check List for install
+// #1.0 Set Waspmote ID
+// #2.0 Set Pan ID
+// #3.0 Set Gateway address
+// #4.0 Set Channel Mask
+// #5.0 Set Encryption On/Off and Set Encrypton Key
+// #6.0 Set Preamble ID
+// #7.0 Set Network Retries
+// #8.0 Set Radio Power Output
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Area #1 Set Global Variables  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-// ===========================================================================
 // Include this library for using current loop functions
-#include <currentLoop.h>
-#include <WaspFrame.h>
-#include <WaspXBeeDM.h>
-#include <WaspXBee900HP.h>
+  #include <currentLoop.h>
+  #include <WaspFrame.h>
+  #include <WaspXBeeDM.h>
+  #include <WaspXBee900HP.h>
+// define variable
+  uint8_t error;
+  char solidmgl[6];
+  float tempc;
+
+// 1.0
+// ===========================================================================
+// Set Waspmote ID - sensor name
+   char WASPMOTE_ID[] = "Solid_Sensor";
 // ===========================================================================
 
-//Nome do Sensor (alterar quando para o nome desejado)
-char WASPMOTE_ID[] = "Solid_Sensor";
+// 2.0
+// ===========================================================================
+// Set PAN (Personal Area Network) - It has to be the same as the gateway
+   uint8_t  panID[2] = {0x7F, 0xFF};
+// ===========================================================================
 
-// define variable
-uint8_t error;
-char solidmgl[3];
-float tempc[3];
-
-// PAN (Personal Area Network) Identifier (Necessário ser o mesmo da gateway)
-uint8_t  panID[2] = {0x7F, 0xFF}; 
-
+// 3.0
 // ===========================================================================
 // ************** Gateway Address ********************
-   //char RX_ADDRESS[] = "0013A2004104876A"; // CPD MAC ID
-    char RX_ADDRESS[] = "0013A200418473D8"; // Lab
+// char RX_ADDRESS[] = "0013A2004104876A"; // CPD MAC ID
+   char RX_ADDRESS[] = "0013A200418473D8"; // Lab
 // ===========================================================================
 
-uint8_t channelMask[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x0F, 0xFF};
+// 4.0
+// ===========================================================================
+// Set channel mask
+   uint8_t channelMask[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x0F, 0xFF};
+// ===========================================================================
 
+// 5.0
+// ===========================================================================
 // Set Encryption On/Off
 // Define the Encryption mode: 1 (enabled) or 0 (disabled)
-  uint8_t encryptionMode = 1;
-  char encryptionKey[] = "M6j3b456IIOTKey!";
+   uint8_t encryptionMode = 1;
+   char encryptionKey[] = "M6j3b456IIOTKey!";
+// ===========================================================================
 
+// 6.0
+// ===========================================================================
 // Define Preamble ID: from 0x00 to 0x07
    uint8_t preambleID = 0x00;
+// ===========================================================================
+
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #2 Config Xbee   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Area #2 Config Xbee   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 void setup()
 {
+// init XBee
+  xbee900HP.ON(SOCKET1);
+
+// Set Waspmote Radio ID Waspmote Name(Radio Name in XCTU Program)
+  xbee900HP.setNodeIdentifier(WASPMOTE_ID);
+  xbee900HP.getNodeIdentifier();
+
+// store Waspmote identifier in EEPROM memory
+  frame.setID( WASPMOTE_ID );
+
+// 7.0
+// ================================================================================
+// Set Network Retries for Mesh Network
+   xbee900HP.setMeshNetworkRetries(0x07);
+   xbee900HP.getMeshNetworkRetries();
+// ================================================================================
+
+
+// 8.0
+// ================================================================================
+// Set Radio Power Output
+  /*
+    Parameter   XBee-PRO
+    0            10dBm
+    1            12dBm
+    2            14dBm
+    3            16dBm
+    4            18dBm
+  */
+   xbee900HP.setPowerLevel(4);
+   xbee900HP.getPowerLevel();
+// ================================================================================
+
+
+// ================================================================================
+// Print config information
+  USB.println(F("-----------------------------------"));
+  USB.println(F("      Configure Information"));
+  USB.println(F("-----------------------------------"));
+// ================================================================================
+
+
+// ================================================================================  
+// Print Gatway MAC
+   USB.print(F("1. Gateway MAC is: "));
+   USB.println(RX_ADDRESS);
+// ================================================================================
+
+
+// ================================================================================
+// Query available frequency channels
+ 
+   xbee900HP.getAvailableFreq();
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("2. Available Frequency bitmap is: 0x"));
+    USB.printHex( xbee900HP._availableFreq[0] );
+    USB.printHex( xbee900HP._availableFreq[1] );
+    USB.printHex( xbee900HP._availableFreq[2] );
+    USB.printHex( xbee900HP._availableFreq[3] );
+    USB.printHex( xbee900HP._availableFreq[4] );
+    USB.printHex( xbee900HP._availableFreq[5] );
+    USB.printHex( xbee900HP._availableFreq[6] );
+    USB.printHex( xbee900HP._availableFreq[7] );
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("2. Error calling 'getAvailableFreq()'"));
+  }
+// ================================================================================
+
+
+// ================================================================================
+// Set Channel Mask for frequency bands
+   xbee900HP.setChannelMask( channelMask );
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("3. Channel Mask bitmap is set to: 0x"));
+    USB.printHex( xbee900HP._channelMask[0] );
+    USB.printHex( xbee900HP._channelMask[1] );
+    USB.printHex( xbee900HP._channelMask[2] );
+    USB.printHex( xbee900HP._channelMask[3] );
+    USB.printHex( xbee900HP._channelMask[4] );
+    USB.printHex( xbee900HP._channelMask[5] );
+    USB.printHex( xbee900HP._channelMask[6] );
+    USB.printHex( xbee900HP._channelMask[7] );
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("3. Error calling 'setChannelMask()'"));
+  }
+// ================================================================================
+
+
+// ================================================================================
+// Get Minimum Frequency Count
+    xbee900HP.getMinFreqCount();
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("4. Minimum Frequency Count:"));
+    USB.println(xbee900HP._minFreqCount, DEC);
+  }
+  else
+  {
+    USB.println(F("4. Error calling 'getMinFreqCount()'"));
+  }
+// ===============================================================================
+
+
+// ===============================================================================
+// Set PANID - xbee 
+    xbee900HP.setPAN( panID );
+
+  // check the AT commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("5. PAN ID set OK to: 0x"));
+    USB.printHex( xbee900HP.PAN_ID[0] );
+    USB.printHex( xbee900HP.PAN_ID[1] );
+    USB.println();
+  }
+  else
+  {
+    USB.println(F("5. Error calling 'setPAN()'"));
+  }
+ // ===============================================================================
+
+ 
+ // ===============================================================================
+ // Set Preamble ID - Xbee
+  xbee900HP.setPreambleID( preambleID );
+
+  // check at commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("6. Preamble set to:"));
+    USB.println(xbee900HP._preambleID, DEC);
+  }
+  else
+  {
+    USB.println(F("6. Error calling 'setPreambleID()'"));
+  }
+// ================================================================================
+
+
+// ================================================================================
+// Set encryption mode (1:enable; 0:disable)
+  
+  xbee900HP.setEncryptionMode( encryptionMode );
+
+  // check the AT commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.print(F("7. AES encryption configured (1:enabled; 0:disabled):"));
+    USB.println( xbee900HP.encryptMode, DEC );
+  }
+  else
+  {
+    USB.println(F("7. Error calling 'setEncryptionMode()'"));
+  }
+// ================================================================================
+
+
+// ================================================================================
+// Set the encryption key
+     xbee900HP.setLinkKey( encryptionKey );
+
+  // check the AT commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.println(F("8. AES encryption key set OK"));
+  }
+  else
+  {
+    USB.println(F("8. Error calling 'setLinkKey()'"));
+  }
+// ================================================================================
+
+
+// ================================================================================
+// Write values to XBee module memory
+  xbee900HP.writeValues();
+
+  // check the AT commmand execution flag
+  if (xbee900HP.error_AT == 0)
+  {
+    USB.println(F("9. Changes stored OK"));
+  }
+  else
+  {
+    USB.println(F("9. Error calling 'writeValues()'"));
+  }
+}
+// =============================== END Xbee config ================================
+ 
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Prod Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void loop()
+{
+    
+  //sensor config
   // Power on the USB for viewing data in the serial monitor
   USB.ON();
-  USB.println(F("      Suspended Solid System \n"));
-  USB.println(F("*********************************"));
- 
+  USB.println(F("**********************************"));
+  USB.println(F("       Suspended Solid System "));
+  USB.println(F("**********************************"));
+
   // Sets the 5V switch ON
   currentLoopBoard.ON(SUPPLY5V);
   delay(1000);
 
   // Sets the 12V switch ON
-  currentLoopBoard.ON(SUPPLY12V); 
-  delay(1000); 
-  
-  // init XBee DigiMesh -> SOCKET_1 because i´m using the shield
-  xbeeDM.ON(SOCKET_1); 
- 
-  // Print Gatway MAC 
-  USB.print(F("  Gateway MAC is:"));
-  USB.println(RX_ADDRESS);
-  USB.println(); 
-  
-  // Set the Waspmote ID
-  frame.setID(WASPMOTE_ID); 
-  
-//  xbeeDM.setPreambleID(preambleID);
- 
-// ===========================================================================
-// Write values to XBee module memory
-    xbeeDM.writeValues();
-// ============================================================================
-
+  currentLoopBoard.ON(SUPPLY12V);
   delay(1000);
- }
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Prod Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void loop()
-{
-  // init XBee 
-  xbeeDM.ON(SOCKET_1); 
-
-// ===========================================================================
+  
+// ================================================================================
 // Read the current values - SOLID SENSOR
- 
- float current_solid = currentLoopBoard.readCurrent(CHANNEL1); // Value as a current in mA - reading from Channel 1 
-  current_solid=current_solid+0.06; //correcting the error
-  USB.print("  Solid Sensor Current Read value: ");
-  USB.printFloat(current_solid, 3); //print current value with 3 decimals
-  USB.println(" mA \n");
-  USB.print("  Solid Sensor Converted Value in mg/l: ");
-  USB.printFloat((((current_solid)*250)-1001), 3); //converting mA to mg/l and printing the value with 3 decimals 
-  USB.println(" mg/l \n");
+  
+  if (currentLoopBoard.isConnected(CHANNEL1))
+  {
+    float current_solid = currentLoopBoard.readCurrent(CHANNEL1); // Value as a current in mA - reading from Channel 1
+    //current_solid=current_solid+0.06; //correcting the error
+    USB.print("  Solid Sensor Current Read value: ");
+    USB.printFloat(current_solid + 0.06, 2);
+    USB.println(" mA \n");
+    USB.print("  Solid Sensor Converted Value in mg/l: ");
+    USB.printFloat((((current_solid + 0.06) * 250) - 1006), 2); //converting mA to mg/l
+    USB.println(" mg/l \n");
+    // Convert Type Float to String -> Convert current_scoketA float to string (3 decimals)
+    Utils.float2String ((((current_solid + 0.06) * 250) - 1006), solidmgl, 1);
+    delay(500);
+  } else
+  { USB.println(" solid sensor not connected");
+  }
+// ================================================================================
 
-// Convert Type Float to String -> Convert current_solid float to string to add on sensor frame
-  Utils.float2String ((((current_solid+0.06)*250)-1001), solidmgl, 3);
-  delay(500);
-   
-// ===========================================================================
+
+// ================================================================================
 // Read the current values - TEMP SENSOR
-  
-  float current_temp = currentLoopBoard.readCurrent(CHANNEL2); // Value as a current in mA - reading from Channel 2 
-  current_temp=current_temp+0.05; // correntig the error
-  USB.print("  Temperature Sensor current Read Value:  ");
-  USB.printFloat(current_temp, 3); //print current value with 3 decimal
-  USB.println(" mA \n");
-  USB.print("  Temperature Sensor converted Value: ");
-  float tempc=((((current_temp)*3.125)-12.5)); //converting mA to celsius
-  USB.printFloat(tempc);// printing the value with 3 decimals 
-  USB.println(" C \n");
-  
-  delay(500);
- 
- // ===========================================================================
- // Show battery level
-  uint8_t battery_level = PWR.getBatteryVolts();
-  USB.print(F("  Battery Level: "));
-  USB.print(PWR.getBatteryLevel(), DEC);
-  USB.println(F(" % \n"));
- // ===========================================================================
+  if (currentLoopBoard.isConnected(CHANNEL2))
+  {
+    float current_temp = currentLoopBoard.readCurrent(CHANNEL2); // Value as a current in mA - reading from Channel 2
+    //current_temp = current_temp+0.05; // correntig the error
+    USB.print("  Temperature Sensor current Read Value:  ");
+    USB.printFloat(current_temp + 0.05, 3); //print current value with 3 decimal
+    USB.println(" mA \n");
+    USB.print("  Temperature Sensor converted Value: ");
+    USB.printFloat((((current_temp + 0.05)) * 3.125) - 12.5, 3);
+    USB.println(" C \n");
+    float tempc = ((((current_temp + 0.05) * 3.125) - 12.5), 3); //converting mA to celsius
+    //USB.printFloat(tempc, 3);
+    delay(500);
+    } else
+  { USB.println(" temperature sensor not connected");
+  }
+// ================================================================================
 
-// ===========================================================================
+
+// ================================================================================
+// Show battery level
+    uint8_t battery_level = PWR.getBatteryVolts();
+    USB.print(F("  Battery Level: "));
+    USB.print(PWR.getBatteryLevel(), DEC);
+    USB.println(F(" % \n"));
+// ================================================================================
+
+
+// ================================================================================
 // Create new frame (ASCII)
-  frame.createFrame(ASCII); 
- //frame.addSensor(SENSOR_DUST, solidmgl); //create frame with the solid sensor information -->>>testing the sensor_dust type
-  frame.addSensor(SENSOR_STR, solidmgl);
-  frame.addSensor(SENSOR_TCB, tempc, 3);
-  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); // set frame fields (Battery sensor - uint8_t)
-  frame.showFrame(); //print the frame
-// ==========================================================================
+   frame.createFrame(ASCII);
+// frame.addSensor(SENSOR_DUST, solidmgl); //create frame with the solid sensor information -->>>testing the sensor_dust type
+   frame.addSensor(SENSOR_STR, solidmgl);
+   frame.addSensor(SENSOR_TCB, tempc, 3);
+   frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel()); // set frame fields (Battery sensor - uint8_t)
+   frame.showFrame(); //print the frame
+// ================================================================================
 
-// ==========================================================================
-// Send Xbee packet  
-  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );   
-  
+
+// ================================================================================
+// Send Xbee packet
+  error = xbeeDM.send( RX_ADDRESS, frame.buffer, frame.length );
+
   // check TX flag
-  if( error == 0 )
+  if ( error == 0 )
   {
     USB.println(F("send ok"));
-    // blink green LED
-    Utils.blinkGreenLED();
+    Utils.blinkGreenLED();  // blink green LED
   }
-  else 
+  else
   {
     USB.println(F("send error"));
-    // blink red LED
-    Utils.blinkRedLED();
+    Utils.blinkRedLED(); // blink red LED
   }
   //   USB.println("\n error = %d \n", error);
   delay(1000);
   USB.println();
+// ================================================================================
+
+
+// ================================================================================
+// Setting Sleep Mode
+  USB.println(F("Entering deep sleep"));
+// Go to sleep disconnecting all switches and modules
+// After 10 seconds, Waspmote wakes up thanks to the RTC Alarm
+  PWR.deepSleep("00:00:00:10", RTC_OFFSET, RTC_ALM1_MODE1, ALL_OFF);
+
+  USB.ON();
+  USB.println(F("\nWaking up"));
+
+// After wake up check interruption source
+  if ( intFlag & RTC_INT )
+  {
+    // clear interruption flag
+    intFlag &= ~(RTC_INT);
+
+    delay(1000);
+    }
+// ================================================================================
   
-// ==========================================================================  
-//Setting Sleep Mode    
-  USB.println(F("enter sleep"));
-  // Go to sleep disconnecting all the switches and modules
-  // After 8 seconds, Waspmote wakes up thanks to internal watchdog
-  PWR.sleep(WTD_8S, ALL_OFF);
-  
-  USB.ON(); // turn back on
-  USB.println(F("\nwake up"));
-  
-  delay(1000);
- 
 }
+
